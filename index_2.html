@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+  <title>Soli Brug Fredrikstad</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg:        #f5f0ea;
+      --surface:   #fff9f4;
+      --border:    #d4c4b0;
+      --accent:    #7a5c3a;
+      --accent2:   #c8a97a;
+      --text:      #2a1f14;
+      --muted:     #8a7360;
+      --danger:    #b44;
+      --green:     #3a7a4a;
+      --radius:    10px;
+      --shadow:    0 2px 12px rgba(42,31,20,.08);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      min-height: 100dvh;
+      padding-bottom: 3rem;
+    }
+
+    /* ─── LOGIN ─── */
+    #login-screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100dvh;
+      padding: 2rem;
+      gap: 1.5rem;
+    }
+    #login-screen h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(1.8rem, 6vw, 2.6rem);
+      font-weight: 700;
+      text-align: center;
+      line-height: 1.15;
+      color: var(--accent);
+    }
+    #login-screen p {
+      color: var(--muted);
+      font-size: .9rem;
+      text-align: center;
+    }
+    #login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 2rem 1.5rem;
+      width: 100%;
+      max-width: 340px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    #login-card label { font-size: .8rem; font-weight: 500; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+    #login-card input {
+      width: 100%;
+      padding: .75rem 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1rem;
+      color: var(--text);
+      margin-top: .3rem;
+    }
+    #login-card input:focus { outline: none; border-color: var(--accent); }
+    #login-error { color: var(--danger); font-size: .85rem; display: none; }
+
+    /* ─── APP ─── */
+    #app { display: none; }
+
+    header {
+      background: var(--accent);
+      color: #fff;
+      padding: 1.1rem 1.2rem .9rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,.18);
+    }
+    header h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+    header span { font-size: .7rem; opacity: .7; display: block; font-family: 'DM Sans', sans-serif; font-weight: 300; }
+
+    #logout-btn {
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.3);
+      color: #fff;
+      padding: .35rem .7rem;
+      border-radius: 6px;
+      font-size: .75rem;
+      cursor: pointer;
+      white-space: nowrap;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin: 1rem;
+      padding: 1.2rem;
+      box-shadow: var(--shadow);
+    }
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 1rem;
+      padding-bottom: .5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ─── FORM GRID ─── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: .75rem;
+    }
+    .form-group { display: flex; flex-direction: column; gap: .25rem; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    .form-group label {
+      font-size: .72rem;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+    .form-group input[type="text"],
+    .form-group input[type="email"],
+    .form-group input[type="tel"],
+    .form-group input[type="number"] {
+      padding: .65rem .85rem;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      font-size: .95rem;
+      color: var(--text);
+      width: 100%;
+      -webkit-appearance: none;
+    }
+    .form-group input:focus { outline: none; border-color: var(--accent); }
+    .form-group input[readonly] { background: #ede8e2; color: var(--muted); }
+
+    .money-group input { font-weight: 500; }
+
+    /* delivery checkbox */
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+      padding: .6rem 0;
+    }
+    .checkbox-row input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .checkbox-row label {
+      font-size: .9rem;
+      cursor: pointer;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    /* total highlight */
+    .total-field input {
+      background: var(--accent) !important;
+      color: #fff !important;
+      font-weight: 700;
+      font-size: 1.05rem;
+      border-color: var(--accent) !important;
+    }
+
+    /* section divider */
+    .form-divider {
+      grid-column: 1 / -1;
+      border: none;
+      border-top: 1px dashed var(--border);
+      margin: .25rem 0;
+    }
+
+    /* submit btn */
+    #submit-btn {
+      width: 100%;
+      padding: .9rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: .5rem;
+      letter-spacing: .02em;
+      transition: background .2s;
+    }
+    #submit-btn:active { background: #5c4228; }
+    #submit-btn:disabled { background: var(--muted); cursor: not-allowed; }
+
+    #form-msg {
+      text-align: center;
+      font-size: .85rem;
+      margin-top: .5rem;
+      min-height: 1.2em;
+    }
+    #form-msg.ok { color: var(--green); }
+    #form-msg.err { color: var(--danger); }
+
+    /* ─── SALES LIST ─── */
+    #sales-section { margin-bottom: 0; }
+
+    .sale-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .9rem;
+      margin-bottom: .75rem;
+      position: relative;
+    }
+    .sale-card .sale-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: .5rem;
+      margin-bottom: .5rem;
+    }
+    .sale-card .sale-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .sale-card .sale-time {
+      font-size: .7rem;
+      color: var(--muted);
+      white-space: nowrap;
+      padding-top: .15rem;
+    }
+    .sale-card .sale-art {
+      font-size: .85rem;
+      color: var(--muted);
+      margin-bottom: .4rem;
+    }
+    .sale-card .sale-art strong { color: var(--text); }
+
+    .sale-amounts {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: .3rem;
+      margin-bottom: .4rem;
+    }
+    .sale-amt-item {
+      background: var(--surface);
+      border-radius: 6px;
+      padding: .3rem .4rem;
+      text-align: center;
+    }
+    .sale-amt-item .lbl { font-size: .6rem; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }
+    .sale-amt-item .val { font-size: .85rem; font-weight: 500; color: var(--text); }
+
+    .sale-total-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: .4rem;
+      padding-top: .4rem;
+      border-top: 1px solid var(--border);
+    }
+    .sale-total-row .delivery-badge {
+      font-size: .72rem;
+      padding: .2rem .5rem;
+      border-radius: 20px;
+      background: #e8f4ea;
+      color: var(--green);
+      font-weight: 500;
+    }
+    .sale-total-row .no-delivery {
+      font-size: .72rem;
+      color: var(--muted);
+    }
+    .sale-total-row .total-val {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    /* grand totals bar */
+    #grand-totals {
+      background: var(--accent);
+      color: #fff;
+      border-radius: var(--radius);
+      padding: 1rem;
+      margin-top: .5rem;
+    }
+    #grand-totals h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: .6rem;
+      opacity: .8;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .grand-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: .4rem;
+      margin-bottom: .5rem;
+    }
+    .grand-item { text-align: center; }
+    .grand-item .g-lbl { font-size: .6rem; opacity: .7; text-transform: uppercase; letter-spacing: .03em; }
+    .grand-item .g-val { font-size: .9rem; font-weight: 600; }
+    .grand-total-line {
+      border-top: 1px solid rgba(255,255,255,.3);
+      padding-top: .6rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .grand-total-line span:first-child { font-size: .8rem; opacity: .8; }
+    .grand-total-line .big { font-family: 'Cormorant Garamond', serif; font-size: 1.5rem; font-weight: 700; }
+
+    #loading { text-align: center; color: var(--muted); padding: 1.5rem; font-size: .9rem; }
+    #empty { text-align: center; color: var(--muted); padding: 1.5rem; font-size: .9rem; display: none; }
+
+    /* ─── util ─── */
+    .btn { cursor: pointer; }
+
+    @media (max-width: 360px) {
+      .sale-amounts, .grand-row { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <h1>Soli Brug<br>Fredrikstad</h1>
+  <p>Salgsregistrering</p>
+  <div id="login-card">
+    <div class="form-group">
+      <label for="code-input">Tilgangskode</label>
+      <input type="password" id="code-input" placeholder="Skriv inn kode" autocomplete="current-password" />
+    </div>
+    <span id="login-error">Feil kode – prøv igjen</span>
+    <button class="btn" id="login-btn" onclick="doLogin()" style="background:var(--accent);color:#fff;padding:.8rem;border:none;border-radius:var(--radius);font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;cursor:pointer;">Logg inn</button>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+  <header>
+    <div>
+      <h1>Soli Brug Fredrikstad</h1>
+      <span>Salgsregistrering</span>
+    </div>
+    <button id="logout-btn" onclick="doLogout()">Logg ut</button>
+  </header>
+
+  <!-- FORM -->
+  <div class="section">
+    <div class="section-title">Nytt salg</div>
+    <div class="form-grid">
+
+      <!-- Kontaktinfo -->
+      <div class="form-group full">
+        <label>Navn</label>
+        <input type="text" id="f-navn" placeholder="Fullt navn" autocomplete="off" />
+      </div>
+      <div class="form-group">
+        <label>Telefon</label>
+        <input type="tel" id="f-telefon" placeholder="Telefonnummer" />
+      </div>
+      <div class="form-group">
+        <label>E-post</label>
+        <input type="email" id="f-epost" placeholder="epost@epost.no" />
+      </div>
+      <div class="form-group full">
+        <label>Adresse</label>
+        <input type="text" id="f-adresse" placeholder="Gateadresse, postnummer sted" />
+      </div>
+      <div class="form-group full">
+        <div class="checkbox-row">
+          <input type="checkbox" id="f-levering" />
+          <label for="f-levering">🚚 Levering til adresse</label>
+        </div>
+      </div>
+
+      <hr class="form-divider" />
+
+      <!-- Kunstinfo -->
+      <div class="form-group">
+        <label>Kunstner</label>
+        <input type="text" id="f-kunstner" placeholder="Kunstnerens navn" />
+      </div>
+      <div class="form-group">
+        <label>Tittel</label>
+        <input type="text" id="f-tittel" placeholder="Verkets tittel" />
+      </div>
+
+      <hr class="form-divider" />
+
+      <!-- Beløp -->
+      <div class="form-group money-group">
+        <label>Pris (kr)</label>
+        <input type="number" id="f-pris" placeholder="0" min="0" step="1" inputmode="numeric" oninput="calcBkh()" />
+      </div>
+      <div class="form-group money-group">
+        <label>5% BKH (kr)</label>
+        <input type="number" id="f-bkh" placeholder="0" min="0" step="1" inputmode="numeric" oninput="calcTotal()" />
+      </div>
+      <div class="form-group money-group">
+        <label>Ramme (kr)</label>
+        <input type="number" id="f-ramme" placeholder="0" min="0" step="1" inputmode="numeric" oninput="calcTotal()" />
+      </div>
+      <div class="form-group money-group">
+        <label>Frakt (kr)</label>
+        <input type="number" id="f-frakt" placeholder="0" min="0" step="1" inputmode="numeric" oninput="calcTotal()" />
+      </div>
+      <div class="form-group full total-field">
+        <label>Total pris (kr)</label>
+        <input type="number" id="f-total" placeholder="0" readonly />
+      </div>
+    </div>
+
+    <button id="submit-btn" onclick="submitSale()">Registrer salg</button>
+    <div id="form-msg"></div>
+  </div>
+
+  <!-- SALES LIST -->
+  <div class="section" id="sales-section">
+    <div class="section-title">Alle salg</div>
+    <div id="loading">Laster inn salg…</div>
+    <div id="empty">Ingen salg registrert ennå.</div>
+    <div id="sales-list"></div>
+    <div id="grand-totals" style="display:none">
+      <h3>Totalt alle salg</h3>
+      <div class="grand-row">
+        <div class="grand-item"><div class="g-lbl">Pris</div><div class="g-val" id="gt-pris">0</div></div>
+        <div class="grand-item"><div class="g-lbl">BKH</div><div class="g-val" id="gt-bkh">0</div></div>
+        <div class="grand-item"><div class="g-lbl">Ramme</div><div class="g-val" id="gt-ramme">0</div></div>
+        <div class="grand-item"><div class="g-lbl">Frakt</div><div class="g-val" id="gt-frakt">0</div></div>
+      </div>
+      <div class="grand-total-line">
+        <span>Totalomsetning</span>
+        <span class="big" id="gt-total">0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ══════════════════════════════════════════
+  //  ⚙️  KONFIGURERING – fyll inn dine verdier
+  // ══════════════════════════════════════════
+  const SUPABASE_URL  = 'https://DITT-PROSJEKT.supabase.co';   // 👈 bytt ut
+  const SUPABASE_KEY  = 'din-anon-public-key-her';              // 👈 bytt ut
+  const ACCESS_CODE   = 'SoliBrugFredrikstad';
+  // ══════════════════════════════════════════
+
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ─── LOGIN ───
+  function doLogin() {
+    const val = document.getElementById('code-input').value;
+    const err = document.getElementById('login-error');
+    if (val === ACCESS_CODE) {
+      sessionStorage.setItem('sbauth', '1');
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      loadSales();
+    } else {
+      err.style.display = 'block';
+      document.getElementById('code-input').value = '';
+    }
+  }
+  document.getElementById('code-input').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+  function doLogout() {
+    sessionStorage.removeItem('sbauth');
+    location.reload();
+  }
+
+  // Auto-login if session exists
+  if (sessionStorage.getItem('sbauth') === '1') {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadSales();
+  }
+
+  // ─── CALCULATIONS ───
+  function n(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+  function calcBkh() {
+    const pris = n('f-pris');
+    document.getElementById('f-bkh').value = pris > 0 ? Math.round(pris * 0.05) : '';
+    calcTotal();
+  }
+
+  function calcTotal() {
+    const t = n('f-pris') + n('f-bkh') + n('f-ramme') + n('f-frakt');
+    document.getElementById('f-total').value = t > 0 ? t : '';
+  }
+
+  // ─── FORMAT ───
+  function kr(v) { return (v || 0).toLocaleString('nb-NO') + ' kr'; }
+
+  function fmtDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('nb-NO', { day:'2-digit', month:'2-digit', year:'2-digit' })
+      + ' ' + d.toLocaleTimeString('nb-NO', { hour:'2-digit', minute:'2-digit' });
+  }
+
+  // ─── RENDER SALE CARD ───
+  function renderCard(s) {
+    return `
+      <div class="sale-card">
+        <div class="sale-header">
+          <div class="sale-name">${s.navn || '—'}</div>
+          <div class="sale-time">${fmtDate(s.created_at)}</div>
+        </div>
+        <div class="sale-art">
+          <strong>${s.kunstner || '—'}</strong>${s.tittel ? ' · ' + s.tittel : ''}
+        </div>
+        ${s.adresse || s.telefon || s.epost ? `
+        <div class="sale-art" style="margin-bottom:.4rem;font-size:.78rem;">
+          ${[s.telefon, s.epost, s.adresse].filter(Boolean).join(' · ')}
+        </div>` : ''}
+        <div class="sale-amounts">
+          <div class="sale-amt-item"><div class="lbl">Pris</div><div class="val">${kr(s.pris)}</div></div>
+          <div class="sale-amt-item"><div class="lbl">BKH 5%</div><div class="val">${kr(s.bkh)}</div></div>
+          <div class="sale-amt-item"><div class="lbl">Ramme</div><div class="val">${kr(s.ramme)}</div></div>
+          <div class="sale-amt-item"><div class="lbl">Frakt</div><div class="val">${kr(s.frakt)}</div></div>
+        </div>
+        <div class="sale-total-row">
+          ${s.levering
+            ? '<span class="delivery-badge">🚚 Levering</span>'
+            : '<span class="no-delivery">Hentes</span>'}
+          <span class="total-val">${kr(s.total)}</span>
+        </div>
+      </div>`;
+  }
+
+  // ─── LOAD SALES ───
+  async function loadSales() {
+    const { data, error } = await supabase
+      .from('salg')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    document.getElementById('loading').style.display = 'none';
+
+    if (error) {
+      document.getElementById('sales-list').innerHTML = '<p style="color:var(--danger);font-size:.85rem">Kunne ikke laste salg. Sjekk Supabase-tilkobling.</p>';
+      return;
+    }
+
+    if (!data || data.length === 0) {
+      document.getElementById('empty').style.display = 'block';
+      document.getElementById('grand-totals').style.display = 'none';
+      return;
+    }
+
+    document.getElementById('empty').style.display = 'none';
+    document.getElementById('sales-list').innerHTML = data.map(renderCard).join('');
+
+    // Grand totals
+    const gt = data.reduce((a, s) => ({
+      pris:  a.pris  + (s.pris  || 0),
+      bkh:   a.bkh   + (s.bkh   || 0),
+      ramme: a.ramme + (s.ramme || 0),
+      frakt: a.frakt + (s.frakt || 0),
+      total: a.total + (s.total || 0),
+    }), { pris:0, bkh:0, ramme:0, frakt:0, total:0 });
+
+    document.getElementById('gt-pris').textContent  = kr(gt.pris);
+    document.getElementById('gt-bkh').textContent   = kr(gt.bkh);
+    document.getElementById('gt-ramme').textContent = kr(gt.ramme);
+    document.getElementById('gt-frakt').textContent = kr(gt.frakt);
+    document.getElementById('gt-total').textContent = kr(gt.total);
+    document.getElementById('grand-totals').style.display = 'block';
+  }
+
+  // ─── SUBMIT SALE ───
+  async function submitSale() {
+    const btn = document.getElementById('submit-btn');
+    const msg = document.getElementById('form-msg');
+
+    const navn = document.getElementById('f-navn').value.trim();
+    if (!navn) { showMsg('Navn er påkrevd.', false); return; }
+
+    btn.disabled = true;
+    btn.textContent = 'Registrerer…';
+    msg.className = ''; msg.textContent = '';
+
+    const row = {
+      navn,
+      telefon:  document.getElementById('f-telefon').value.trim(),
+      epost:    document.getElementById('f-epost').value.trim(),
+      adresse:  document.getElementById('f-adresse').value.trim(),
+      levering: document.getElementById('f-levering').checked,
+      kunstner: document.getElementById('f-kunstner').value.trim(),
+      tittel:   document.getElementById('f-tittel').value.trim(),
+      pris:     n('f-pris'),
+      bkh:      n('f-bkh'),
+      ramme:    n('f-ramme'),
+      frakt:    n('f-frakt'),
+      total:    n('f-total'),
+    };
+
+    const { error } = await supabase.from('salg').insert([row]);
+
+    btn.disabled = false;
+    btn.textContent = 'Registrer salg';
+
+    if (error) {
+      showMsg('Feil ved lagring: ' + error.message, false);
+    } else {
+      showMsg('✓ Salg registrert!', true);
+      clearForm();
+      loadSales();
+    }
+  }
+
+  function showMsg(txt, ok) {
+    const el = document.getElementById('form-msg');
+    el.textContent = txt;
+    el.className = ok ? 'ok' : 'err';
+    setTimeout(() => { el.textContent = ''; el.className = ''; }, 4000);
+  }
+
+  function clearForm() {
+    ['f-navn','f-telefon','f-epost','f-adresse','f-kunstner','f-tittel',
+     'f-pris','f-bkh','f-ramme','f-frakt','f-total']
+      .forEach(id => document.getElementById(id).value = '');
+    document.getElementById('f-levering').checked = false;
+  }
+</script>
+</body>
+</html>
