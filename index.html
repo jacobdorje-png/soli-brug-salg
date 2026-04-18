@@ -11,180 +11,77 @@
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
-body{
-  background:#f0ebe3;color:#111;
-  font-family:'proxima-nova','Nunito',sans-serif;
-  font-size:16px;
-  min-height:100dvh;
-  padding-bottom:5rem;
-  -webkit-font-smoothing:antialiased;
-  overflow-x:hidden;
-}
-:root{
-  --bg:#f0ebe3;--white:#fff;--border:#d5c8b8;
-  --accent:#7a5c3a;--muted:#555;
-  --danger:#c0392b;--green:#1e8a3e;--blue:#1a5fa8;--orange:#c06010;
-  --r:12px;
-  --touch:48px; /* minimum touch target */
-}
+body{background:#f0ebe3;color:#111;font-family:'proxima-nova','Nunito',sans-serif;font-size:16px;min-height:100dvh;padding-bottom:5rem;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+:root{--bg:#f0ebe3;--white:#fff;--border:#d5c8b8;--accent:#7a5c3a;--muted:#555;--danger:#c0392b;--green:#1e8a3e;--blue:#1a5fa8;--orange:#c06010;--r:12px;--touch:48px}
 
-/* ── LOGIN ── */
-#login-screen{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:100dvh;padding:1.5rem;gap:1.5rem;
-}
+#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:1.5rem;gap:1.5rem}
 .logo{font-size:2.2rem;font-weight:700;text-align:center;color:var(--accent);line-height:1.2}
 .sub{color:var(--muted);font-size:1rem;font-weight:500}
-.card{
-  background:var(--white);border:1px solid var(--border);border-radius:var(--r);
-  padding:1.75rem 1.5rem;width:100%;max-width:360px;
-  box-shadow:0 4px 20px rgba(0,0,0,.1);
-  display:flex;flex-direction:column;gap:1.1rem;
-}
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:1.75rem 1.5rem;width:100%;max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,.1);display:flex;flex-direction:column;gap:1.1rem}
 
-/* ── LABELS ── */
 .lbl{font-size:.72rem;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:.3rem;display:block}
 
-/* ── INPUTS – min 16px to prevent iOS zoom ── */
 input[type=text],input[type=email],input[type=tel],input[type=number],input[type=password],input[type=datetime-local]{
-  width:100%;min-height:var(--touch);
-  padding:.75rem 1rem;
+  width:100%;min-height:var(--touch);padding:.75rem 1rem;
   border:1.5px solid var(--border);border-radius:10px;
-  font-family:'proxima-nova','Nunito',sans-serif;
-  font-size:16px;color:#111;font-weight:600;
-  background:#faf8f5;-webkit-appearance:none;
-  box-sizing:border-box;
+  font-family:'proxima-nova','Nunito',sans-serif;font-size:16px;color:#111;font-weight:600;
+  background:#faf8f5;-webkit-appearance:none;box-sizing:border-box;
 }
 input:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(122,92,58,.12)}
 input[readonly]{background:#e8e2da;color:var(--muted)}
 .total-inp{background:var(--accent)!important;color:#fff!important;font-weight:700!important;border-color:var(--accent)!important;font-size:1.1rem!important}
 
-/* ── RAMME ── */
 .ramme-row{display:flex;gap:.5rem;align-items:flex-end}
 .ramme-pris{width:110px;flex-shrink:0}
 .ramme-info-wrap{flex:1;display:flex;flex-direction:column;gap:.3rem}
-.ramme-info-inp{
-  width:100%;min-height:var(--touch);
-  padding:.75rem .9rem;
-  border:1.5px solid var(--border);border-radius:10px;
-  font-family:'proxima-nova','Nunito',sans-serif;
-  font-size:16px;color:#111;font-weight:600;
-  background:#faf8f5;-webkit-appearance:none;box-sizing:border-box;
-}
+.ramme-info-inp{width:100%;min-height:var(--touch);padding:.75rem .9rem;border:1.5px solid var(--border);border-radius:10px;font-family:'proxima-nova','Nunito',sans-serif;font-size:16px;color:#111;font-weight:600;background:#faf8f5;-webkit-appearance:none;box-sizing:border-box}
 .ramme-info-inp:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(122,92,58,.12)}
 
-/* ── UX-ADVARSEL ── */
-.ux-advarsel{
-  display:none;background:#fff3e0;border:1.5px solid var(--orange);
-  border-radius:8px;padding:.65rem .85rem;
-  font-size:.85rem;font-weight:700;color:var(--orange);line-height:1.4;
-}
+.ux-advarsel{display:none;background:#fff3e0;border:1.5px solid var(--orange);border-radius:8px;padding:.65rem .85rem;font-size:.85rem;font-weight:700;color:var(--orange);line-height:1.4}
 .ux-advarsel.synlig{display:flex;align-items:flex-start;gap:.4rem}
 
-/* ── BUTTONS ── */
-.btn-primary{
-  width:100%;min-height:var(--touch);padding:.9rem 1rem;
-  background:var(--accent);color:#fff;border:none;border-radius:10px;
-  font-family:'proxima-nova','Nunito',sans-serif;font-size:1.05rem;font-weight:700;
-  cursor:pointer;letter-spacing:.02em;
-  -webkit-appearance:none;
-}
+.btn-primary{width:100%;min-height:var(--touch);padding:.9rem 1rem;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:'proxima-nova','Nunito',sans-serif;font-size:1.05rem;font-weight:700;cursor:pointer;letter-spacing:.02em;-webkit-appearance:none}
 .btn-primary:active{opacity:.85}
 .btn-primary:disabled{background:var(--muted);cursor:not-allowed}
 
-/* ── APP ── */
 #app{display:none}
-
-/* ── HEADER ── */
-header{
-  background:var(--accent);color:#fff;
-  padding:.9rem 1.1rem;
-  position:sticky;top:0;z-index:200;
-  display:flex;align-items:center;justify-content:space-between;gap:.5rem;
-  box-shadow:0 2px 12px rgba(0,0,0,.18);
-}
+header{background:var(--accent);color:#fff;padding:.9rem 1.1rem;position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;gap:.5rem;box-shadow:0 2px 12px rgba(0,0,0,.18)}
 header .hname{font-size:1.05rem;font-weight:700;line-height:1.2}
 header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
-#logout-btn{
-  background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);
-  color:#fff;padding:.5rem .85rem;border-radius:8px;
-  font-size:.82rem;font-family:'proxima-nova','Nunito',sans-serif;font-weight:700;
-  cursor:pointer;white-space:nowrap;min-height:var(--touch);
-  display:flex;align-items:center;
-}
+#logout-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;padding:.5rem .85rem;border-radius:8px;font-size:.82rem;font-family:'proxima-nova','Nunito',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap;min-height:var(--touch);display:flex;align-items:center}
 
-/* ── SECTIONS ── */
-.section{
-  background:var(--white);border:1px solid var(--border);border-radius:var(--r);
-  margin:.85rem;padding:1.1rem;
-  box-shadow:0 2px 12px rgba(0,0,0,.07);
-}
-.section-head{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:1rem;padding-bottom:.6rem;border-bottom:1px solid var(--border);
-}
+.section{background:var(--white);border:1px solid var(--border);border-radius:var(--r);margin:.85rem;padding:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,.07)}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding-bottom:.6rem;border-bottom:1px solid var(--border)}
 .stitle{font-size:1rem;font-weight:700;color:var(--accent);letter-spacing:.02em}
 
-/* ── MODE TOGGLE ── */
 .mode-toggle{display:flex;border:1.5px solid var(--border);border-radius:8px;overflow:hidden;flex-shrink:0}
-.mode-btn{
-  min-height:36px;padding:.4rem .8rem;
-  font-family:'proxima-nova','Nunito',sans-serif;font-size:.78rem;font-weight:700;
-  cursor:pointer;border:none;background:transparent;color:var(--muted);
-}
+.mode-btn{min-height:36px;padding:.4rem .8rem;font-family:'proxima-nova','Nunito',sans-serif;font-size:.78rem;font-weight:700;cursor:pointer;border:none;background:transparent;color:var(--muted)}
 .mode-btn.active{background:var(--accent);color:#fff}
 
-/* ── DATETIME ROW ── */
 #datetime-row{display:none;margin-bottom:.8rem}
 #datetime-row.visible{display:block}
 
-/* ── FORM GRID – single column on mobile ── */
 .fgrid{display:flex;flex-direction:column;gap:.75rem}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
 .fdiv{border:none;border-top:1px dashed var(--border);margin:.1rem 0}
 
-/* ── CHECKBOX ── */
 .checkbox-row{display:flex;align-items:center;gap:.75rem;min-height:var(--touch);padding:.25rem 0}
 .checkbox-row input[type=checkbox]{width:24px;height:24px;flex-shrink:0;accent-color:var(--accent);cursor:pointer}
 .checkbox-row label{font-size:1rem;cursor:pointer;font-weight:600;color:#111}
 
 #form-msg{text-align:center;font-size:.9rem;margin-top:.5rem;min-height:1.3em;font-weight:600}
 
-/* ── FILTER TABS ── */
-.filter-wrap{
-  margin:.2rem .85rem .5rem;
-  overflow-x:auto;-webkit-overflow-scrolling:touch;
-  scrollbar-width:none;
-}
+.filter-wrap{margin:.2rem .85rem .5rem;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .filter-wrap::-webkit-scrollbar{display:none}
 .filter-tabs{display:flex;gap:.45rem;padding:.25rem .05rem}
-.ftab{
-  min-height:38px;padding:.4rem 1rem;
-  border-radius:20px;border:1.5px solid var(--border);
-  background:var(--white);
-  font-family:'proxima-nova','Nunito',sans-serif;font-size:.82rem;font-weight:700;
-  color:var(--muted);cursor:pointer;white-space:nowrap;
-  display:flex;align-items:center;
-}
+.ftab{min-height:38px;padding:.4rem 1rem;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-family:'proxima-nova','Nunito',sans-serif;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap;display:flex;align-items:center}
 .ftab.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .ftab:active{opacity:.8}
 
-/* ── SALES TOP ── */
-.sales-top{
-  display:flex;align-items:center;justify-content:space-between;
-  gap:.5rem;margin-bottom:.7rem;padding-bottom:.6rem;border-bottom:1px solid var(--border);
-}
-.excel-btn{
-  display:inline-flex;align-items:center;gap:.35rem;
-  background:none;border:1.5px solid var(--green);color:var(--green);
-  padding:.4rem .8rem;border-radius:8px;
-  font-size:.82rem;font-weight:700;cursor:pointer;
-  font-family:'proxima-nova','Nunito',sans-serif;
-  min-height:38px;
-}
+.sales-top{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.7rem;padding-bottom:.6rem;border-bottom:1px solid var(--border)}
+.excel-btn{display:inline-flex;align-items:center;gap:.35rem;background:none;border:1.5px solid var(--green);color:var(--green);padding:.4rem .8rem;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif;min-height:38px}
 .excel-btn:active{background:#e8f5e9}
 
-/* ── VERK-GRUPPE ── */
 .verk-gruppe{margin-bottom:.3rem}
 .verk-gruppe-header{display:flex;align-items:center;gap:.5rem;padding:.4rem .1rem;margin-bottom:.4rem}
 .verk-gruppe-tittel{font-size:.85rem;font-weight:700;color:var(--accent);flex:0 0 auto}
@@ -192,84 +89,43 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 .verk-gruppe-linje{flex:1;height:1px;background:var(--border)}
 .verk-gruppe-salg{padding-left:.6rem;border-left:2px solid var(--border)}
 
-/* ── SALE CARD ── */
-.sale-card{
-  background:#faf8f5;border:1px solid var(--border);
-  border-radius:10px;padding:1rem;margin-bottom:.75rem;
-}
+.sale-card{background:#faf8f5;border:1px solid var(--border);border-radius:10px;padding:1rem;margin-bottom:.75rem}
 .sc-top{display:flex;justify-content:space-between;align-items:center;gap:.5rem;margin-bottom:.6rem}
 .sc-nr{font-size:.72rem;font-weight:700;color:#fff;background:var(--accent);padding:.25rem .6rem;border-radius:20px;white-space:nowrap}
 .sc-time{font-size:.7rem;color:var(--muted);font-weight:600}
 .sc-art-title{font-size:1.05rem;font-weight:700;color:#111;margin-bottom:.55rem;line-height:1.3}
 .sc-art-title-grouped{font-size:.95rem;font-weight:700;color:#111;margin-bottom:.55rem}
 
-/* Beløp grid */
 .sc-amounts{display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem;margin-bottom:.6rem}
 .sc-amt{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:.4rem .3rem;text-align:center}
 .sc-amt .al{font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;font-weight:700}
 .sc-amt .av{font-size:.88rem;font-weight:700;color:#111}
 .sc-amt .ai{font-size:.65rem;color:var(--accent);font-weight:700;margin-top:.15rem;word-break:break-word;line-height:1.2}
 
-/* Footer med levering + total */
 .sc-foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:.5rem;margin-bottom:.6rem}
 .badge-lev{font-size:.75rem;padding:.25rem .6rem;border-radius:20px;background:#d4edda;color:var(--green);font-weight:700}
 .badge-no{font-size:.75rem;color:var(--muted);font-weight:600}
 .sc-total{font-size:1.1rem;font-weight:700;color:var(--accent)}
 
-/* Status-knapper – fulle bredde på mobil */
 .sc-actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.6rem}
-.status-btn{
-  display:flex;align-items:center;justify-content:center;gap:.4rem;
-  min-height:44px;padding:.6rem .5rem;
-  border-radius:10px;border:2px solid var(--border);
-  font-family:'proxima-nova','Nunito',sans-serif;font-size:.85rem;font-weight:700;
-  cursor:pointer;background:var(--white);color:var(--muted);
-}
+.status-btn{display:flex;align-items:center;justify-content:center;gap:.4rem;min-height:44px;padding:.6rem .5rem;border-radius:10px;border:2px solid var(--border);font-family:'proxima-nova','Nunito',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;background:var(--white);color:var(--muted)}
 .status-btn.ok-green{background:#d4edda;border-color:var(--green);color:var(--green)}
 .status-btn.ok-blue{background:#d0e4f7;border-color:var(--blue);color:var(--blue)}
 .status-btn:active{opacity:.8}
+@media(min-width:600px){.sc-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.4rem}.status-btn{min-height:32px;padding:.2rem .7rem;border-radius:20px;font-size:.75rem;border-width:1.5px;gap:.3rem}}
 
-/* Desktop: kompakte chips */
-@media(min-width:600px){
-  .sc-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.4rem}
-  .status-btn{min-height:32px;padding:.2rem .7rem;border-radius:20px;font-size:.75rem;border-width:1.5px;gap:.3rem}
-}
-
-/* Kundeinfo */
 .sc-customer{border-top:1px dashed var(--border);padding-top:.5rem;margin-top:.1rem;margin-bottom:.6rem}
 .sc-customer-name{font-size:.88rem;font-weight:700;color:#333;margin-bottom:.2rem}
 .sc-customer-detail{font-size:.78rem;color:var(--muted);font-weight:500;line-height:2}
-
-.contact-link{
-  display:inline-flex;align-items:center;gap:.25rem;
-  color:var(--accent);font-weight:700;cursor:pointer;
-  background:none;border:none;
-  font-family:'proxima-nova','Nunito',sans-serif;font-size:.78rem;
-  padding:.1rem 0;text-decoration:none;
-  min-height:36px;
-}
+.contact-link{display:inline-flex;align-items:center;gap:.25rem;color:var(--accent);font-weight:700;cursor:pointer;background:none;border:none;font-family:'proxima-nova','Nunito',sans-serif;font-size:.78rem;padding:.1rem 0;text-decoration:none;min-height:36px}
 .contact-link:active{opacity:.7}
 
-/* Bunnrad */
 .sc-bottom-row{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
-.sc-copy-btn{
-  display:flex;align-items:center;gap:.35rem;
-  background:none;border:1.5px solid var(--border);border-radius:8px;
-  padding:.5rem .85rem;min-height:42px;
-  font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer;
-  font-family:'proxima-nova','Nunito',sans-serif;
-}
+.sc-copy-btn{display:flex;align-items:center;gap:.35rem;background:none;border:1.5px solid var(--border);border-radius:8px;padding:.5rem .85rem;min-height:42px;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif}
 .sc-copy-btn.copied{background:#e8f5e9;border-color:var(--green);color:var(--green)}
 .sc-copy-btn:active{opacity:.8}
-.sc-edit-btn{
-  background:none;border:none;
-  font-size:.82rem;color:#aaa;font-weight:600;
-  cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif;
-  text-decoration:underline;padding:.5rem .3rem;min-height:42px;
-  display:flex;align-items:center;
-}
+.sc-edit-btn{background:none;border:none;font-size:.82rem;color:#aaa;font-weight:600;cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif;text-decoration:underline;padding:.5rem .3rem;min-height:42px;display:flex;align-items:center}
 
-/* ── GRAND TOTALS ── */
 #grand-totals{display:none;background:var(--accent);color:#fff;border-radius:var(--r);padding:1.1rem;margin-top:.6rem}
 #grand-totals h3{font-size:.78rem;font-weight:700;opacity:.8;text-transform:uppercase;letter-spacing:.06em;margin-bottom:.65rem}
 .gt-row{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-bottom:.65rem}
@@ -280,7 +136,6 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 .gt-foot span{font-size:.85rem;opacity:.8;font-weight:600}
 .gt-foot strong{font-size:1.5rem;font-weight:700}
 
-/* ── CONTACT POPUP ── */
 #contact-popup{display:none;position:fixed;z-index:1000;background:var(--white);border:1px solid var(--border);border-radius:var(--r);box-shadow:0 8px 30px rgba(0,0,0,.2);min-width:210px;overflow:hidden}
 #contact-popup.open{display:block}
 .popup-title{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;padding:.65rem 1.1rem .35rem}
@@ -289,7 +144,6 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 .popup-item .pi-icon{font-size:1.15rem;width:1.4rem;text-align:center;flex-shrink:0}
 .popup-divider{border:none;border-top:1px solid var(--border);margin:0}
 
-/* ── MODAL ── */
 #modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;overflow-y:auto;padding:1rem}
 #modal-overlay.open{display:flex;align-items:flex-start;justify-content:center}
 #modal{background:var(--white);border-radius:var(--r);width:100%;max-width:480px;padding:1.4rem;margin:auto;box-shadow:0 8px 40px rgba(0,0,0,.25)}
@@ -303,7 +157,6 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 
 #loading{text-align:center;color:var(--muted);padding:1.5rem;font-size:.95rem;font-weight:600}
 #empty{text-align:center;color:var(--muted);padding:1.5rem;font-size:.95rem;display:none;font-weight:600}
-
 @media(max-width:360px){.sc-amounts,.gt-row{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
@@ -337,7 +190,6 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
     <button id="logout-btn">Logg ut</button>
   </header>
 
-  <!-- FORM -->
   <div class="section">
     <div class="section-head">
       <div class="stitle">Nytt salg</div>
@@ -346,40 +198,19 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
         <button class="mode-btn" id="btn-gammelt" onclick="setMode('gammelt')">Gammelt salg</button>
       </div>
     </div>
-
     <div id="datetime-row">
       <span class="lbl">Tidspunkt for salget</span>
       <input type="datetime-local" id="f-dato">
     </div>
-
     <div class="fgrid">
-      <!-- Kontaktinfo -->
-      <div>
-        <span class="lbl">Navn</span>
-        <input type="text" id="f-navn" placeholder="Fullt navn" autocomplete="off">
-      </div>
+      <div><span class="lbl">Navn</span><input type="text" id="f-navn" placeholder="Fullt navn" autocomplete="off"></div>
       <div class="frow">
-        <div>
-          <span class="lbl">Telefon</span>
-          <input type="tel" id="f-telefon" placeholder="Telefon">
-        </div>
-        <div>
-          <span class="lbl">E-post</span>
-          <input type="email" id="f-epost" placeholder="E-post">
-        </div>
+        <div><span class="lbl">Telefon</span><input type="tel" id="f-telefon" placeholder="Telefon"></div>
+        <div><span class="lbl">E-post</span><input type="email" id="f-epost" placeholder="E-post"></div>
       </div>
-      <div>
-        <span class="lbl">Adresse</span>
-        <input type="text" id="f-adresse" placeholder="Gateadresse, postnummer sted">
-      </div>
-      <div class="checkbox-row">
-        <input type="checkbox" id="f-levering">
-        <label for="f-levering">🚚 Levering til adresse</label>
-      </div>
-
+      <div><span class="lbl">Adresse</span><input type="text" id="f-adresse" placeholder="Gateadresse, postnummer sted"></div>
+      <div class="checkbox-row"><input type="checkbox" id="f-levering"><label for="f-levering">🚚 Levering til adresse</label></div>
       <hr class="fdiv">
-
-      <!-- Kunstinfo -->
       <div>
         <span class="lbl">Kunstner</span>
         <input type="text" id="f-kunstner" placeholder="Søk eller skriv navn…" list="kunstner-list" autocomplete="off">
@@ -390,55 +221,32 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
         <input type="text" id="f-tittel" placeholder="Verkets tittel" list="tittel-list" autocomplete="off">
         <datalist id="tittel-list"></datalist>
       </div>
-
       <hr class="fdiv">
-
-      <!-- Beløp -->
       <div class="frow">
-        <div>
-          <span class="lbl">Pris (kr)</span>
-          <input type="number" id="f-pris" placeholder="0" min="0" inputmode="numeric">
-        </div>
-        <div>
-          <span class="lbl">5% BKH (kr)</span>
-          <input type="number" id="f-bkh" placeholder="0" min="0" inputmode="numeric">
-        </div>
+        <div><span class="lbl">Pris (kr)</span><input type="number" id="f-pris" placeholder="0" min="0" inputmode="numeric"></div>
+        <div><span class="lbl">5% BKH (kr)</span><input type="number" id="f-bkh" placeholder="0" min="0" inputmode="numeric"></div>
       </div>
-
-      <!-- Ramme -->
       <div>
         <span class="lbl">Rammeinfo</span>
         <div class="ramme-row">
-          <div class="ramme-pris">
-            <input type="number" id="f-ramme" placeholder="kr" min="0" inputmode="numeric">
-          </div>
+          <div class="ramme-pris"><input type="number" id="f-ramme" placeholder="kr" min="0" inputmode="numeric"></div>
           <div class="ramme-info-wrap">
             <input class="ramme-info-inp" type="text" id="f-ramme-info" placeholder="UX / MR / flytende på hvit…">
             <div class="ux-advarsel" id="f-ux-advarsel">⚠️ Dette bildet er solgt tidligere – er du sikker på at det er UX?</div>
           </div>
         </div>
       </div>
-
-      <div>
-        <span class="lbl">Frakt (kr)</span>
-        <input type="number" id="f-frakt" placeholder="0" min="0" inputmode="numeric">
-      </div>
-      <div>
-        <span class="lbl">Total pris (kr)</span>
-        <input type="number" id="f-total" placeholder="0" readonly class="total-inp">
-      </div>
+      <div><span class="lbl">Frakt (kr)</span><input type="number" id="f-frakt" placeholder="0" min="0" inputmode="numeric"></div>
+      <div><span class="lbl">Total pris (kr)</span><input type="number" id="f-total" placeholder="0" readonly class="total-inp"></div>
     </div>
-
     <button class="btn-primary" id="submit-btn" style="margin-top:.85rem">Registrer salg</button>
     <div id="form-msg"></div>
   </div>
 
-  <!-- FILTER TABS -->
   <div class="filter-wrap">
     <div class="filter-tabs" id="filter-tabs"></div>
   </div>
 
-  <!-- SALG -->
   <div class="section">
     <div class="sales-top">
       <div class="stitle" id="sales-title">Alle salg</div>
@@ -460,7 +268,6 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
   </div>
 </div>
 
-<!-- EDIT MODAL -->
 <div id="modal-overlay">
   <div id="modal">
     <div class="modal-head">
@@ -468,10 +275,7 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
       <button id="modal-close">×</button>
     </div>
     <div class="fgrid">
-      <div>
-        <span class="lbl">Tidspunkt</span>
-        <input type="datetime-local" id="m-dato">
-      </div>
+      <div><span class="lbl">Tidspunkt</span><input type="datetime-local" id="m-dato"></div>
       <hr class="fdiv">
       <div><span class="lbl">Navn</span><input type="text" id="m-navn" placeholder="Fullt navn"></div>
       <div class="frow">
@@ -479,10 +283,7 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
         <div><span class="lbl">E-post</span><input type="email" id="m-epost"></div>
       </div>
       <div><span class="lbl">Adresse</span><input type="text" id="m-adresse"></div>
-      <div class="checkbox-row">
-        <input type="checkbox" id="m-levering">
-        <label for="m-levering">🚚 Levering til adresse</label>
-      </div>
+      <div class="checkbox-row"><input type="checkbox" id="m-levering"><label for="m-levering">🚚 Levering til adresse</label></div>
       <hr class="fdiv">
       <div>
         <span class="lbl">Kunstner</span>
@@ -523,8 +324,20 @@ var SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6I
 var CODE='SoliBrugFredrikstad';
 var sb=null,editId=null,mode='nytt',alleSalg=[],aktivFilter='alle';
 
+/* Sorteringsrekkefølge for ramme_info – UX alltid øverst */
 var RAMME_ORDEN=['UX','MR','UR','MAR','SP','AP','PP','EP','HC'];
-function rammeSort(info){var v=(info||'').toUpperCase().trim();var idx=RAMME_ORDEN.indexOf(v);return idx>-1?idx:RAMME_ORDEN.length+(v?v.charCodeAt(0):999);}
+function rammeSort(info){
+  var v=(info||'').toUpperCase().trim();
+  /* UX er alltid #1 uansett */
+  if(v==='UX') return 0;
+  var idx=RAMME_ORDEN.indexOf(v);
+  return idx>-1?idx:RAMME_ORDEN.length+(v?v.charCodeAt(0):999);
+}
+
+/* Normaliser tittel for gruppering: trim + lowercase + kollapser mellomrom */
+function normaliserTittel(t){
+  return(t||'').trim().toLowerCase().replace(/\s+/g,' ');
+}
 
 function loadSB(cb){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';s.onload=function(){sb=window.supabase.createClient(SURL,SKEY);cb();};document.head.appendChild(s);}
 
@@ -561,7 +374,7 @@ function sjekkUxAdvarsel(){
   var ri=document.getElementById('f-ramme-info').value.trim().toUpperCase();
   var advarsel=document.getElementById('f-ux-advarsel');
   if(ri==='UX'&&tittel){
-    var harUX=alleSalg.some(function(s){return(s.tittel||'').toLowerCase()===tittel.toLowerCase()&&(s.ramme_info||'').toUpperCase()==='UX';});
+    var harUX=alleSalg.some(function(s){return normaliserTittel(s.tittel)===normaliserTittel(tittel)&&(s.ramme_info||'').toUpperCase()==='UX';});
     advarsel.className='ux-advarsel'+(harUX?' synlig':'');
   } else {advarsel.className='ux-advarsel';}
 }
@@ -633,17 +446,41 @@ function renderSalg(){
   if(erAlle){
     data.forEach(function(s){list.appendChild(makeCard(s,false));});
   } else {
-    var grupper={},rekkefolge=[];
-    data.forEach(function(s){var t=s.tittel||'(uten tittel)';if(!grupper[t]){grupper[t]=[];rekkefolge.push(t);}grupper[t].push(s);});
+    /* ── Grupper etter normalisert tittel (caseinsensitiv, trimmet) ── */
+    var grupper={};        /* nøkkel: normalisert tittel */
+    var displayTittel={};  /* nøkkel → original tittel å vise */
+    var rekkefolge=[];
+
+    data.forEach(function(s){
+      var norm=normaliserTittel(s.tittel)||'(uten tittel)';
+      if(!grupper[norm]){
+        grupper[norm]=[];
+        rekkefolge.push(norm);
+        /* Bruk den første originalverdien som display-tittel */
+        displayTittel[norm]=s.tittel||'(uten tittel)';
+      }
+      grupper[norm].push(s);
+    });
+
+    /* Sorter tittelnøklene alfabetisk */
     rekkefolge.sort(function(a,b){return a.localeCompare(b,'nb');});
-    rekkefolge.forEach(function(tittel){
-      var salg=grupper[tittel];
+
+    rekkefolge.forEach(function(norm){
+      var salg=grupper[norm];
+
+      /* ── Sorter innad: UX alltid øverst, deretter RAMME_ORDEN ── */
       salg.sort(function(a,b){return rammeSort(a.ramme_info)-rammeSort(b.ramme_info);});
-      if(salg.length===1){list.appendChild(makeCard(salg[0],false));}
-      else{
+
+      if(salg.length===1){
+        list.appendChild(makeCard(salg[0],false));
+      } else {
         var gruppe=document.createElement('div');gruppe.className='verk-gruppe';
         var header=document.createElement('div');header.className='verk-gruppe-header';
-        header.innerHTML='<div class="verk-gruppe-linje"></div><div class="verk-gruppe-tittel">'+tittel+'</div><span class="verk-gruppe-antall">'+salg.length+'</span><div class="verk-gruppe-linje"></div>';
+        header.innerHTML=
+          '<div class="verk-gruppe-linje"></div>'+
+          '<div class="verk-gruppe-tittel">'+displayTittel[norm]+'</div>'+
+          '<span class="verk-gruppe-antall">'+salg.length+'</span>'+
+          '<div class="verk-gruppe-linje"></div>';
         gruppe.appendChild(header);
         var wrap=document.createElement('div');wrap.className='verk-gruppe-salg';
         salg.forEach(function(s){wrap.appendChild(makeCard(s,true));});
@@ -653,9 +490,12 @@ function renderSalg(){
   }
 
   var gt=data.reduce(function(a,s){return{pris:a.pris+(s.pris||0),bkh:a.bkh+(s.bkh||0),ramme:a.ramme+(s.ramme||0),frakt:a.frakt+(s.frakt||0),total:a.total+(s.total||0)};},{pris:0,bkh:0,ramme:0,frakt:0,total:0});
-  document.getElementById('gt-pris').textContent=kr(gt.pris);document.getElementById('gt-bkh').textContent=kr(gt.bkh);
-  document.getElementById('gt-ramme').textContent=kr(gt.ramme);document.getElementById('gt-frakt').textContent=kr(gt.frakt);
-  document.getElementById('gt-total').textContent=kr(gt.total);document.getElementById('grand-totals').style.display='block';
+  document.getElementById('gt-pris').textContent=kr(gt.pris);
+  document.getElementById('gt-bkh').textContent=kr(gt.bkh);
+  document.getElementById('gt-ramme').textContent=kr(gt.ramme);
+  document.getElementById('gt-frakt').textContent=kr(gt.frakt);
+  document.getElementById('gt-total').textContent=kr(gt.total);
+  document.getElementById('grand-totals').style.display='block';
 }
 
 function makeCard(s,erGruppert){
