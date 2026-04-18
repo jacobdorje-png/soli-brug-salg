@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#7a5c3a">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Soli Brug Fredrikstad</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -20,13 +19,7 @@ body{background:#f0ebe3;color:#111;font-family:'proxima-nova','Nunito',sans-seri
 .card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:1.75rem 1.5rem;width:100%;max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,.1);display:flex;flex-direction:column;gap:1.1rem}
 
 .lbl{font-size:.72rem;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:.3rem;display:block}
-
-input[type=text],input[type=email],input[type=tel],input[type=number],input[type=password],input[type=datetime-local]{
-  width:100%;min-height:var(--touch);padding:.75rem 1rem;
-  border:1.5px solid var(--border);border-radius:10px;
-  font-family:'proxima-nova','Nunito',sans-serif;font-size:16px;color:#111;font-weight:600;
-  background:#faf8f5;-webkit-appearance:none;box-sizing:border-box;
-}
+input[type=text],input[type=email],input[type=tel],input[type=number],input[type=password],input[type=datetime-local]{width:100%;min-height:var(--touch);padding:.75rem 1rem;border:1.5px solid var(--border);border-radius:10px;font-family:'proxima-nova','Nunito',sans-serif;font-size:16px;color:#111;font-weight:600;background:#faf8f5;-webkit-appearance:none;box-sizing:border-box}
 input:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(122,92,58,.12)}
 input[readonly]{background:#e8e2da;color:var(--muted)}
 .total-inp{background:var(--accent)!important;color:#fff!important;font-weight:700!important;border-color:var(--accent)!important;font-size:1.1rem!important}
@@ -40,7 +33,7 @@ input[readonly]{background:#e8e2da;color:var(--muted)}
 .ux-advarsel{display:none;background:#fff3e0;border:1.5px solid var(--orange);border-radius:8px;padding:.65rem .85rem;font-size:.85rem;font-weight:700;color:var(--orange);line-height:1.4}
 .ux-advarsel.synlig{display:flex;align-items:flex-start;gap:.4rem}
 
-.btn-primary{width:100%;min-height:var(--touch);padding:.9rem 1rem;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:'proxima-nova','Nunito',sans-serif;font-size:1.05rem;font-weight:700;cursor:pointer;letter-spacing:.02em;-webkit-appearance:none}
+.btn-primary{width:100%;min-height:var(--touch);padding:.9rem 1rem;background:var(--accent);color:#fff;border:none;border-radius:10px;font-family:'proxima-nova','Nunito',sans-serif;font-size:1.05rem;font-weight:700;cursor:pointer;-webkit-appearance:none}
 .btn-primary:active{opacity:.85}
 .btn-primary:disabled{background:var(--muted);cursor:not-allowed}
 
@@ -48,7 +41,7 @@ input[readonly]{background:#e8e2da;color:var(--muted)}
 header{background:var(--accent);color:#fff;padding:.9rem 1.1rem;position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;gap:.5rem;box-shadow:0 2px 12px rgba(0,0,0,.18)}
 header .hname{font-size:1.05rem;font-weight:700;line-height:1.2}
 header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
-#logout-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;padding:.5rem .85rem;border-radius:8px;font-size:.82rem;font-family:'proxima-nova','Nunito',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap;min-height:var(--touch);display:flex;align-items:center}
+#logout-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;padding:.5rem .85rem;border-radius:8px;font-size:.82rem;font-family:'proxima-nova','Nunito',sans-serif;font-weight:700;cursor:pointer;min-height:var(--touch);display:flex;align-items:center}
 
 .section{background:var(--white);border:1px solid var(--border);border-radius:var(--r);margin:.85rem;padding:1.1rem;box-shadow:0 2px 12px rgba(0,0,0,.07)}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding-bottom:.6rem;border-bottom:1px solid var(--border)}
@@ -64,11 +57,9 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 .fgrid{display:flex;flex-direction:column;gap:.75rem}
 .frow{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}
 .fdiv{border:none;border-top:1px dashed var(--border);margin:.1rem 0}
-
 .checkbox-row{display:flex;align-items:center;gap:.75rem;min-height:var(--touch);padding:.25rem 0}
 .checkbox-row input[type=checkbox]{width:24px;height:24px;flex-shrink:0;accent-color:var(--accent);cursor:pointer}
 .checkbox-row label{font-size:1rem;cursor:pointer;font-weight:600;color:#111}
-
 #form-msg{text-align:center;font-size:.9rem;margin-top:.5rem;min-height:1.3em;font-weight:600}
 
 .filter-wrap{margin:.2rem .85rem .5rem;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}
@@ -112,7 +103,7 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 .status-btn.ok-green{background:#d4edda;border-color:var(--green);color:var(--green)}
 .status-btn.ok-blue{background:#d0e4f7;border-color:var(--blue);color:var(--blue)}
 .status-btn:active{opacity:.8}
-@media(min-width:600px){.sc-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.4rem}.status-btn{min-height:32px;padding:.2rem .7rem;border-radius:20px;font-size:.75rem;border-width:1.5px;gap:.3rem}}
+@media(min-width:600px){.sc-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.4rem}.status-btn{min-height:32px;padding:.2rem .7rem;border-radius:20px;font-size:.75rem;border-width:1.5px}}
 
 .sc-customer{border-top:1px dashed var(--border);padding-top:.5rem;margin-top:.1rem;margin-bottom:.6rem}
 .sc-customer-name{font-size:.88rem;font-weight:700;color:#333;margin-bottom:.2rem}
@@ -324,22 +315,38 @@ var SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6I
 var CODE='SoliBrugFredrikstad';
 var sb=null,editId=null,mode='nytt',alleSalg=[],aktivFilter='alle';
 
-/* Sorteringsrekkefølge for ramme_info – UX alltid øverst */
-var RAMME_ORDEN=['UX','MR','UR','MAR','SP','AP','PP','EP','HC'];
-function rammeSort(info){
-  var v=(info||'').toUpperCase().trim();
-  /* UX er alltid #1 uansett */
-  if(v==='UX') return 0;
-  var idx=RAMME_ORDEN.indexOf(v);
-  return idx>-1?idx:RAMME_ORDEN.length+(v?v.charCodeAt(0):999);
+/* Sjekk om ramme_info er UX (caseinsensitiv) */
+function erUX(info){
+  return (info||'').toUpperCase().trim()==='UX';
 }
 
-/* Normaliser tittel for gruppering: trim + lowercase + kollapser mellomrom */
-function normaliserTittel(t){
-  return(t||'').trim().toLowerCase().replace(/\s+/g,' ');
+/* Normaliser tittel for gruppering */
+function normTittel(t){
+  return (t||'').trim().toLowerCase().replace(/\s+/g,' ');
 }
 
-function loadSB(cb){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';s.onload=function(){sb=window.supabase.createClient(SURL,SKEY);cb();};document.head.appendChild(s);}
+/*
+ * SORTERING INNE PÅ KUNSTNER:
+ * – UX alltid øverst
+ * – resten i solgt rekkefølge (ordrenummer DESC = nyeste sist registrert øverst)
+ */
+function sorterGruppe(salg){
+  return salg.slice().sort(function(a,b){
+    var aUX=erUX(a.ramme_info);
+    var bUX=erUX(b.ramme_info);
+    if(aUX && !bUX) return -1;   /* a er UX → øverst */
+    if(!aUX && bUX) return  1;   /* b er UX → øverst */
+    /* begge UX eller ingen UX → behold solgt rekkefølge (høyest ordrenr øverst) */
+    return (b.ordrenummer||0)-(a.ordrenummer||0);
+  });
+}
+
+function loadSB(cb){
+  var s=document.createElement('script');
+  s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+  s.onload=function(){sb=window.supabase.createClient(SURL,SKEY);cb();};
+  document.head.appendChild(s);
+}
 
 document.getElementById('login-btn').addEventListener('click',function(){
   var v=document.getElementById('code-input').value;
@@ -347,11 +354,19 @@ document.getElementById('login-btn').addEventListener('click',function(){
   document.getElementById('login-error').style.display='none';
   document.getElementById('login-status').textContent='Logger inn…';
   sessionStorage.setItem('sbauth','1');
-  loadSB(function(){document.getElementById('login-screen').style.display='none';document.getElementById('app').style.display='block';document.getElementById('login-status').textContent='';init();});
+  loadSB(function(){
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('login-status').textContent='';
+    init();
+  });
 });
 document.getElementById('code-input').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('login-btn').click();});
 document.getElementById('logout-btn').addEventListener('click',function(){sessionStorage.removeItem('sbauth');document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';});
-if(sessionStorage.getItem('sbauth')==='1'){document.getElementById('login-screen').style.display='none';loadSB(function(){document.getElementById('app').style.display='block';init();});}
+if(sessionStorage.getItem('sbauth')==='1'){
+  document.getElementById('login-screen').style.display='none';
+  loadSB(function(){document.getElementById('app').style.display='block';init();});
+}
 
 function n(id){return parseFloat(document.getElementById(id).value)||0;}
 function kr(v){return(v||0).toLocaleString('nb-NO')+' kr';}
@@ -371,10 +386,10 @@ function setMode(m){
 
 function sjekkUxAdvarsel(){
   var tittel=document.getElementById('f-tittel').value.trim();
-  var ri=document.getElementById('f-ramme-info').value.trim().toUpperCase();
+  var ri=document.getElementById('f-ramme-info').value.trim();
   var advarsel=document.getElementById('f-ux-advarsel');
-  if(ri==='UX'&&tittel){
-    var harUX=alleSalg.some(function(s){return normaliserTittel(s.tittel)===normaliserTittel(tittel)&&(s.ramme_info||'').toUpperCase()==='UX';});
+  if(erUX(ri)&&tittel){
+    var harUX=alleSalg.some(function(s){return normTittel(s.tittel)===normTittel(tittel)&&erUX(s.ramme_info);});
     advarsel.className='ux-advarsel'+(harUX?' synlig':'');
   } else {advarsel.className='ux-advarsel';}
 }
@@ -444,43 +459,28 @@ function renderSalg(){
   document.getElementById('empty').style.display='none';
 
   if(erAlle){
+    /* Alle salg: ingen gruppering, bare ordrenummer DESC */
     data.forEach(function(s){list.appendChild(makeCard(s,false));});
   } else {
-    /* ── Grupper etter normalisert tittel (caseinsensitiv, trimmet) ── */
-    var grupper={};        /* nøkkel: normalisert tittel */
-    var displayTittel={};  /* nøkkel → original tittel å vise */
+    /* Kunstner-visning: grupper etter normalisert tittel */
+    var grupper={};
+    var displayTittel={};
     var rekkefolge=[];
-
     data.forEach(function(s){
-      var norm=normaliserTittel(s.tittel)||'(uten tittel)';
-      if(!grupper[norm]){
-        grupper[norm]=[];
-        rekkefolge.push(norm);
-        /* Bruk den første originalverdien som display-tittel */
-        displayTittel[norm]=s.tittel||'(uten tittel)';
-      }
+      var norm=normTittel(s.tittel)||'(uten tittel)';
+      if(!grupper[norm]){grupper[norm]=[];rekkefolge.push(norm);displayTittel[norm]=s.tittel||'(uten tittel)';}
       grupper[norm].push(s);
     });
-
-    /* Sorter tittelnøklene alfabetisk */
     rekkefolge.sort(function(a,b){return a.localeCompare(b,'nb');});
 
     rekkefolge.forEach(function(norm){
-      var salg=grupper[norm];
-
-      /* ── Sorter innad: UX alltid øverst, deretter RAMME_ORDEN ── */
-      salg.sort(function(a,b){return rammeSort(a.ramme_info)-rammeSort(b.ramme_info);});
-
+      var salg=sorterGruppe(grupper[norm]);
       if(salg.length===1){
         list.appendChild(makeCard(salg[0],false));
       } else {
         var gruppe=document.createElement('div');gruppe.className='verk-gruppe';
         var header=document.createElement('div');header.className='verk-gruppe-header';
-        header.innerHTML=
-          '<div class="verk-gruppe-linje"></div>'+
-          '<div class="verk-gruppe-tittel">'+displayTittel[norm]+'</div>'+
-          '<span class="verk-gruppe-antall">'+salg.length+'</span>'+
-          '<div class="verk-gruppe-linje"></div>';
+        header.innerHTML='<div class="verk-gruppe-linje"></div><div class="verk-gruppe-tittel">'+displayTittel[norm]+'</div><span class="verk-gruppe-antall">'+salg.length+'</span><div class="verk-gruppe-linje"></div>';
         gruppe.appendChild(header);
         var wrap=document.createElement('div');wrap.className='verk-gruppe-salg';
         salg.forEach(function(s){wrap.appendChild(makeCard(s,true));});
