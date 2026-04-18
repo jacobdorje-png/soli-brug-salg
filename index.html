@@ -10,7 +10,6 @@
 body{background:#f0ebe3;color:#111;font-family:'proxima-nova','Nunito',sans-serif;font-size:15px;min-height:100dvh;padding-bottom:4rem;-webkit-font-smoothing:antialiased}
 :root{--bg:#f0ebe3;--white:#fff;--border:#d5c8b8;--accent:#7a5c3a;--muted:#555;--danger:#c0392b;--green:#1e8a3e;--blue:#1a5fa8;--r:10px}
 
-/* ── LOGIN ── */
 #login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:2rem;gap:1.5rem}
 .logo{font-size:2rem;font-weight:700;text-align:center;color:var(--accent);line-height:1.2}
 .sub{color:var(--muted);font-size:.9rem;font-weight:500}
@@ -30,38 +29,12 @@ input[readonly]{background:#e8e2da;color:var(--muted)}
 .btn-primary{width:100%;padding:.85rem;background:var(--accent);color:#fff;border:none;border-radius:8px;font-family:'proxima-nova','Nunito',sans-serif;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:.02em}
 .btn-primary:disabled{background:var(--muted);cursor:not-allowed}
 
-/* ── HEADER ── */
 #app{display:none}
-header{background:var(--accent);color:#fff;padding:.85rem 1.2rem;position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
-.header-left{flex:1;min-width:0}
-.header-left .hname{font-size:1rem;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.header-left .hsub{font-size:.68rem;opacity:.75;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.header-right{display:flex;gap:.4rem;flex-shrink:0}
-.hbtn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:#fff;padding:.35rem .65rem;border-radius:6px;font-size:.75rem;font-family:'proxima-nova','Nunito',sans-serif;font-weight:700;cursor:pointer;white-space:nowrap}
+header{background:var(--accent);color:#fff;padding:1rem 1.2rem;position:sticky;top:0;z-index:200;display:flex;align-items:center;justify-content:space-between}
+header .hname{font-size:1.1rem;font-weight:700}
+header .hsub{font-size:.7rem;opacity:.7;font-weight:400}
+#logout-btn{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);color:#fff;padding:.35rem .75rem;border-radius:6px;font-size:.75rem;font-family:'proxima-nova','Nunito',sans-serif;font-weight:700;cursor:pointer}
 
-/* ── SIDE DRAWER ── */
-#drawer-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:400}
-#drawer-overlay.open{display:block}
-#drawer{position:fixed;top:0;right:-320px;width:300px;max-width:90vw;height:100dvh;background:var(--white);z-index:401;transition:right .25s;overflow-y:auto;display:flex;flex-direction:column}
-#drawer.open{right:0}
-.drawer-head{background:var(--accent);color:#fff;padding:1.1rem 1.2rem;display:flex;align-items:center;justify-content:space-between}
-.drawer-head h2{font-size:1rem;font-weight:700}
-#drawer-close{background:none;border:none;color:#fff;font-size:1.4rem;cursor:pointer;line-height:1;padding:.2rem .4rem}
-.drawer-section{padding:.8rem 1rem;border-bottom:1px solid var(--border)}
-.drawer-section h3{font-size:.72rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.6rem}
-.ust-item{display:flex;align-items:center;justify-content:space-between;padding:.55rem .7rem;border-radius:8px;margin-bottom:.3rem;cursor:pointer;border:1.5px solid transparent;transition:all .15s}
-.ust-item:hover{background:#f5f0ea}
-.ust-item.active-ust{background:#f0e8dd;border-color:var(--accent)}
-.ust-item .un{font-size:.9rem;font-weight:700;color:#111}
-.ust-item .ud{font-size:.7rem;color:var(--muted);font-weight:500}
-.ust-badge{font-size:.65rem;padding:.15rem .4rem;border-radius:20px;font-weight:700;background:#d4edda;color:var(--green)}
-.ust-badge.avsl{background:#e8e2da;color:var(--muted)}
-.drawer-btn{width:100%;padding:.7rem;border:1.5px solid var(--border);border-radius:8px;background:transparent;font-family:'proxima-nova','Nunito',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;color:var(--accent);margin-bottom:.4rem;text-align:left;display:flex;align-items:center;gap:.5rem}
-.drawer-btn:hover{background:#f5f0ea}
-.drawer-btn.danger{color:var(--danger);border-color:#f0c0bb}
-.drawer-btn.danger:hover{background:#fff0ee}
-
-/* ── SECTIONS ── */
 .section{background:var(--white);border:1px solid var(--border);border-radius:var(--r);margin:1rem;padding:1.2rem;box-shadow:0 2px 10px rgba(0,0,0,.07)}
 .section-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
 .stitle{font-size:1rem;font-weight:700;color:var(--accent);letter-spacing:.02em}
@@ -81,10 +54,18 @@ header{background:var(--accent);color:#fff;padding:.85rem 1.2rem;position:sticky
 .checkbox-row label{font-size:.9rem;cursor:pointer;font-weight:600;color:#111}
 #form-msg{text-align:center;font-size:.85rem;margin-top:.5rem;min-height:1.2em;font-weight:600}
 
-/* ── EMPTY STATE ── */
-#no-utstilling{text-align:center;padding:2rem 1rem;color:var(--muted)}
-#no-utstilling h3{font-size:1.1rem;font-weight:700;color:var(--accent);margin-bottom:.5rem}
-#no-utstilling p{font-size:.88rem;margin-bottom:1rem}
+/* ── FILTER TABS ── */
+.filter-wrap{margin:0 1rem .5rem;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.filter-tabs{display:flex;gap:.4rem;padding:.2rem 0}
+.ftab{padding:.35rem .8rem;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-family:'proxima-nova','Nunito',sans-serif;font-size:.78rem;font-weight:700;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s}
+.ftab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.ftab:hover:not(.active){background:#f0ebe3}
+
+/* ── SALES HEADER ── */
+.sales-top{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.6rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
+.sales-top .stitle{margin:0;padding:0;border:none}
+.excel-btn{display:inline-flex;align-items:center;gap:.35rem;background:none;border:1.5px solid var(--green);color:var(--green);padding:.3rem .65rem;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif}
+.excel-btn:hover{background:#e8f5e9}
 
 /* ── SALE CARDS ── */
 .sale-card{background:#faf8f5;border:1px solid var(--border);border-radius:8px;padding:.9rem;margin-bottom:.7rem}
@@ -109,7 +90,7 @@ header{background:var(--accent);color:#fff;padding:.85rem 1.2rem;position:sticky
 .sc-customer{border-top:1px dashed var(--border);padding-top:.45rem;margin-top:.1rem;margin-bottom:.5rem}
 .sc-customer-name{font-size:.8rem;font-weight:700;color:#333;margin-bottom:.15rem}
 .sc-customer-detail{font-size:.72rem;color:var(--muted);font-weight:500;line-height:1.8}
-.contact-link{display:inline-flex;align-items:center;gap:.25rem;color:var(--accent);font-weight:700;text-decoration:none;cursor:pointer;background:none;border:none;font-family:'proxima-nova','Nunito',sans-serif;font-size:.72rem;padding:0}
+.contact-link{display:inline-flex;align-items:center;gap:.25rem;color:var(--accent);font-weight:700;cursor:pointer;background:none;border:none;font-family:'proxima-nova','Nunito',sans-serif;font-size:.72rem;padding:0;text-decoration:none}
 .contact-link:hover{text-decoration:underline}
 .sc-bottom-row{display:flex;align-items:center;justify-content:space-between;gap:.5rem}
 .sc-copy-btn{display:flex;align-items:center;gap:.3rem;background:none;border:1.5px solid var(--border);border-radius:6px;padding:.3rem .7rem;font-size:.75rem;font-weight:700;color:var(--muted);cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif;transition:all .15s}
@@ -148,38 +129,18 @@ header{background:var(--accent);color:#fff;padding:.85rem 1.2rem;position:sticky
 .btn-cancel{flex:1;padding:.8rem;background:transparent;color:var(--muted);border:1.5px solid var(--border);border-radius:8px;font-family:'proxima-nova','Nunito',sans-serif;font-size:.95rem;font-weight:600;cursor:pointer}
 #modal-msg{text-align:center;font-size:.83rem;margin-top:.5rem;min-height:1.1em;font-weight:600}
 
-/* ── NY UTSTILLING MODAL ── */
-#ust-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:600;overflow-y:auto;padding:1rem}
-#ust-modal-overlay.open{display:flex;align-items:center;justify-content:center}
-#ust-modal{background:var(--white);border-radius:var(--r);width:100%;max-width:380px;padding:1.4rem;box-shadow:0 8px 40px rgba(0,0,0,.25);display:flex;flex-direction:column;gap:1rem}
-#ust-modal h2{font-size:1rem;font-weight:700;color:var(--accent)}
-#ust-modal input{width:100%;padding:.75rem 1rem;border:1.5px solid var(--border);border-radius:8px;font-family:'proxima-nova','Nunito',sans-serif;font-size:1rem;color:#111;font-weight:600;background:#faf8f5;box-sizing:border-box}
-#ust-modal input:focus{outline:none;border-color:var(--accent)}
-.ust-modal-actions{display:flex;gap:.6rem}
-
 #loading{text-align:center;color:var(--muted);padding:1.5rem;font-size:.9rem;font-weight:600}
 #empty{text-align:center;color:var(--muted);padding:1.5rem;font-size:.9rem;display:none;font-weight:600}
 @media(max-width:360px){.sc-amounts,.gt-row{grid-template-columns:repeat(2,1fr)}}
-
-/* Excel-knapp */
-.excel-btn{display:inline-flex;align-items:center;gap:.4rem;background:none;border:1.5px solid #1e8a3e;color:#1e8a3e;padding:.3rem .7rem;border-radius:6px;font-size:.75rem;font-weight:700;cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif}
-.excel-btn:hover{background:#e8f5e9}
-
-/* Arkiv-banner */
-.arkiv-banner{background:#e8e2da;border:1px solid var(--border);border-radius:8px;padding:.6rem 1rem;margin:0 1rem .5rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem}
-.arkiv-banner span{font-size:.82rem;font-weight:700;color:var(--muted)}
-.arkiv-back{background:none;border:none;color:var(--accent);font-size:.82rem;font-weight:700;cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif;text-decoration:underline}
 </style>
 </head>
 <body>
 
-<!-- CONTACT POPUP -->
 <div id="contact-popup">
-  <div class="popup-title" id="popup-title">Velg handling</div>
+  <div class="popup-title" id="popup-title"></div>
   <div id="popup-items"></div>
 </div>
 
-<!-- LOGIN -->
 <div id="login-screen">
   <div class="logo">Soli Brug<br>Fredrikstad</div>
   <p class="sub">Salgsregistrering</p>
@@ -194,27 +155,17 @@ header{background:var(--accent);color:#fff;padding:.85rem 1.2rem;position:sticky
   </div>
 </div>
 
-<!-- APP -->
 <div id="app">
   <header>
-    <div class="header-left">
-      <div class="hname" id="header-ust-navn">Soli Brug Fredrikstad</div>
-      <div class="hsub" id="header-ust-sub">Ingen aktiv utstilling</div>
+    <div>
+      <div class="hname">Soli Brug Fredrikstad</div>
+      <div class="hsub">Salgsregistrering</div>
     </div>
-    <div class="header-right">
-      <button class="hbtn" id="menu-btn">☰ Utstillinger</button>
-      <button class="hbtn" id="logout-btn">Logg ut</button>
-    </div>
+    <button id="logout-btn">Logg ut</button>
   </header>
 
-  <!-- ARKIV BANNER (vises kun ved arkivvisning) -->
-  <div class="arkiv-banner" id="arkiv-banner" style="display:none">
-    <span id="arkiv-banner-navn">Arkiv</span>
-    <button class="arkiv-back" id="arkiv-back-btn">← Tilbake til pågående</button>
-  </div>
-
-  <!-- FORM (skjules ved arkivvisning) -->
-  <div class="section" id="form-section">
+  <!-- NYTT SALG -->
+  <div class="section">
     <div class="section-head">
       <div class="stitle">Nytt salg</div>
       <div class="mode-toggle">
@@ -226,50 +177,48 @@ header{background:var(--accent);color:#fff;padding:.85rem 1.2rem;position:sticky
       <span class="lbl">Tidspunkt for salget</span>
       <input type="datetime-local" id="f-dato">
     </div>
-    <div id="no-utstilling" style="display:none">
-      <h3>Ingen aktiv utstilling</h3>
-      <p>Opprett eller aktiver en utstilling i menyen for å registrere salg.</p>
-      <button class="btn-primary" style="max-width:220px;margin:0 auto" onclick="openDrawer()">Åpne utstillingsmeny</button>
-    </div>
-    <div id="form-fields">
-      <div class="fgrid">
-        <div class="fcol2"><span class="lbl">Navn</span><input type="text" id="f-navn" placeholder="Fullt navn" autocomplete="off"></div>
-        <div><span class="lbl">Telefon</span><input type="tel" id="f-telefon" placeholder="Telefonnummer"></div>
-        <div><span class="lbl">E-post</span><input type="email" id="f-epost" placeholder="epost@epost.no"></div>
-        <div class="fcol2"><span class="lbl">Adresse</span><input type="text" id="f-adresse" placeholder="Gateadresse, postnummer sted"></div>
-        <div class="fcol2"><div class="checkbox-row"><input type="checkbox" id="f-levering"><label for="f-levering">🚚 Levering til adresse</label></div></div>
-        <hr class="fdiv">
-        <div class="fcol2">
-          <span class="lbl">Kunstner</span>
-          <input type="text" id="f-kunstner" placeholder="Kunstnerens navn" list="kunstner-list" autocomplete="off">
-          <datalist id="kunstner-list"></datalist>
-        </div>
-        <div class="fcol2"><span class="lbl">Tittel</span><input type="text" id="f-tittel" placeholder="Verkets tittel"></div>
-        <hr class="fdiv">
-        <div><span class="lbl">Pris (kr)</span><input type="number" id="f-pris" placeholder="0" min="0" inputmode="numeric"></div>
-        <div><span class="lbl">5% BKH (kr)</span><input type="number" id="f-bkh" placeholder="0" min="0" inputmode="numeric"></div>
-        <div>
-          <span class="lbl">Ramme (kr)</span>
-          <div class="ramme-row">
-            <div class="ramme-pris"><input type="number" id="f-ramme" placeholder="0" min="0" inputmode="numeric"></div>
-            <input class="ramme-info-inp" type="text" id="f-ramme-info" placeholder="typ" maxlength="4">
-          </div>
-        </div>
-        <div><span class="lbl">Frakt (kr)</span><input type="number" id="f-frakt" placeholder="0" min="0" inputmode="numeric"></div>
-        <div class="fcol2"><span class="lbl">Total pris (kr)</span><input type="number" id="f-total" placeholder="0" readonly class="total-inp"></div>
+    <div class="fgrid">
+      <div class="fcol2"><span class="lbl">Navn</span><input type="text" id="f-navn" placeholder="Fullt navn" autocomplete="off"></div>
+      <div><span class="lbl">Telefon</span><input type="tel" id="f-telefon" placeholder="Telefonnummer"></div>
+      <div><span class="lbl">E-post</span><input type="email" id="f-epost" placeholder="epost@epost.no"></div>
+      <div class="fcol2"><span class="lbl">Adresse</span><input type="text" id="f-adresse" placeholder="Gateadresse, postnummer sted"></div>
+      <div class="fcol2"><div class="checkbox-row"><input type="checkbox" id="f-levering"><label for="f-levering">🚚 Levering til adresse</label></div></div>
+      <hr class="fdiv">
+      <div class="fcol2">
+        <span class="lbl">Kunstner</span>
+        <input type="text" id="f-kunstner" placeholder="Søk eller skriv navn…" list="kunstner-list" autocomplete="off">
+        <datalist id="kunstner-list"></datalist>
       </div>
-      <button class="btn-primary" id="submit-btn" style="margin-top:.75rem">Registrer salg</button>
-      <div id="form-msg"></div>
+      <div class="fcol2"><span class="lbl">Tittel</span><input type="text" id="f-tittel" placeholder="Verkets tittel"></div>
+      <hr class="fdiv">
+      <div><span class="lbl">Pris (kr)</span><input type="number" id="f-pris" placeholder="0" min="0" inputmode="numeric"></div>
+      <div><span class="lbl">5% BKH (kr)</span><input type="number" id="f-bkh" placeholder="0" min="0" inputmode="numeric"></div>
+      <div>
+        <span class="lbl">Ramme (kr)</span>
+        <div class="ramme-row">
+          <div class="ramme-pris"><input type="number" id="f-ramme" placeholder="0" min="0" inputmode="numeric"></div>
+          <input class="ramme-info-inp" type="text" id="f-ramme-info" placeholder="typ" maxlength="4">
+        </div>
+      </div>
+      <div><span class="lbl">Frakt (kr)</span><input type="number" id="f-frakt" placeholder="0" min="0" inputmode="numeric"></div>
+      <div class="fcol2"><span class="lbl">Total pris (kr)</span><input type="number" id="f-total" placeholder="0" readonly class="total-inp"></div>
     </div>
+    <button class="btn-primary" id="submit-btn" style="margin-top:.75rem">Registrer salg</button>
+    <div id="form-msg"></div>
   </div>
 
-  <!-- SALES LIST -->
-  <div class="section" id="sales-section">
-    <div class="section-head" style="margin-bottom:.5rem">
+  <!-- FILTER TABS -->
+  <div class="filter-wrap">
+    <div class="filter-tabs" id="filter-tabs"></div>
+  </div>
+
+  <!-- SALGSLISTE -->
+  <div class="section">
+    <div class="sales-top">
       <div class="stitle" id="sales-title">Alle salg</div>
       <button class="excel-btn" id="excel-btn" style="display:none" onclick="exportExcel()">📊 Excel</button>
     </div>
-    <div id="loading">Laster inn…</div>
+    <div id="loading">Laster inn salg…</div>
     <div id="empty">Ingen salg registrert ennå.</div>
     <div id="sales-list"></div>
     <div id="grand-totals">
@@ -282,47 +231,6 @@ header{background:var(--accent);color:#fff;padding:.85rem 1.2rem;position:sticky
       </div>
       <div class="gt-foot"><span>Totalomsetning</span><strong id="gt-total"></strong></div>
     </div>
-  </div>
-</div>
-
-<!-- DRAWER -->
-<div id="drawer-overlay"></div>
-<div id="drawer">
-  <div class="drawer-head">
-    <h2>Utstillinger</h2>
-    <button id="drawer-close">×</button>
-  </div>
-
-  <div class="drawer-section">
-    <h3>Pågående</h3>
-    <div id="drawer-active"></div>
-    <button class="drawer-btn" onclick="openUstModal()">＋ Ny utstilling</button>
-  </div>
-
-  <div class="drawer-section">
-    <h3>Arkiverte</h3>
-    <div id="drawer-arkiv"></div>
-  </div>
-
-  <div class="drawer-section" id="drawer-actions" style="display:none">
-    <h3>Handlinger for valgt</h3>
-    <button class="drawer-btn danger" id="btn-avslutt">🗄 Avslutt og arkiver utstilling</button>
-  </div>
-</div>
-
-<!-- NY UTSTILLING MODAL -->
-<div id="ust-modal-overlay">
-  <div id="ust-modal">
-    <h2>Ny utstilling</h2>
-    <div>
-      <span class="lbl">Navn på utstilling</span>
-      <input type="text" id="ust-navn-input" placeholder="f.eks. Pushwagner 2026">
-    </div>
-    <div class="ust-modal-actions">
-      <button class="btn-cancel" onclick="closeUstModal()">Avbryt</button>
-      <button class="btn-save" onclick="opprettUstilling()">Opprett</button>
-    </div>
-    <div id="ust-msg" style="font-size:.83rem;text-align:center;font-weight:600;min-height:1em"></div>
   </div>
 </div>
 
@@ -376,13 +284,11 @@ var CODE='SoliBrugFredrikstad';
 var sb=null;
 var editId=null;
 var mode='nytt';
-var alleUstillinger=[];
-var aktivUstilling=null;   // pågående
-var visUstilling=null;     // det vi viser (kan være arkivert)
-var alleKunstnere=[];
-var currentSalesData=[];
+var alleSalg=[];        // alle salg fra DB
+var aktivFilter='alle'; // 'alle' eller kunstnernavn
+var alleKunstnere=[];   // unike kunstnere fra salg
 
-/* ─── SUPABASE ─── */
+/* ── SUPABASE ── */
 function loadSB(cb){
   var s=document.createElement('script');
   s.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
@@ -390,7 +296,7 @@ function loadSB(cb){
   document.head.appendChild(s);
 }
 
-/* ─── LOGIN ─── */
+/* ── LOGIN ── */
 document.getElementById('login-btn').addEventListener('click',function(){
   var v=document.getElementById('code-input').value;
   if(v!==CODE){document.getElementById('login-error').style.display='block';document.getElementById('code-input').value='';return;}
@@ -411,209 +317,15 @@ if(sessionStorage.getItem('sbauth')==='1'){
   loadSB(function(){document.getElementById('app').style.display='block';init();});
 }
 
-/* ─── DRAWER ─── */
-document.getElementById('menu-btn').addEventListener('click',openDrawer);
-document.getElementById('drawer-close').addEventListener('click',closeDrawer);
-document.getElementById('drawer-overlay').addEventListener('click',closeDrawer);
-document.getElementById('arkiv-back-btn').addEventListener('click',function(){
-  visUstilling=aktivUstilling;
-  document.getElementById('arkiv-banner').style.display='none';
-  document.getElementById('form-section').style.display='block';
-  oppdaterHeader();
-  loadSales();
-});
-
-function openDrawer(){closePopup();document.getElementById('drawer-overlay').classList.add('open');document.getElementById('drawer').classList.add('open');}
-function closeDrawer(){document.getElementById('drawer-overlay').classList.remove('open');document.getElementById('drawer').classList.remove('open');}
-
-/* ─── NY UTSTILLING MODAL ─── */
-function openUstModal(){closeDrawer();document.getElementById('ust-modal-overlay').classList.add('open');setTimeout(function(){document.getElementById('ust-navn-input').focus();},100);}
-function closeUstModal(){document.getElementById('ust-modal-overlay').classList.remove('open');document.getElementById('ust-navn-input').value='';document.getElementById('ust-msg').textContent='';}
-document.getElementById('ust-modal-overlay').addEventListener('click',function(e){if(e.target===this)closeUstModal();});
-
-async function opprettUstilling(){
-  var navn=document.getElementById('ust-navn-input').value.trim();
-  var msg=document.getElementById('ust-msg');
-  if(!navn){msg.style.color='var(--danger)';msg.textContent='Skriv inn navn.';return;}
-  var r=await sb.from('utstillinger').insert([{navn:navn,aktiv:true,avsluttet:false}]).select();
-  if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
-  // Deaktiver andre aktive
-  await sb.from('utstillinger').update({aktiv:false}).neq('id',r.data[0].id).eq('aktiv',true);
-  closeUstModal();
-  await lastUstillinger();
-  visUstilling=aktivUstilling;
-  oppdaterHeader();
-  oppdaterFormVisning();
-  loadSales();
-}
-
-async function avsluttUstilling(){
-  if(!aktivUstilling)return;
-  if(!confirm('Avslutt og arkiver "'+aktivUstilling.navn+'"?'))return;
-  await sb.from('utstillinger').update({aktiv:false,avsluttet:true}).eq('id',aktivUstilling.id);
-  closeDrawer();
-  await lastUstillinger();
-  visUstilling=aktivUstilling;
-  oppdaterHeader();
-  oppdaterFormVisning();
-  loadSales();
-}
-document.getElementById('btn-avslutt').addEventListener('click',avsluttUstilling);
-
-/* ─── UTSTILLINGER ─── */
-async function lastUstillinger(){
-  var r=await sb.from('utstillinger').select('*').order('created_at',{ascending:false});
-  if(r.error)return;
-  alleUstillinger=r.data||[];
-  aktivUstilling=alleUstillinger.find(function(u){return u.aktiv&&!u.avsluttet;})||null;
-  if(!visUstilling)visUstilling=aktivUstilling;
-  renderDrawer();
-}
-
-function renderDrawer(){
-  var aktiveDiv=document.getElementById('drawer-active');
-  var arkivDiv=document.getElementById('drawer-arkiv');
-  var actDiv=document.getElementById('drawer-actions');
-  aktiveDiv.innerHTML='';arkivDiv.innerHTML='';
-
-  var pågående=alleUstillinger.filter(function(u){return !u.avsluttet;});
-  var arkiverte=alleUstillinger.filter(function(u){return u.avsluttet;});
-
-  if(pågående.length===0){aktiveDiv.innerHTML='<p style="font-size:.82rem;color:var(--muted);padding:.3rem 0">Ingen pågående utstilling</p>';}
-  pågående.forEach(function(u){
-    var el=document.createElement('div');
-    el.className='ust-item'+(u.aktiv?' active-ust':'');
-    el.innerHTML='<div><div class="un">'+u.navn+'</div><div class="ud">'+fmtDateShort(u.created_at)+'</div></div>'+
-      '<span class="ust-badge">'+(u.aktiv?'Aktiv':'Inaktiv')+'</span>';
-    el.addEventListener('click',function(){
-      velgUstilling(u);closeDrawer();
-    });
-    aktiveDiv.appendChild(el);
-  });
-
-  if(arkiverte.length===0){arkivDiv.innerHTML='<p style="font-size:.82rem;color:var(--muted);padding:.3rem 0">Ingen arkiverte utstillinger</p>';}
-  arkiverte.forEach(function(u){
-    var el=document.createElement('div');
-    el.className='ust-item';
-    el.innerHTML='<div><div class="un">'+u.navn+'</div><div class="ud">'+fmtDateShort(u.created_at)+'</div></div>'+
-      '<span class="ust-badge avsl">Arkivert</span>';
-    el.addEventListener('click',function(){visArkivert(u);closeDrawer();});
-    arkivDiv.appendChild(el);
-  });
-
-  actDiv.style.display=aktivUstilling?'block':'none';
-}
-
-function velgUstilling(u){
-  // Sett som aktiv
-  sb.from('utstillinger').update({aktiv:true}).eq('id',u.id);
-  if(aktivUstilling&&aktivUstilling.id!==u.id) sb.from('utstillinger').update({aktiv:false}).eq('id',aktivUstilling.id);
-  aktivUstilling=u;visUstilling=u;
-  document.getElementById('arkiv-banner').style.display='none';
-  document.getElementById('form-section').style.display='block';
-  oppdaterHeader();oppdaterFormVisning();loadSales();
-  lastUstillinger();
-}
-
-function visArkivert(u){
-  visUstilling=u;
-  document.getElementById('arkiv-banner-navn').textContent='Arkiv: '+u.navn;
-  document.getElementById('arkiv-banner').style.display='flex';
-  document.getElementById('form-section').style.display='none';
-  oppdaterHeader();loadSales();
-}
-
-function oppdaterHeader(){
-  var hn=document.getElementById('header-ust-navn');
-  var hs=document.getElementById('header-ust-sub');
-  if(visUstilling){
-    hn.textContent=visUstilling.navn;
-    hs.textContent=visUstilling.avsluttet?'Arkivert utstilling':'Pågående utstilling';
-  } else {
-    hn.textContent='Soli Brug Fredrikstad';
-    hs.textContent='Ingen aktiv utstilling';
-  }
-}
-
-function oppdaterFormVisning(){
-  var noUst=document.getElementById('no-utstilling');
-  var formFields=document.getElementById('form-fields');
-  if(!aktivUstilling){noUst.style.display='block';formFields.style.display='none';}
-  else{noUst.style.display='none';formFields.style.display='block';}
-}
-
-/* ─── KUNSTNER AUTOCOMPLETE ─── */
-async function lastKunstnere(){
-  var r=await sb.from('kunstnere').select('navn').order('navn');
-  if(r.error)return;
-  alleKunstnere=(r.data||[]).map(function(k){return k.navn;});
-  oppdaterKunstnerList();
-}
-
-function oppdaterKunstnerList(){
-  ['kunstner-list','kunstner-list-m'].forEach(function(id){
-    var dl=document.getElementById(id);
-    if(!dl)return;
-    dl.innerHTML='';
-    alleKunstnere.forEach(function(k){
-      var opt=document.createElement('option');opt.value=k;dl.appendChild(opt);
-    });
-  });
-}
-
-async function lagreKunstnerHvisNy(navn){
-  if(!navn||alleKunstnere.indexOf(navn)>-1)return;
-  await sb.from('kunstnere').upsert([{navn:navn}],{onConflict:'navn'});
-  alleKunstnere.push(navn);alleKunstnere.sort();
-  oppdaterKunstnerList();
-}
-
-/* ─── HELPERS ─── */
+/* ── HELPERS ── */
 function n(id){return parseFloat(document.getElementById(id).value)||0;}
 function kr(v){return(v||0).toLocaleString('nb-NO')+' kr';}
 function onr(num){return'2026-'+String(num).padStart(3,'0');}
 function fmt(iso){var d=new Date(iso);return d.toLocaleDateString('nb-NO',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('nb-NO',{hour:'2-digit',minute:'2-digit'});}
-function fmtDateShort(iso){return new Date(iso).toLocaleDateString('nb-NO',{day:'2-digit',month:'2-digit',year:'2-digit'});}
 function toLocalInput(iso){var d=new Date(iso);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16);}
 function calcT(p){var t=n(p+'pris')+n(p+'bkh')+n(p+'ramme')+n(p+'frakt');document.getElementById(p+'total').value=t>0?t:'';}
 
-/* ─── KVITTERING ─── */
-function lagKvittering(s){
-  return['Soli Brug Fredrikstad','Ordrenummer: '+onr(s.ordrenummer),'',
-    'Kunstner: '+(s.kunstner||'—'),'Kunstverk: '+(s.tittel||'—'),
-    'Pris: '+kr(s.pris),'5% BKH: '+kr(s.bkh),
-    (s.ramme?'Ramme: '+kr(s.ramme):null),'','Totalt: '+kr(s.total),'',
-    'Bildet kan hentes på Soli Brug Fredrikstad tidligst: ','',
-    'Tusen takk for handelen!','Mvh:','Soli Brug'
-  ].filter(function(l){return l!==null;}).join('\n');
-}
-
-/* ─── POPUP ─── */
-var popup=document.getElementById('contact-popup');
-function showPopup(e,items,title){
-  e.stopPropagation();
-  var container=document.getElementById('popup-items');
-  document.getElementById('popup-title').textContent=title||'';
-  container.innerHTML='';
-  items.forEach(function(item,i){
-    if(i>0){var hr=document.createElement('hr');hr.className='popup-divider';container.appendChild(hr);}
-    var el=document.createElement('a');el.className='popup-item';
-    el.innerHTML='<span class="pi-icon">'+item.icon+'</span>'+item.label;
-    el.href=item.href;container.appendChild(el);
-  });
-  popup.classList.add('open');
-  var rect=e.target.getBoundingClientRect();
-  var pw=220;var left=rect.left;
-  if(left+pw>window.innerWidth-10)left=window.innerWidth-pw-10;
-  var top=rect.bottom+6;
-  popup.style.left=left+'px';popup.style.top=top+'px';
-}
-function closePopup(){popup.classList.remove('open');}
-document.addEventListener('click',function(e){if(!popup.contains(e.target))closePopup();});
-function phonePopup(e,tlf){showPopup(e,[{icon:'📞',label:'Ring',href:'tel:'+tlf},{icon:'💬',label:'Send SMS',href:'sms:'+tlf}],tlf);}
-function emailPopup(e,epost){showPopup(e,[{icon:'✉️',label:'Apple Mail',href:'mailto:'+epost},{icon:'📧',label:'Gmail',href:'https://mail.google.com/mail/?view=cm&to='+encodeURIComponent(epost)}],epost);}
-
-/* ─── MODE TOGGLE ─── */
+/* ── MODE TOGGLE ── */
 function setMode(m){
   mode=m;
   document.getElementById('btn-nytt').className='mode-btn'+(m==='nytt'?' active':'');
@@ -623,25 +335,86 @@ function setMode(m){
   else{dr.classList.remove('visible');document.getElementById('f-dato').value='';}
 }
 
-/* ─── INIT ─── */
-async function init(){
-  document.getElementById('f-pris').addEventListener('input',function(){var p=n('f-pris');document.getElementById('f-bkh').value=p>0?Math.round(p*0.05):'';calcT('f-');});
-  ['f-bkh','f-ramme','f-frakt'].forEach(function(id){document.getElementById(id).addEventListener('input',function(){calcT('f-');});});
-  document.getElementById('submit-btn').addEventListener('click',submitSale);
-  document.getElementById('m-pris').addEventListener('input',function(){var p=n('m-pris');document.getElementById('m-bkh').value=p>0?Math.round(p*0.05):'';calcT('m-');});
-  ['m-bkh','m-ramme','m-frakt'].forEach(function(id){document.getElementById(id).addEventListener('input',function(){calcT('m-');});});
-  document.getElementById('btn-save').addEventListener('click',saveSale);
-  document.getElementById('btn-cancel').addEventListener('click',closeModal);
-  document.getElementById('modal-close').addEventListener('click',closeModal);
-  document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
-  await lastUstillinger();
-  await lastKunstnere();
-  oppdaterHeader();
-  oppdaterFormVisning();
-  loadSales();
+/* ── KUNSTNER AUTOCOMPLETE ── */
+function oppdaterKunstnerLister(){
+  ['kunstner-list','kunstner-list-m'].forEach(function(id){
+    var dl=document.getElementById(id);if(!dl)return;
+    dl.innerHTML='';
+    alleKunstnere.forEach(function(k){var opt=document.createElement('option');opt.value=k;dl.appendChild(opt);});
+  });
 }
 
-/* ─── RENDER CARD ─── */
+/* ── FILTER TABS ── */
+function byggFilterTabs(){
+  var wrap=document.getElementById('filter-tabs');wrap.innerHTML='';
+  // Hent unike kunstnere fra alleSalg
+  var kunstnere=[];
+  alleSalg.forEach(function(s){if(s.kunstner&&kunstnere.indexOf(s.kunstner)===-1)kunstnere.push(s.kunstner);});
+  kunstnere.sort();
+
+  // Oppdater autocomplete med disse kunstnerne
+  alleKunstnere=kunstnere;
+  oppdaterKunstnerLister();
+
+  if(kunstnere.length===0){wrap.style.display='none';return;}
+  wrap.style.display='flex';
+
+  // "Alle"-tab
+  var alle=document.createElement('button');
+  alle.className='ftab'+(aktivFilter==='alle'?' active':'');
+  alle.textContent='Alle ('+alleSalg.length+')';
+  alle.addEventListener('click',function(){aktivFilter='alle';renderSalg();byggFilterTabs();});
+  wrap.appendChild(alle);
+
+  // Én tab per kunstner
+  kunstnere.forEach(function(k){
+    var antall=alleSalg.filter(function(s){return s.kunstner===k;}).length;
+    var btn=document.createElement('button');
+    btn.className='ftab'+(aktivFilter===k?' active':'');
+    btn.textContent=k+' ('+antall+')';
+    btn.addEventListener('click',function(){aktivFilter=k;renderSalg();byggFilterTabs();});
+    wrap.appendChild(btn);
+  });
+}
+
+/* ── LOAD ALL SALES ── */
+async function loadSales(){
+  document.getElementById('loading').style.display='block';
+  document.getElementById('sales-list').innerHTML='';
+  document.getElementById('empty').style.display='none';
+  document.getElementById('grand-totals').style.display='none';
+  var r=await sb.from('salg').select('*').order('ordrenummer',{ascending:false});
+  document.getElementById('loading').style.display='none';
+  if(r.error){document.getElementById('sales-list').innerHTML='<p style="color:var(--danger);font-weight:700">Feil: '+r.error.message+'</p>';return;}
+  alleSalg=r.data||[];
+  byggFilterTabs();
+  renderSalg();
+}
+
+/* ── RENDER (filtrer og vis) ── */
+function renderSalg(){
+  var data=aktivFilter==='alle'?alleSalg:alleSalg.filter(function(s){return s.kunstner===aktivFilter;});
+  var list=document.getElementById('sales-list');
+  list.innerHTML='';
+
+  var tittel=aktivFilter==='alle'?'Alle salg':aktivFilter;
+  document.getElementById('sales-title').textContent=tittel;
+  document.getElementById('excel-btn').style.display=data.length?'inline-flex':'none';
+
+  if(!data.length){document.getElementById('empty').style.display='block';document.getElementById('grand-totals').style.display='none';return;}
+  document.getElementById('empty').style.display='none';
+  data.forEach(function(s){list.appendChild(makeCard(s));});
+
+  var gt=data.reduce(function(a,s){return{pris:a.pris+(s.pris||0),bkh:a.bkh+(s.bkh||0),ramme:a.ramme+(s.ramme||0),frakt:a.frakt+(s.frakt||0),total:a.total+(s.total||0)};},{pris:0,bkh:0,ramme:0,frakt:0,total:0});
+  document.getElementById('gt-pris').textContent=kr(gt.pris);
+  document.getElementById('gt-bkh').textContent=kr(gt.bkh);
+  document.getElementById('gt-ramme').textContent=kr(gt.ramme);
+  document.getElementById('gt-frakt').textContent=kr(gt.frakt);
+  document.getElementById('gt-total').textContent=kr(gt.total);
+  document.getElementById('grand-totals').style.display='block';
+}
+
+/* ── RENDER CARD ── */
 function makeCard(s){
   var d=document.createElement('div');d.className='sale-card';
   var kontaktHtml='';
@@ -675,75 +448,102 @@ function makeCard(s){
 
 function amt(l,v,info){return'<div class="sc-amt"><div class="al">'+l+'</div><div class="av">'+kr(v)+'</div>'+(info?'<div class="ai">'+info+'</div>':'')+'</div>';}
 
+/* ── TOGGLE ── */
 async function toggle(s,field,btn){
   var nv=!s[field];var up={};up[field]=nv;
   var r=await sb.from('salg').update(up).eq('id',s.id);
   if(!r.error){s[field]=nv;if(field==='hentet'){btn.className='status-btn'+(nv?' ok-green':'');btn.innerHTML=(nv?'✅':'☐')+' Hentet';}else{btn.className='status-btn'+(nv?' ok-blue':'');btn.innerHTML=(nv?'✅':'☐')+' Faktura sendt';}}
 }
 
-/* ─── LOAD SALES ─── */
-async function loadSales(){
-  document.getElementById('loading').style.display='block';
-  document.getElementById('sales-list').innerHTML='';
-  document.getElementById('empty').style.display='none';
-  document.getElementById('grand-totals').style.display='none';
+/* ── POPUP ── */
+var popup=document.getElementById('contact-popup');
+function showPopup(e,items,title){
+  e.stopPropagation();var container=document.getElementById('popup-items');
+  document.getElementById('popup-title').textContent=title||'';
+  container.innerHTML='';
+  items.forEach(function(item,i){
+    if(i>0){var hr=document.createElement('hr');hr.className='popup-divider';container.appendChild(hr);}
+    var el=document.createElement('a');el.className='popup-item';
+    el.innerHTML='<span class="pi-icon">'+item.icon+'</span>'+item.label;
+    el.href=item.href;container.appendChild(el);
+  });
+  popup.classList.add('open');
+  var rect=e.target.getBoundingClientRect();var pw=220;
+  var left=rect.left;if(left+pw>window.innerWidth-10)left=window.innerWidth-pw-10;
+  popup.style.left=left+'px';popup.style.top=(rect.bottom+6)+'px';
+}
+function closePopup(){popup.classList.remove('open');}
+document.addEventListener('click',function(e){if(!popup.contains(e.target))closePopup();});
+function phonePopup(e,tlf){showPopup(e,[{icon:'📞',label:'Ring',href:'tel:'+tlf},{icon:'💬',label:'Send SMS',href:'sms:'+tlf}],tlf);}
+function emailPopup(e,epost){showPopup(e,[{icon:'✉️',label:'Apple Mail',href:'mailto:'+epost},{icon:'📧',label:'Gmail',href:'https://mail.google.com/mail/?view=cm&to='+encodeURIComponent(epost)}],epost);}
 
-  var query=sb.from('salg').select('*').order('ordrenummer',{ascending:false});
-  if(visUstilling) query=query.eq('utstilling_id',visUstilling.id);
-  else query=query.is('utstilling_id',null);
-
-  var r=await query;
-  document.getElementById('loading').style.display='none';
-  if(r.error){document.getElementById('sales-list').innerHTML='<p style="color:var(--danger);font-weight:700">Feil: '+r.error.message+'</p>';return;}
-  currentSalesData=r.data||[];
-
-  var titel=visUstilling?visUstilling.navn:'Alle salg';
-  document.getElementById('sales-title').textContent=titel;
-  document.getElementById('excel-btn').style.display=currentSalesData.length?'inline-flex':'none';
-
-  if(!currentSalesData.length){document.getElementById('empty').style.display='block';return;}
-  currentSalesData.forEach(function(s){document.getElementById('sales-list').appendChild(makeCard(s));});
-  var gt=currentSalesData.reduce(function(a,s){return{pris:a.pris+(s.pris||0),bkh:a.bkh+(s.bkh||0),ramme:a.ramme+(s.ramme||0),frakt:a.frakt+(s.frakt||0),total:a.total+(s.total||0)};},{pris:0,bkh:0,ramme:0,frakt:0,total:0});
-  document.getElementById('gt-pris').textContent=kr(gt.pris);
-  document.getElementById('gt-bkh').textContent=kr(gt.bkh);
-  document.getElementById('gt-ramme').textContent=kr(gt.ramme);
-  document.getElementById('gt-frakt').textContent=kr(gt.frakt);
-  document.getElementById('gt-total').textContent=kr(gt.total);
-  document.getElementById('grand-totals').style.display='block';
+/* ── KVITTERING ── */
+function lagKvittering(s){
+  return['Soli Brug Fredrikstad','Ordrenummer: '+onr(s.ordrenummer),'',
+    'Kunstner: '+(s.kunstner||'—'),'Kunstverk: '+(s.tittel||'—'),
+    'Pris: '+kr(s.pris),'5% BKH: '+kr(s.bkh),
+    (s.ramme?'Ramme: '+kr(s.ramme):null),'','Totalt: '+kr(s.total),'',
+    'Bildet kan hentes på Soli Brug Fredrikstad tidligst: ','',
+    'Tusen takk for handelen!','Mvh:','Soli Brug'
+  ].filter(function(l){return l!==null;}).join('\n');
 }
 
-/* ─── SUBMIT ─── */
+/* ── EXCEL ── */
+function exportExcel(){
+  var data=aktivFilter==='alle'?alleSalg:alleSalg.filter(function(s){return s.kunstner===aktivFilter;});
+  if(!data.length)return;
+  var filnavn=(aktivFilter==='alle'?'Alle_salg':aktivFilter.replace(/\s/g,'_'))+'.csv';
+  var rows=[['Ordrenr','Dato','Navn','Telefon','E-post','Adresse','Levering','Kunstner','Tittel','Pris','BKH','Ramme','Ramme info','Frakt','Total','Hentet','Faktura sendt']];
+  data.forEach(function(s){rows.push([onr(s.ordrenummer),fmt(s.created_at),s.navn||'',s.telefon||'',s.epost||'',s.adresse||'',s.levering?'Ja':'Nei',s.kunstner||'',s.tittel||'',s.pris||0,s.bkh||0,s.ramme||0,s.ramme_info||'',s.frakt||0,s.total||0,s.hentet?'Ja':'Nei',s.faktura_sendt?'Ja':'Nei']);});
+  var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(';');}).join('\r\n');
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;a.download=filnavn;document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+}
+
+/* ── INIT ── */
+function init(){
+  document.getElementById('f-pris').addEventListener('input',function(){var p=n('f-pris');document.getElementById('f-bkh').value=p>0?Math.round(p*0.05):'';calcT('f-');});
+  ['f-bkh','f-ramme','f-frakt'].forEach(function(id){document.getElementById(id).addEventListener('input',function(){calcT('f-');});});
+  document.getElementById('submit-btn').addEventListener('click',submitSale);
+  document.getElementById('m-pris').addEventListener('input',function(){var p=n('m-pris');document.getElementById('m-bkh').value=p>0?Math.round(p*0.05):'';calcT('m-');});
+  ['m-bkh','m-ramme','m-frakt'].forEach(function(id){document.getElementById(id).addEventListener('input',function(){calcT('m-');});});
+  document.getElementById('btn-save').addEventListener('click',saveSale);
+  document.getElementById('btn-cancel').addEventListener('click',closeModal);
+  document.getElementById('modal-close').addEventListener('click',closeModal);
+  document.getElementById('modal-overlay').addEventListener('click',function(e){if(e.target===this)closeModal();});
+  loadSales();
+}
+
+/* ── SUBMIT ── */
 async function submitSale(){
-  if(!aktivUstilling)return;
-  var btn=document.getElementById('submit-btn');
-  var msg=document.getElementById('form-msg');
+  var btn=document.getElementById('submit-btn');var msg=document.getElementById('form-msg');
   var navn=document.getElementById('f-navn').value.trim();
   if(!navn){msg.style.color='var(--danger)';msg.textContent='Navn er påkrevd.';return;}
   btn.disabled=true;btn.textContent='Registrerer…';
-  var kunstner=document.getElementById('f-kunstner').value.trim();
   var row={
     navn:navn,telefon:document.getElementById('f-telefon').value.trim(),
     epost:document.getElementById('f-epost').value.trim(),adresse:document.getElementById('f-adresse').value.trim(),
     levering:document.getElementById('f-levering').checked,
-    kunstner:kunstner,tittel:document.getElementById('f-tittel').value.trim(),
+    kunstner:document.getElementById('f-kunstner').value.trim(),
+    tittel:document.getElementById('f-tittel').value.trim(),
     pris:n('f-pris'),bkh:n('f-bkh'),ramme:n('f-ramme'),frakt:n('f-frakt'),total:n('f-total'),
     ramme_info:document.getElementById('f-ramme-info').value.trim().toUpperCase(),
-    hentet:false,faktura_sendt:false,
-    utstilling_id:aktivUstilling.id
+    hentet:false,faktura_sendt:false
   };
   if(mode==='gammelt'){var dv=document.getElementById('f-dato').value;if(dv)row.created_at=new Date(dv).toISOString();}
   var r=await sb.from('salg').insert([row]);
   btn.disabled=false;btn.textContent='Registrer salg';
   if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
-  await lagreKunstnerHvisNy(kunstner);
   msg.style.color='var(--green)';msg.textContent='✓ Salg registrert!';
   ['navn','telefon','epost','adresse','kunstner','tittel','pris','bkh','ramme','frakt','total'].forEach(function(k){document.getElementById('f-'+k).value='';});
   document.getElementById('f-ramme-info').value='';
   document.getElementById('f-levering').checked=false;
-  setMode('nytt');setTimeout(function(){msg.textContent='';},4000);loadSales();
+  setMode('nytt');setTimeout(function(){msg.textContent='';},4000);
+  loadSales();
 }
 
-/* ─── MODAL ─── */
+/* ── MODAL ── */
 function openModal(s){
   editId=s.id;
   document.getElementById('modal-title').textContent='Rediger – '+onr(s.ordrenummer);
@@ -761,12 +561,12 @@ async function saveSale(){
   if(!editId)return;
   var btn=document.getElementById('btn-save');var msg=document.getElementById('modal-msg');
   btn.disabled=true;btn.textContent='Lagrer…';
-  var kunstner=document.getElementById('m-kunstner').value.trim();
   var row={
     navn:document.getElementById('m-navn').value.trim(),telefon:document.getElementById('m-telefon').value.trim(),
     epost:document.getElementById('m-epost').value.trim(),adresse:document.getElementById('m-adresse').value.trim(),
     levering:document.getElementById('m-levering').checked,
-    kunstner:kunstner,tittel:document.getElementById('m-tittel').value.trim(),
+    kunstner:document.getElementById('m-kunstner').value.trim(),
+    tittel:document.getElementById('m-tittel').value.trim(),
     pris:n('m-pris'),bkh:n('m-bkh'),ramme:n('m-ramme'),frakt:n('m-frakt'),total:n('m-total'),
     ramme_info:document.getElementById('m-ramme-info').value.trim().toUpperCase()
   };
@@ -774,30 +574,9 @@ async function saveSale(){
   var r=await sb.from('salg').update(row).eq('id',editId);
   btn.disabled=false;btn.textContent='Lagre endringer';
   if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
-  await lagreKunstnerHvisNy(kunstner);
-  closeModal();loadSales();
-}
-
-/* ─── EXCEL EKSPORT ─── */
-function exportExcel(){
-  if(!currentSalesData.length)return;
-  var navn=visUstilling?visUstilling.navn:'Salg';
-  var rows=[['Ordrenr','Dato','Navn','Telefon','E-post','Adresse','Levering','Kunstner','Tittel','Pris','BKH','Ramme','Ramme info','Frakt','Total','Hentet','Faktura sendt']];
-  currentSalesData.forEach(function(s){
-    rows.push([
-      onr(s.ordrenummer),fmt(s.created_at),s.navn||'',s.telefon||'',s.epost||'',s.adresse||'',
-      s.levering?'Ja':'Nei',s.kunstner||'',s.tittel||'',
-      s.pris||0,s.bkh||0,s.ramme||0,s.ramme_info||'',s.frakt||0,s.total||0,
-      s.hentet?'Ja':'Nei',s.faktura_sendt?'Ja':'Nei'
-    ]);
-  });
-  /* Bygg CSV (Excel åpner det fint) */
-  var csv=rows.map(function(r){return r.map(function(c){var v=String(c).replace(/"/g,'""');return'"'+v+'"';}).join(';');}).join('\r\n');
-  var bom='\uFEFF';
-  var blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8;'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');a.href=url;a.download=navn.replace(/\s/g,'_')+'.csv';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  closeModal();
+  // Behold filter om mulig
+  loadSales();
 }
 </script>
 </body>
