@@ -289,7 +289,8 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 
   <!-- MAIN NAV -->
   <div class="main-nav">
-    <button class="main-tab active" id="tab-salg" onclick="setMainTab('salg')">🛒 Salg Fredrikstad</button>
+    <button class="main-tab active" id="tab-soli" onclick="setMainTab('soli')">🛒 Salg Soli</button>
+    <button class="main-tab" id="tab-fredrikstad" onclick="setMainTab('fredrikstad')">🛒 Salg Fredrikstad</button>
     <button class="main-tab" id="tab-innramming" onclick="setMainTab('innramming')">🖼 Innramming</button>
   </div>
 
@@ -525,6 +526,7 @@ var BUCKET='bilder';
 var CODE='SoliBrugSalg';
 var sb=null,editId=null,irEditId=null,mode='nytt';
 var alleSalg=[],alleIr=[],aktivFilter='alle',irFilter='alle',sokeTekst='',visArkiv=false;
+var aktivButikk='soli'; /* 'soli' eller 'fredrikstad' */
 var arkivModus=null,arkivEnkeltId=null;
 /* Foto state */
 var fFotoUrl=null,mFotoUrl=null,irFotoUrl=null,irMFotoUrl=null;
@@ -629,10 +631,18 @@ if(sessionStorage.getItem('sbauth')==='1'){document.getElementById('login-screen
 
 /* ── MAIN TAB ── */
 function setMainTab(tab){
-  document.getElementById('tab-salg').className='main-tab'+(tab==='salg'?' active':'');
-  document.getElementById('tab-innramming').className='main-tab'+(tab==='innramming'?' active':'');
-  document.getElementById('page-salg').className='page'+(tab==='salg'?' active':'');
+  ['soli','fredrikstad','innramming'].forEach(function(t){
+    var el=document.getElementById('tab-'+t);if(el)el.className='main-tab'+(tab===t?' active':'');
+  });
+  document.getElementById('page-salg').className='page'+(tab!=='innramming'?' active':'');
   document.getElementById('page-innramming').className='page'+(tab==='innramming'?' active':'');
+  if(tab==='soli'||tab==='fredrikstad'){
+    aktivButikk=tab;
+    aktivFilter='alle';visArkiv=false;sokeTekst='';
+    document.getElementById('search-input').value='';
+    oppdaterSokeUI();oppdaterArkivBar();
+    oppdaterAutocomplete();byggFilterTabs();renderSalg();
+  }
   if(tab==='innramming'&&alleIr.length===0)loadIr();
 }
 
@@ -651,7 +661,7 @@ function sjekkUxAdvarsel(){
   var ri=document.getElementById('f-ramme-info').value.trim();
   var advarsel=document.getElementById('f-ux-advarsel');
   if(erUX(ri)&&tittel){
-    var aktive=alleSalg.filter(function(s){return!s.arkiv;});
+    var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
     var harUX=aktive.some(function(s){return normTittel(s.tittel)===normTittel(tittel)&&erUX(s.ramme_info);});
     advarsel.className='ux-advarsel'+(harUX?' synlig':'');
   } else {advarsel.className='ux-advarsel';}
@@ -659,7 +669,7 @@ function sjekkUxAdvarsel(){
 
 function oppdaterAutocomplete(){
   var kunstnere=[],titler=[],selgere=[];
-  var aktive=alleSalg.filter(function(s){return!s.arkiv;});
+  var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
   aktive.forEach(function(s){
     if(s.kunstner&&kunstnere.indexOf(s.kunstner)===-1)kunstnere.push(s.kunstner);
     if(s.tittel&&titler.indexOf(s.tittel)===-1)titler.push(s.tittel);
@@ -670,7 +680,7 @@ function oppdaterAutocomplete(){
   ['tittel-list','tittel-list-m'].forEach(function(id){var dl=document.getElementById(id);if(!dl)return;dl.innerHTML='';titler.forEach(function(t){var o=document.createElement('option');o.value=t;dl.appendChild(o);});});
   ['selger-list','selger-list-m'].forEach(function(id){var dl=document.getElementById(id);if(!dl)return;dl.innerHTML='';selgere.forEach(function(s){var o=document.createElement('option');o.value=s;dl.appendChild(o);});});
   var arkivNavn=[];
-  alleSalg.forEach(function(s){if(s.arkiv&&arkivNavn.indexOf(s.arkiv)===-1)arkivNavn.push(s.arkiv);});
+  alleSalg.forEach(function(s){if(s.arkiv&&s.butikk===aktivButikk&&arkivNavn.indexOf(s.arkiv)===-1)arkivNavn.push(s.arkiv);});
   arkivNavn.sort();
   var dl=document.getElementById('arkiv-list');if(dl){dl.innerHTML='';arkivNavn.forEach(function(a){var o=document.createElement('option');o.value=a;dl.appendChild(o);});}
   ['f-kunstner','m-kunstner'].forEach(function(kid){
@@ -689,8 +699,8 @@ function oppdaterAutocomplete(){
 
 function byggFilterTabs(){
   var wrap=document.getElementById('filter-tabs');wrap.innerHTML='';
-  var aktive=alleSalg.filter(function(s){return!s.arkiv;});
-  var arkiverte=alleSalg.filter(function(s){return!!s.arkiv;});
+  var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
+  var arkiverte=alleSalg.filter(function(s){return!!s.arkiv&&s.butikk===aktivButikk;});
   var nylige=document.createElement('button');
   nylige.className='ftab'+(aktivFilter==='alle'&&!visArkiv?' active':'');
   nylige.textContent='Nylige salg ('+aktive.length+')';
@@ -738,7 +748,7 @@ function renderSalg(){
   if(sokeTekst){
     document.getElementById('sales-title').textContent='Søkeresultat';
     document.getElementById('excel-btn').style.display='none';
-    var treff=alleSalg.filter(function(s){return sokFilter(s,sokeTekst);});
+    var treff=alleSalg.filter(function(s){return s.butikk===aktivButikk&&sokFilter(s,sokeTekst);});
     var ie=document.getElementById('search-info');
     ie.style.display='block';ie.textContent='Fant '+treff.length+' treff på «'+sokeTekst+'» (inkl. arkiverte)';
     if(!treff.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Ingen treff.';return;}
@@ -751,7 +761,7 @@ function renderSalg(){
   if(visArkiv){
     document.getElementById('sales-title').textContent='Arkiv';
     document.getElementById('excel-btn').style.display='none';
-    var ark=alleSalg.filter(function(s){return!!s.arkiv;});
+    var ark=alleSalg.filter(function(s){return!!s.arkiv&&s.butikk===aktivButikk;});
     if(!ark.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Arkivet er tomt.';return;}
     var grp={},rek=[];
     ark.forEach(function(s){if(!grp[s.arkiv]){grp[s.arkiv]=[];rek.push(s.arkiv);}grp[s.arkiv].push(s);});
@@ -773,10 +783,11 @@ function renderSalg(){
   }
 
   /* NORMAL */
-  var aktive=alleSalg.filter(function(s){return!s.arkiv;});
+  var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
   var erAlle=aktivFilter==='alle';
   var raaData=erAlle?aktive:aktive.filter(function(s){return s.kunstner===aktivFilter;});
-  document.getElementById('sales-title').textContent=erAlle?'Nylige salg':aktivFilter;
+  var butikkNavn=aktivButikk==='soli'?'Soli':'Fredrikstad';
+  document.getElementById('sales-title').textContent=erAlle?'Nylige salg – '+butikkNavn:aktivFilter;
   document.getElementById('excel-btn').style.display=raaData.length?'inline-flex':'none';
   if(!raaData.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Ingen salg ennå.';return;}
   if(erAlle){raaData.forEach(function(s){list.appendChild(makeCard(s,false));});}
@@ -870,7 +881,7 @@ function åpneArkivModal(modus,enkeltId){
   /* Eksisterende arkiver som chips */
   var eksChips=document.getElementById('arkiv-chips');eksChips.innerHTML='';
   var arkivNavn=[];
-  alleSalg.forEach(function(s){if(s.arkiv&&arkivNavn.indexOf(s.arkiv)===-1)arkivNavn.push(s.arkiv);});
+  alleSalg.forEach(function(s){if(s.arkiv&&s.butikk===aktivButikk&&arkivNavn.indexOf(s.arkiv)===-1)arkivNavn.push(s.arkiv);});
   arkivNavn.sort();
   arkivNavn.forEach(function(an){
     var btn=document.createElement('button');btn.className='arkiv-chip-btn';btn.textContent='🗄 '+an;
@@ -897,7 +908,7 @@ async function utforArkivering(){
   if(!navn){msg.style.color='var(--danger)';msg.textContent='Gi arkivet et navn.';return;}
   var ids;
   if(arkivModus==='enkelt'){ids=[arkivEnkeltId];}
-  else{ids=alleSalg.filter(function(s){return!s.arkiv&&s.kunstner===aktivFilter;}).map(function(s){return s.id;});}
+  else{ids=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk&&s.kunstner===aktivFilter;}).map(function(s){return s.id;});}
   if(!ids.length){msg.style.color='var(--danger)';msg.textContent='Ingen salg å arkivere.';return;}
   document.getElementById('arkiv-lagre-btn').disabled=true;document.getElementById('arkiv-lagre-btn').textContent='Arkiverer…';
   var r=await sb.from('salg').update({arkiv:navn}).in('id',ids);
@@ -939,7 +950,7 @@ function lagKvittering(s){
 }
 
 function exportExcel(){
-  var aktive=alleSalg.filter(function(s){return!s.arkiv;});
+  var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
   var data=(aktivFilter==='alle')?aktive:aktive.filter(function(s){return s.kunstner===aktivFilter;});
   if(!data.length)return;
   var rows=[['Ordrenr','Dato','Navn','Telefon','E-post','Adresse','Levering','Kunstner','Tittel','Edisjon','Pris','BKH','Ramme','Rammeinfo','Frakt','Total','Hentet','Faktura sendt','Selger','Info om salget']];
@@ -1108,7 +1119,7 @@ async function submitSale(){
   var navn=document.getElementById('f-navn').value.trim();
   if(!navn){msg.style.color='var(--danger)';msg.textContent='Navn er påkrevd.';return;}
   btn.disabled=true;btn.textContent='Registrerer…';
-  var row={navn:navn,telefon:document.getElementById('f-telefon').value.trim(),epost:document.getElementById('f-epost').value.trim(),adresse:document.getElementById('f-adresse').value.trim(),levering:document.getElementById('f-levering').checked,kunstner:document.getElementById('f-kunstner').value.trim(),tittel:document.getElementById('f-tittel').value.trim(),edisjon:document.getElementById('f-edisjon').value.trim(),pris:nv('f-pris'),bkh:nv('f-bkh'),ramme:nv('f-ramme'),frakt:nv('f-frakt'),total:nv('f-total'),ramme_info:document.getElementById('f-ramme-info').value.trim(),selger:document.getElementById('f-selger').value.trim(),notat:document.getElementById('f-notat').value.trim(),bilde_url:fFotoUrl,hentet:false,faktura_sendt:false};
+  var row={navn:navn,telefon:document.getElementById('f-telefon').value.trim(),epost:document.getElementById('f-epost').value.trim(),adresse:document.getElementById('f-adresse').value.trim(),levering:document.getElementById('f-levering').checked,kunstner:document.getElementById('f-kunstner').value.trim(),tittel:document.getElementById('f-tittel').value.trim(),edisjon:document.getElementById('f-edisjon').value.trim(),pris:nv('f-pris'),bkh:nv('f-bkh'),ramme:nv('f-ramme'),frakt:nv('f-frakt'),total:nv('f-total'),ramme_info:document.getElementById('f-ramme-info').value.trim(),selger:document.getElementById('f-selger').value.trim(),notat:document.getElementById('f-notat').value.trim(),bilde_url:fFotoUrl,butikk:aktivButikk,hentet:false,faktura_sendt:false};
   if(mode==='gammelt'){var dv=document.getElementById('f-dato').value;if(dv)row.created_at=new Date(dv).toISOString();}
   var r=await sb.from('salg').insert([row]);
   btn.disabled=false;btn.textContent='Registrer salg';
