@@ -748,9 +748,9 @@ function renderSalg(){
   if(sokeTekst){
     document.getElementById('sales-title').textContent='Søkeresultat';
     document.getElementById('excel-btn').style.display='none';
-    var treff=alleSalg.filter(function(s){return s.butikk===aktivButikk&&sokFilter(s,sokeTekst);});
+    var treff=alleSalg.filter(function(s){return sokFilter(s,sokeTekst);});
     var ie=document.getElementById('search-info');
-    ie.style.display='block';ie.textContent='Fant '+treff.length+' treff på «'+sokeTekst+'» (inkl. arkiverte)';
+    ie.style.display='block';ie.textContent='Fant '+treff.length+' treff på «'+sokeTekst+'» (alle butikker, inkl. arkiverte)';
     if(!treff.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Ingen treff.';return;}
     treff.forEach(function(s){list.appendChild(makeCard(s,false));});
     visTotals(treff);return;
@@ -827,6 +827,7 @@ function makeCard(s,erGruppert){
   if(s.epost)k+='<button class="contact-link" data-epost="'+s.epost+'">✉️ '+s.epost+'</button>';
   var ec=s.edisjon?'<span class="sc-edisjon">'+s.edisjon+'</span>':'';
   var arkivChip=s.arkiv?'<span class="sc-arkiv-chip">🗄 '+s.arkiv+'</span>':'';
+  var butikkChip=sokeTekst?'<span style="font-size:.65rem;font-weight:700;color:#fff;background:'+(s.butikk==='soli'?'#3a7c5c':'#7a5c3a')+';border-radius:20px;padding:.15rem .5rem;white-space:nowrap">'+(s.butikk==='soli'?'Soli':'Fredrikstad')+'</span>':'';
   var artHtml=erGruppert
     ?'<div class="sc-art-title-grouped">'+(s.kunstner||'—')+(s.tittel?' – <em style="font-weight:500">'+s.tittel+'</em>':'')+ec+'</div>'
     :'<div class="sc-art-title">'+(s.kunstner||'—')+(s.tittel?' – <em style="font-weight:500">'+s.tittel+'</em>':'')+ec+'</div>';
@@ -836,7 +837,7 @@ function makeCard(s,erGruppert){
   var arkiverKnapp=!s.arkiv?'<button class="sc-arkiver-btn" data-action="arkiver">🗄 Arkiver</button>':'';
 
   d.innerHTML=
-    '<div class="sc-top"><span class="sc-nr">'+onr(s.ordrenummer)+'</span>'+arkivChip+'<span class="sc-time">'+fmt(s.created_at)+'</span></div>'+
+    '<div class="sc-top"><span class="sc-nr">'+onr(s.ordrenummer)+'</span>'+butikkChip+arkivChip+'<span class="sc-time">'+fmt(s.created_at)+'</span></div>'+
     artHtml+selgerHtml+fotoHtml+
     '<div class="sc-amounts">'+amt('Pris',s.pris,null)+amt('BKH 5%',s.bkh,null)+amt('Ramme',s.ramme,s.ramme_info)+amt('Frakt',s.frakt,null)+'</div>'+
     '<div class="sc-foot">'+(s.levering?'<span class="badge-lev">🚚 Levering</span>':'<span class="badge-no">Hentes</span>')+'<span class="sc-total">'+kr(s.total)+'</span></div>'+
