@@ -787,8 +787,9 @@ function renderSalg(){
       var gt2=salg.reduce(function(a,s){return{total:a.total+(s.total||0)-(s.bkh||0),antall:a.antall+1};},{total:0,antall:0});
       var g=document.createElement('div');g.className='arkiv-gruppe';
       var h=document.createElement('div');h.className='arkiv-gruppe-header';
-      h.innerHTML='<div><div class="arkiv-gruppe-navn">🗄 '+an+'</div><div class="arkiv-gruppe-meta">'+gt2.antall+' salg · '+kr(gt2.total)+' eks. BKH</div></div><button class="hent-ut-btn" data-arkiv="'+an+'">Hent ut</button>';
-      h.querySelector('.hent-ut-btn').addEventListener('click',function(e){e.stopPropagation();if(confirm('Hente ut alle salg fra «'+an+'» tilbake?'))hentUtArkiv(an);});
+      h.innerHTML='<div><div class="arkiv-gruppe-navn">🗄 '+an+'</div><div class="arkiv-gruppe-meta">'+gt2.antall+' salg · '+kr(gt2.total)+' eks. BKH</div></div><div style="display:flex;gap:.4rem"><button class="hent-ut-btn" data-action="excel">📊 Excel</button><button class="hent-ut-btn" data-action="hentut">Hent ut</button></div>';
+      h.querySelector('[data-action=hentut]').addEventListener('click',function(e){e.stopPropagation();if(confirm('Hente ut alle salg fra «'+an+'» tilbake?'))hentUtArkiv(an);});
+      h.querySelector('[data-action=excel]').addEventListener('click',function(e){e.stopPropagation();exportArkivExcel(an,grp[an]);});
       var sd=document.createElement('div');sd.className='arkiv-gruppe-salg skjult';
       salg.forEach(function(s){sd.appendChild(makeCard(s,false));});
       g.appendChild(h);g.appendChild(sd);
@@ -940,6 +941,30 @@ async function hentUtArkiv(an){
   var ids=alleSalg.filter(function(s){return s.arkiv===an;}).map(function(s){return s.id;});
   var r=await sb.from('salg').update({arkiv:null}).in('id',ids);
   if(!r.error)loadSales();
+}
+
+function exportArkivExcel(arkivNavn,salg){
+  /* Sorter etter ordrenummer */
+  var data=salg.slice().sort(function(a,b){return(a.ordrenummer||0)-(b.ordrenummer||0);});
+  var totalPris=data.reduce(function(sum,s){return sum+(s.pris||0);},0);
+
+  /* Rader: header + data + tom rad + totalrad */
+  var rows=[['Navn','Kunstner','Tittel','Pris']];
+  data.forEach(function(s){
+    rows.push([s.navn||'',s.kunstner||'',s.tittel||'',s.pris||0]);
+  });
+  rows.push(['','','','']); /* tom rad */
+  rows.push(['','','Total',totalPris]);
+
+  var csv=rows.map(function(r){
+    return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(';');
+  }).join('\r\n');
+
+  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;
+  a.download=arkivNavn.replace(/\s/g,'_')+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
 }
 
 /* ── POPUP ── */
