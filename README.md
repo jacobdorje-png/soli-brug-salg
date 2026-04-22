@@ -1,1 +1,1 @@
-# soli-brug-fredrikstad
+# soli-brug-salg
