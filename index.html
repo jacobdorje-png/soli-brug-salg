@@ -67,6 +67,18 @@ body.butikk-fredrikstad .mode-btn.active{background:#8B1a2e}
 body.butikk-fredrikstad .foto-upload-wrap{border-color:#d4b8be;background:#faf3f4}
 body.butikk-fredrikstad .checkbox-row input[type=checkbox]{accent-color:#8B1a2e}
 body.butikk-fredrikstad .total-inp{background:#8B1a2e!important;border-color:#8B1a2e!important}
+/* Innramming – blågrå */
+body.butikk-innramming{background:#edf1f5}
+body.butikk-innramming header{background:#3a5a7a}
+body.butikk-innramming .section{border-color:#b8cad8;transition:border-color .35s}
+body.butikk-innramming input[type=text],body.butikk-innramming input[type=email],body.butikk-innramming input[type=tel],body.butikk-innramming input[type=number],body.butikk-innramming input[type=datetime-local],body.butikk-innramming textarea.notat-inp,body.butikk-innramming .ramme-info-inp{background:#f3f6f9;border-color:#b8cad8}
+body.butikk-innramming input:focus,body.butikk-innramming textarea.notat-inp:focus{border-color:#3a5a7a;box-shadow:0 0 0 3px rgba(58,90,122,.12)}
+body.butikk-innramming .stitle{color:#3a5a7a}
+body.butikk-innramming .section-head{border-bottom-color:#b8cad8}
+body.butikk-innramming .fdiv{border-color:#b8cad8}
+body.butikk-innramming .btn-primary{background:#3a5a7a}
+body.butikk-innramming .btn-primary:disabled{background:var(--muted)}
+body.butikk-innramming .foto-upload-wrap{border-color:#b8cad8;background:#f3f6f9}
 header .hname{font-size:1.05rem;font-weight:700;line-height:1.2}
 header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 #logout-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;padding:.5rem .85rem;border-radius:8px;font-size:.82rem;font-family:'proxima-nova','Nunito',sans-serif;font-weight:700;cursor:pointer;min-height:var(--touch);display:flex;align-items:center}
@@ -696,7 +708,12 @@ function setMainTab(tab){
     oppdaterSokeUI();oppdaterArkivBar();
     oppdaterAutocomplete();byggFilterTabs();renderSalg();
   }
-  if(tab==='innramming'&&alleIr.length===0)loadIr();
+  if(tab==='innramming'){
+    document.body.className='butikk-innramming';
+    var metaColor=document.querySelector('meta[name=theme-color]');
+    if(metaColor)metaColor.content='#3a5a7a';
+    if(alleIr.length===0)loadIr();
+  }
 }
 
 /* ── SALG MODUS ── */
