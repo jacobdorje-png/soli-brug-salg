@@ -915,11 +915,12 @@ function makeCard(s,erGruppert){
     notatHtml+
     '<div class="sc-actions"><button class="status-btn'+(s.hentet?' ok-green':'')+'" data-action="hentet">'+(s.hentet?'✅':'☐')+' Hentet</button><button class="status-btn'+(s.faktura_sendt?' ok-blue':'')+'" data-action="faktura">'+(s.faktura_sendt?'✅':'☐')+' Faktura sendt</button></div>'+
     '<div class="sc-customer"><div class="sc-customer-name">'+(s.navn||'—')+'</div><div class="sc-customer-detail">'+(k||'')+(k&&s.adresse?'<br>':'')+(s.adresse||'')+'</div></div>'+
-    '<div class="sc-bottom-row"><button class="sc-copy-btn" data-action="copy">📋 Kopier kvittering</button>'+arkiverKnapp+'<button class="sc-edit-btn" data-action="edit">✏️ Rediger</button></div>';
+    '<div class="sc-bottom-row"><button class="sc-copy-btn" data-action="copy">📋 Kopier kvittering</button>'+arkiverKnapp+'<button class="sc-edit-btn" data-action="edit">✏️ Rediger</button><button class="sc-edit-btn" data-action="slett" style="color:#c0392b">🗑</button></div>';
 
   d.querySelector('[data-action=hentet]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'hentet',this);});
   d.querySelector('[data-action=faktura]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'faktura_sendt',this);});
   d.querySelector('[data-action=edit]').addEventListener('click',function(e){e.stopPropagation();openModal(s);});
+  d.querySelector('[data-action=slett]').addEventListener('click',function(e){e.stopPropagation();slettSalg(s);});
   d.querySelector('[data-action=copy]').addEventListener('click',function(e){
     e.stopPropagation();var btn=this;
     navigator.clipboard.writeText(lagKvittering(s)).then(function(){btn.textContent='✅ Kopiert!';btn.classList.add('copied');setTimeout(function(){btn.innerHTML='📋 Kopier kvittering';btn.classList.remove('copied');},2500);});
@@ -1192,6 +1193,13 @@ async function saveIr(){
 }
 
 /* ══════════════ INIT ══════════════ */
+async function slettSalg(s){
+  if(!confirm('Slette salg '+onr(s.ordrenummer)+' – '+(s.kunstner||s.navn||'')+'?\nDette kan ikke angres.'))return;
+  var r=await sb.from('salg').delete().eq('id',s.id);
+  if(!r.error)loadSales();
+  else alert('Feil: '+r.error.message);
+}
+
 /* ── NTFY VARSLER ── */
 var NTFY_KANAL='soli-brug-salg';
 function sendVarsel(tittel,melding){
