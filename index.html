@@ -944,27 +944,41 @@ async function hentUtArkiv(an){
 }
 
 function exportArkivExcel(arkivNavn,salg){
-  /* Sorter etter ordrenummer */
   var data=salg.slice().sort(function(a,b){return(a.ordrenummer||0)-(b.ordrenummer||0);});
   var totalPris=data.reduce(function(sum,s){return sum+(s.pris||0);},0);
 
-  /* Rader: header + data + tom rad + totalrad */
-  var rows=[['Navn','Kunstner','Tittel','Pris']];
-  data.forEach(function(s){
-    rows.push([s.navn||'',s.kunstner||'',s.tittel||'',s.pris||0]);
-  });
-  rows.push(['','','','']); /* tom rad */
-  rows.push(['','','Total',totalPris]);
+  /* Last SheetJS hvis ikke allerede lastet */
+  function lagXlsx(){
+    var XLSX=window.XLSX;
+    var wsData=[['Navn','Kunstner','Tittel','Pris (kr)']];
+    data.forEach(function(s){wsData.push([s.navn||'',s.kunstner||'',s.tittel||'',s.pris||0]);});
+    wsData.push(['','','','']);
+    wsData.push(['','','Total',totalPris]);
 
-  var csv=rows.map(function(r){
-    return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(';');
-  }).join('\r\n');
+    var ws=XLSX.utils.aoa_to_sheet(wsData);
+    /* Kolonnebredder */
+    ws['!cols']=[{wch:25},{wch:20},{wch:30},{wch:14}];
+    /* Fet skrift på header og total */
+    var boldStyle={font:{bold:true}};
+    ['A1','B1','C1','D1'].forEach(function(c){if(ws[c])ws[c].s=boldStyle;});
+    var totalRow=wsData.length;
+    var totalCell='D'+totalRow;
+    if(ws[totalCell])ws[totalCell].s=boldStyle;
+    var totalLblCell='C'+totalRow;
+    if(ws[totalLblCell])ws[totalLblCell].s=boldStyle;
 
-  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');a.href=url;
-  a.download=arkivNavn.replace(/\s/g,'_')+'.csv';
-  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+    var wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,arkivNavn.substring(0,31));
+    XLSX.writeFile(wb,arkivNavn.replace(/\s/g,'_')+'.xlsx');
+  }
+
+  if(window.XLSX){lagXlsx();}
+  else{
+    var s=document.createElement('script');
+    s.src='https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js';
+    s.onload=lagXlsx;
+    document.head.appendChild(s);
+  }
 }
 
 /* ── POPUP ── */
@@ -995,11 +1009,21 @@ function exportExcel(){
   var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
   var data=(aktivFilter==='alle')?aktive:aktive.filter(function(s){return s.kunstner===aktivFilter;});
   if(!data.length)return;
-  var rows=[['Ordrenr','Dato','Navn','Telefon','E-post','Adresse','Levering','Kunstner','Tittel','Edisjon','Pris','BKH','Ramme','Rammeinfo','Frakt','Total','Hentet','Faktura sendt','Selger','Info om salget']];
-  data.forEach(function(s){rows.push([onr(s.ordrenummer),fmt(s.created_at),s.navn||'',s.telefon||'',s.epost||'',s.adresse||'',s.levering?'Ja':'Nei',s.kunstner||'',s.tittel||'',s.edisjon||'',s.pris||0,s.bkh||0,s.ramme||0,s.ramme_info||'',s.frakt||0,s.total||0,s.hentet?'Ja':'Nei',s.faktura_sendt?'Ja':'Nei',s.selger||'',s.notat||'']);});
-  var csv=rows.map(function(r){return r.map(function(c){return'"'+String(c).replace(/"/g,'""')+'"';}).join(';');}).join('\r\n');
-  var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
-  var url=URL.createObjectURL(blob);var a=document.createElement('a');a.href=url;a.download='salg.csv';document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  var filnavn=(aktivFilter==='alle'?'Nylige_salg':aktivFilter.replace(/\s/g,'_'))+'.xlsx';
+
+  function lagXlsx(){
+    var XLSX=window.XLSX;
+    var wsData=[['Ordrenr','Dato','Navn','Telefon','E-post','Adresse','Levering','Kunstner','Tittel','Edisjon','Pris','BKH','Ramme','Rammeinfo','Frakt','Total','Hentet','Faktura sendt','Selger','Info om salget']];
+    data.forEach(function(s){wsData.push([onr(s.ordrenummer),fmt(s.created_at),s.navn||'',s.telefon||'',s.epost||'',s.adresse||'',s.levering?'Ja':'Nei',s.kunstner||'',s.tittel||'',s.edisjon||'',s.pris||0,s.bkh||0,s.ramme||0,s.ramme_info||'',s.frakt||0,s.total||0,s.hentet?'Ja':'Nei',s.faktura_sendt?'Ja':'Nei',s.selger||'',s.notat||'']);});
+    var ws=XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols']=[{wch:10},{wch:14},{wch:22},{wch:14},{wch:22},{wch:28},{wch:9},{wch:18},{wch:22},{wch:9},{wch:10},{wch:8},{wch:8},{wch:14},{wch:8},{wch:10},{wch:8},{wch:14},{wch:14},{wch:30}];
+    var wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'Salg');
+    XLSX.writeFile(wb,filnavn);
+  }
+
+  if(window.XLSX){lagXlsx();}
+  else{var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js';s.onload=lagXlsx;document.head.appendChild(s);}
 }
 
 /* ══════════════ INNRAMMING ══════════════ */
