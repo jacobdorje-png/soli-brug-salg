@@ -162,7 +162,9 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 
 .sc-foot{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:.5rem;margin-bottom:.6rem}
 .badge-lev{font-size:.75rem;padding:.25rem .6rem;border-radius:20px;background:#d4edda;color:var(--green);font-weight:700}
+.badge-mont{font-size:.75rem;padding:.25rem .6rem;border-radius:20px;background:#d0e4f7;color:var(--blue);font-weight:700}
 .badge-no{font-size:.75rem;color:var(--muted);font-weight:600}
+.badge-wrap{display:flex;gap:.3rem;flex-wrap:wrap}
 .sc-total{font-size:1.1rem;font-weight:700;color:var(--accent)}
 
 .sc-actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.6rem}
@@ -322,7 +324,10 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
           <div><span class="lbl">E-post</span><input type="email" id="f-epost" placeholder="E-post"></div>
         </div>
         <div><span class="lbl">Adresse</span><input type="text" id="f-adresse" placeholder="Gateadresse, postnummer sted"></div>
-        <div class="checkbox-row"><input type="checkbox" id="f-levering"><label for="f-levering">🚚 Levering til adresse</label></div>
+        <div class="frow">
+          <div class="checkbox-row"><input type="checkbox" id="f-levering"><label for="f-levering">🚚 Levering</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="f-montering"><label for="f-montering">🔧 Montering</label></div>
+        </div>
         <hr class="fdiv">
         <div><span class="lbl">Kunstner</span><input type="text" id="f-kunstner" placeholder="Søk eller skriv navn…" list="kunstner-list" autocomplete="off"><datalist id="kunstner-list"></datalist></div>
         <div>
@@ -461,7 +466,10 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
         <div><span class="lbl">E-post</span><input type="email" id="m-epost"></div>
       </div>
       <div><span class="lbl">Adresse</span><input type="text" id="m-adresse"></div>
-      <div class="checkbox-row"><input type="checkbox" id="m-levering"><label for="m-levering">🚚 Levering til adresse</label></div>
+      <div class="frow">
+        <div class="checkbox-row"><input type="checkbox" id="m-levering"><label for="m-levering">🚚 Levering</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="m-montering"><label for="m-montering">🔧 Montering</label></div>
+      </div>
       <hr class="fdiv">
       <div><span class="lbl">Kunstner</span><input type="text" id="m-kunstner" list="kunstner-list-m" autocomplete="off"><datalist id="kunstner-list-m"></datalist></div>
       <div>
@@ -848,7 +856,7 @@ function makeCard(s,erGruppert){
     '<div class="sc-top"><span class="sc-nr">'+onr(s.ordrenummer)+'</span>'+butikkChip+arkivChip+'<span class="sc-time">'+fmt(s.created_at)+'</span></div>'+
     artHtml+selgerHtml+fotoHtml+
     '<div class="sc-amounts">'+amt('Pris',s.pris,null)+amt('BKH 5%',s.bkh,null)+amt('Ramme',s.ramme,s.ramme_info)+amt('Frakt',s.frakt,null)+'</div>'+
-    '<div class="sc-foot">'+(s.levering?'<span class="badge-lev">🚚 Levering</span>':'<span class="badge-no">Hentes</span>')+'<span class="sc-total">'+kr(s.total)+'</span></div>'+
+    '<div class="sc-foot"><div class="badge-wrap">'+(s.levering?'<span class="badge-lev">🚚 Levering</span>':'')+(s.montering?'<span class="badge-mont">🔧 Montering</span>':'')+(!s.levering&&!s.montering?'<span class="badge-no">Hentes</span>':'')+'</div><span class="sc-total">'+kr(s.total)+'</span></div>'+
     notatHtml+
     '<div class="sc-actions"><button class="status-btn'+(s.hentet?' ok-green':'')+'" data-action="hentet">'+(s.hentet?'✅':'☐')+' Hentet</button><button class="status-btn'+(s.faktura_sendt?' ok-blue':'')+'" data-action="faktura">'+(s.faktura_sendt?'✅':'☐')+' Faktura sendt</button></div>'+
     '<div class="sc-customer"><div class="sc-customer-name">'+(s.navn||'—')+'</div><div class="sc-customer-detail">'+(k||'')+(k&&s.adresse?'<br>':'')+(s.adresse||'')+'</div></div>'+
@@ -1033,6 +1041,7 @@ function openModal(s){
   document.getElementById('m-ramme-info').value=s.ramme_info||'';
   document.getElementById('m-notat').value=s.notat||'';
   document.getElementById('m-levering').checked=!!s.levering;
+  document.getElementById('m-montering').checked=!!s.montering;
   settFotoPreview('m-foto-preview','m-foto-fjern',s.bilde_url);
   document.getElementById('modal-msg').textContent='';
   document.getElementById('modal-bg').classList.add('open');
@@ -1044,7 +1053,7 @@ async function saveSale(){
   if(!editId)return;
   var btn=document.getElementById('btn-save'),msg=document.getElementById('modal-msg');
   btn.disabled=true;btn.textContent='Lagrer…';
-  var row={navn:document.getElementById('m-navn').value.trim(),telefon:document.getElementById('m-telefon').value.trim(),epost:document.getElementById('m-epost').value.trim(),adresse:document.getElementById('m-adresse').value.trim(),levering:document.getElementById('m-levering').checked,kunstner:document.getElementById('m-kunstner').value.trim(),tittel:document.getElementById('m-tittel').value.trim(),edisjon:document.getElementById('m-edisjon').value.trim(),pris:nv('m-pris'),bkh:nv('m-bkh'),ramme:nv('m-ramme'),frakt:nv('m-frakt'),total:nv('m-total'),ramme_info:document.getElementById('m-ramme-info').value.trim(),selger:document.getElementById('m-selger').value.trim(),notat:document.getElementById('m-notat').value.trim(),bilde_url:mFotoUrl};
+  var row={navn:document.getElementById('m-navn').value.trim(),telefon:document.getElementById('m-telefon').value.trim(),epost:document.getElementById('m-epost').value.trim(),adresse:document.getElementById('m-adresse').value.trim(),levering:document.getElementById('m-levering').checked,montering:document.getElementById('m-montering').checked,kunstner:document.getElementById('m-kunstner').value.trim(),tittel:document.getElementById('m-tittel').value.trim(),edisjon:document.getElementById('m-edisjon').value.trim(),pris:nv('m-pris'),bkh:nv('m-bkh'),ramme:nv('m-ramme'),frakt:nv('m-frakt'),total:nv('m-total'),ramme_info:document.getElementById('m-ramme-info').value.trim(),selger:document.getElementById('m-selger').value.trim(),notat:document.getElementById('m-notat').value.trim(),bilde_url:mFotoUrl};
   var dv=document.getElementById('m-dato').value;if(dv)row.created_at=new Date(dv).toISOString();
   var r=await sb.from('salg').update(row).eq('id',editId);
   btn.disabled=false;btn.textContent='Lagre endringer';
@@ -1128,7 +1137,7 @@ async function submitSale(){
   var navn=document.getElementById('f-navn').value.trim();
   if(!navn){msg.style.color='var(--danger)';msg.textContent='Navn er påkrevd.';return;}
   btn.disabled=true;btn.textContent='Registrerer…';
-  var row={navn:navn,telefon:document.getElementById('f-telefon').value.trim(),epost:document.getElementById('f-epost').value.trim(),adresse:document.getElementById('f-adresse').value.trim(),levering:document.getElementById('f-levering').checked,kunstner:document.getElementById('f-kunstner').value.trim(),tittel:document.getElementById('f-tittel').value.trim(),edisjon:document.getElementById('f-edisjon').value.trim(),pris:nv('f-pris'),bkh:nv('f-bkh'),ramme:nv('f-ramme'),frakt:nv('f-frakt'),total:nv('f-total'),ramme_info:document.getElementById('f-ramme-info').value.trim(),selger:document.getElementById('f-selger').value.trim(),notat:document.getElementById('f-notat').value.trim(),bilde_url:fFotoUrl,butikk:aktivButikk,hentet:false,faktura_sendt:false};
+  var row={navn:navn,telefon:document.getElementById('f-telefon').value.trim(),epost:document.getElementById('f-epost').value.trim(),adresse:document.getElementById('f-adresse').value.trim(),levering:document.getElementById('f-levering').checked,montering:document.getElementById('f-montering').checked,kunstner:document.getElementById('f-kunstner').value.trim(),tittel:document.getElementById('f-tittel').value.trim(),edisjon:document.getElementById('f-edisjon').value.trim(),pris:nv('f-pris'),bkh:nv('f-bkh'),ramme:nv('f-ramme'),frakt:nv('f-frakt'),total:nv('f-total'),ramme_info:document.getElementById('f-ramme-info').value.trim(),selger:document.getElementById('f-selger').value.trim(),notat:document.getElementById('f-notat').value.trim(),bilde_url:fFotoUrl,butikk:aktivButikk,hentet:false,faktura_sendt:false};
   if(mode==='gammelt'){var dv=document.getElementById('f-dato').value;if(dv)row.created_at=new Date(dv).toISOString();}
   var r=await sb.from('salg').insert([row]);
   btn.disabled=false;btn.textContent='Registrer salg';
@@ -1136,7 +1145,7 @@ async function submitSale(){
   msg.style.color='var(--green)';msg.textContent='✓ Salg registrert!';
   ['navn','telefon','epost','adresse','kunstner','tittel','edisjon','pris','bkh','ramme','frakt','total','selger'].forEach(function(k){document.getElementById('f-'+k).value='';});
   document.getElementById('f-ramme-info').value='';document.getElementById('f-notat').value='';
-  document.getElementById('f-ux-advarsel').className='ux-advarsel';document.getElementById('f-levering').checked=false;
+  document.getElementById('f-ux-advarsel').className='ux-advarsel';document.getElementById('f-levering').checked=false;document.getElementById('f-montering').checked=false;
   settFotoPreview('f-foto-preview','f-foto-fjern',null);fFotoUrl=null;
   setMode('nytt');setTimeout(function(){msg.textContent='';},4000);loadSales();
 }
