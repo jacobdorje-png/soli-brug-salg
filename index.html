@@ -1192,6 +1192,16 @@ async function saveIr(){
 }
 
 /* ══════════════ INIT ══════════════ */
+/* ── NTFY VARSLER ── */
+var NTFY_KANAL='soli-brug-salg';
+function sendVarsel(tittel,melding){
+  fetch('https://ntfy.sh/'+NTFY_KANAL,{
+    method:'POST',
+    headers:{'Title':tittel,'Priority':'default','Content-Type':'text/plain; charset=utf-8'},
+    body:melding
+  }).catch(function(){/* stille feil – varsel er ikke kritisk */});
+}
+
 function init(){
   /* Sett startfarge (Soli er aktiv ved oppstart) */
   document.body.className='butikk-soli';
@@ -1248,6 +1258,11 @@ async function submitSale(){
   btn.disabled=false;btn.textContent='Registrer salg';
   if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
   msg.style.color='var(--green)';msg.textContent='✓ Salg registrert!';
+  /* ── VARSEL ── */
+  sendVarsel(
+    '🛒 Nytt salg – '+(aktivButikk==='soli'?'Soli':'Fredrikstad'),
+    (row.kunstner?row.kunstner+' – ':'')+(row.tittel?row.tittel+'\n':'')+kr(row.total)+(row.selger?'\nSelger: '+row.selger:'')
+  );
   ['navn','telefon','epost','adresse','kunstner','tittel','edisjon','pris','bkh','ramme','frakt','total','selger'].forEach(function(k){document.getElementById('f-'+k).value='';});
   document.getElementById('f-ramme-info').value='';document.getElementById('f-notat').value='';
   document.getElementById('f-ux-advarsel').className='ux-advarsel';document.getElementById('f-levering').checked=false;document.getElementById('f-montering').checked=false;
@@ -1265,6 +1280,7 @@ async function submitIr(){
   btn.disabled=false;btn.textContent='Registrer innrammingsjobb';
   if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
   msg.style.color='var(--green)';msg.textContent='✓ Registrert!';
+  sendVarsel('🖼 Ny innrammingsjobb',(row.navn?row.navn+'\n':'')+(row.beskrivelse||'')+(row.pris?'\n'+kr(row.pris):''));
   ['ir-navn','ir-tlf','ir-pris'].forEach(function(k){document.getElementById(k).value='';});
   document.getElementById('ir-beskrivelse').value='';document.getElementById('ir-notat').value='';
   settFotoPreview('ir-foto-preview','ir-foto-fjern',null);irFotoUrl=null;
