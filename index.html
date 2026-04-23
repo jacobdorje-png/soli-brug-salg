@@ -1206,12 +1206,12 @@ function sendVarsel(tittel,melding){
   fetch('https://ntfy.sh/'+NTFY_KANAL,{
     method:'POST',
     headers:{
-      'Title': encodeURIComponent(tittel),
+      'Title': tittel,
       'Priority': 'default',
       'Tags': 'bell',
       'Content-Type': 'text/plain; charset=utf-8'
     },
-    body: tittel+'\n'+melding
+    body: melding
   }).then(function(res){
     if(!res.ok)console.error('ntfy feil:',res.status);
     else console.log('ntfy sendt OK');
