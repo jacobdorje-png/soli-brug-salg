@@ -1203,15 +1203,15 @@ async function slettSalg(s){
 /* ── NTFY VARSLER ── */
 var NTFY_KANAL='soli-brug-salg';
 function sendVarsel(tittel,melding){
-  fetch('https://ntfy.sh/'+NTFY_KANAL,{
+  fetch('https://ntfy.sh/',{
     method:'POST',
-    headers:{
-      'Title': tittel,
-      'Priority': 'default',
-      'Tags': 'bell',
-      'Content-Type': 'text/plain; charset=utf-8'
-    },
-    body: melding
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      topic: NTFY_KANAL,
+      title: tittel,
+      message: melding,
+      priority: 3
+    })
   }).then(function(res){
     if(!res.ok)console.error('ntfy feil:',res.status);
     else console.log('ntfy sendt OK');
