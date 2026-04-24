@@ -230,9 +230,12 @@ body.butikk-fredrikstad .type-chip input[type=radio]{accent-color:#8B1a2e}
 .status-btn:active{opacity:.8}
 @media(min-width:600px){.sc-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.4rem}.status-btn{min-height:32px;padding:.2rem .7rem;border-radius:20px;font-size:.75rem;border-width:1.5px}}
 
-.sc-customer{border-top:1px dashed var(--border);padding-top:.5rem;margin-top:.1rem;margin-bottom:.6rem}
+.sc-customer{border-bottom:1px dashed var(--border);padding-bottom:.5rem;margin-bottom:.6rem}
 .sc-customer-name{font-size:.88rem;font-weight:700;color:#333;margin-bottom:.2rem}
 .sc-customer-detail{font-size:.78rem;color:var(--muted);font-weight:500;line-height:2}
+.badge-hente{font-size:.75rem;padding:.25rem .6rem;border-radius:20px;font-weight:700}
+.badge-soli{background:#e0f0e8;color:#3a7a52;border:1px solid #b0d8c0}
+.badge-fred{background:#f5e0e4;color:#8B1a2e;border:1px solid #d4a0aa}
 .contact-link{display:inline-flex;align-items:center;gap:.25rem;color:var(--accent);font-weight:700;cursor:pointer;background:none;border:none;font-family:'proxima-nova','Nunito',sans-serif;font-size:.78rem;padding:.1rem 0;text-decoration:none;min-height:36px}
 .contact-link:active{opacity:.7}
 
@@ -387,6 +390,10 @@ datalist{display:none!important}
           <div class="checkbox-row"><input type="checkbox" id="f-levering"><label for="f-levering">🚚 Levering</label></div>
           <div class="checkbox-row"><input type="checkbox" id="f-montering"><label for="f-montering">🔧 Montering</label></div>
         </div>
+        <div class="frow">
+          <div class="checkbox-row"><input type="checkbox" id="f-hentes-soli"><label for="f-hentes-soli">📍 Hentes på Soli Brug</label></div>
+          <div class="checkbox-row"><input type="checkbox" id="f-hentes-fred"><label for="f-hentes-fred">📍 Hentes i Fredrikstad</label></div>
+        </div>
         <hr class="fdiv">
         <div><span class="lbl">Kunstner</span><input type="text" id="f-kunstner" placeholder="Søk eller skriv navn…" list="kunstner-list" autocomplete="off"><datalist id="kunstner-list"></datalist></div>
         <div>
@@ -534,6 +541,10 @@ datalist{display:none!important}
       <div class="frow">
         <div class="checkbox-row"><input type="checkbox" id="m-levering"><label for="m-levering">🚚 Levering</label></div>
         <div class="checkbox-row"><input type="checkbox" id="m-montering"><label for="m-montering">🔧 Montering</label></div>
+      </div>
+      <div class="frow">
+        <div class="checkbox-row"><input type="checkbox" id="m-hentes-soli"><label for="m-hentes-soli">📍 Hentes på Soli Brug</label></div>
+        <div class="checkbox-row"><input type="checkbox" id="m-hentes-fred"><label for="m-hentes-fred">📍 Hentes i Fredrikstad</label></div>
       </div>
       <hr class="fdiv">
       <div><span class="lbl">Kunstner</span><input type="text" id="m-kunstner" list="kunstner-list-m" autocomplete="off"><datalist id="kunstner-list-m"></datalist></div>
@@ -932,18 +943,29 @@ function makeCard(s,erGruppert){
   var selgerHtml=s.selger?'<div class="sc-selger">Selger: '+s.selger+'</div>':'';
   var arkiverKnapp=!s.arkiv?'<button class="sc-arkiver-btn" data-action="arkiver">🗄 Arkiver</button>':'';
 
+  /* Hentested badge */
+  var henteHtml='';
+  if(s.levering)henteHtml+='<span class="badge-lev">🚚 Levering</span>';
+  if(s.montering)henteHtml+='<span class="badge-mont">🔧 Montering</span>';
+  if(s.hentested==='soli')henteHtml+='<span class="badge-hente badge-soli">📍 Hentes på Soli Brug</span>';
+  else if(s.hentested==='fredrikstad')henteHtml+='<span class="badge-hente badge-fred">📍 Hentes i Fredrikstad</span>';
+  if(!henteHtml)henteHtml='<span class="badge-no">Hentes</span>';
+
   d.innerHTML=
     '<div class="sc-top"><span class="sc-nr">'+onr(s.ordrenummer)+'</span>'+butikkChip+arkivChip+'<span class="sc-time">'+fmt(s.created_at)+'</span></div>'+
+    /* 1. KUNDEINFO ØVERST */
+    '<div class="sc-customer"><div class="sc-customer-name">'+(s.navn||'—')+'</div><div class="sc-customer-detail">'+(k||'')+(k&&s.adresse?'<br>':'')+(s.adresse||'')+'</div></div>'+
+    /* 2. KUNSTVERKINFO */
     artHtml+selgerHtml+fotoHtml+
     '<div class="sc-amounts">'+amt('Pris',s.pris,null)+amt('BKH 5%',s.bkh,null)+amt('Ramme',s.ramme,s.ramme_info)+amt('Frakt',s.frakt,null)+'</div>'+
-    '<div class="sc-foot"><div class="badge-wrap">'+(s.levering?'<span class="badge-lev">🚚 Levering</span>':'')+(s.montering?'<span class="badge-mont">🔧 Montering</span>':'')+(!s.levering&&!s.montering?'<span class="badge-no">Hentes</span>':'')+'</div><span class="sc-total">'+kr(s.total)+'</span></div>'+
     notatHtml+
+    /* 3. HENTING NEDERST */
+    '<div class="sc-foot"><div class="badge-wrap">'+henteHtml+'</div><span class="sc-total">'+kr(s.total)+'</span></div>'+
     '<div class="sc-actions">'+
       '<button class="status-btn'+(s.hentet?' ok-green':'')+'" data-action="hentet">'+(s.hentet?'✅':'☐')+' Hentet</button>'+
       '<button class="status-btn'+(s.betalt_kort?' ok-green':'')+'" data-action="betalt_kort">'+(s.betalt_kort?'✅':'☐')+' Betalt kort</button>'+
       '<button class="status-btn'+(s.faktura_sendt?' ok-green':'')+'" data-action="faktura">'+(s.faktura_sendt?'✅ Faktura sendt':'📄 Skal ha faktura')+'</button>'+
     '</div>'+
-    '<div class="sc-customer"><div class="sc-customer-name">'+(s.navn||'—')+'</div><div class="sc-customer-detail">'+(k||'')+(k&&s.adresse?'<br>':'')+(s.adresse||'')+'</div></div>'+
     '<div class="sc-bottom-row"><button class="sc-copy-btn" data-action="copy">📋 Kopier kvittering</button>'+arkiverKnapp+'<button class="sc-edit-btn" data-action="edit">✏️ Rediger</button><button class="sc-edit-btn" data-action="slett" style="color:#c0392b">🗑</button></div>';
 
   d.querySelector('[data-action=hentet]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'hentet',this);});
@@ -1181,6 +1203,8 @@ function openModal(s){
   document.getElementById('m-notat').value=s.notat||'';
   document.getElementById('m-levering').checked=!!s.levering;
   document.getElementById('m-montering').checked=!!s.montering;
+  document.getElementById('m-hentes-soli').checked=s.hentested==='soli';
+  document.getElementById('m-hentes-fred').checked=s.hentested==='fredrikstad';
   var mType=document.querySelector('input[name="m-type"][value="'+( s.type||'')+'"]');
   if(mType)mType.checked=true; else{var prev=document.querySelector('input[name="m-type"]:checked');if(prev)prev.checked=false;}
   settFotoPreview('m-foto-preview','m-foto-fjern',s.bilde_url);
@@ -1195,7 +1219,7 @@ async function saveSale(){
   var btn=document.getElementById('btn-save'),msg=document.getElementById('modal-msg');
   btn.disabled=true;btn.textContent='Lagrer…';
   var mTypeValg=document.querySelector('input[name="m-type"]:checked');
-  var row={navn:document.getElementById('m-navn').value.trim(),telefon:document.getElementById('m-telefon').value.trim(),epost:document.getElementById('m-epost').value.trim(),adresse:document.getElementById('m-adresse').value.trim(),levering:document.getElementById('m-levering').checked,montering:document.getElementById('m-montering').checked,kunstner:document.getElementById('m-kunstner').value.trim(),tittel:document.getElementById('m-tittel').value.trim(),edisjon:document.getElementById('m-edisjon').value.trim(),type:mTypeValg?mTypeValg.value:'',pris:nv('m-pris'),bkh:nv('m-bkh'),ramme:nv('m-ramme'),frakt:nv('m-frakt'),total:nv('m-total'),ramme_info:document.getElementById('m-ramme-info').value.trim(),selger:document.getElementById('m-selger').value.trim(),notat:document.getElementById('m-notat').value.trim(),bilde_url:mFotoUrl};
+  var row={navn:document.getElementById('m-navn').value.trim(),telefon:document.getElementById('m-telefon').value.trim(),epost:document.getElementById('m-epost').value.trim(),adresse:document.getElementById('m-adresse').value.trim(),levering:document.getElementById('m-levering').checked,montering:document.getElementById('m-montering').checked,hentested:document.getElementById('m-hentes-soli').checked?'soli':document.getElementById('m-hentes-fred').checked?'fredrikstad':null,kunstner:document.getElementById('m-kunstner').value.trim(),tittel:document.getElementById('m-tittel').value.trim(),edisjon:document.getElementById('m-edisjon').value.trim(),type:mTypeValg?mTypeValg.value:'',pris:nv('m-pris'),bkh:nv('m-bkh'),ramme:nv('m-ramme'),frakt:nv('m-frakt'),total:nv('m-total'),ramme_info:document.getElementById('m-ramme-info').value.trim(),selger:document.getElementById('m-selger').value.trim(),notat:document.getElementById('m-notat').value.trim(),bilde_url:mFotoUrl};
   var dv=document.getElementById('m-dato').value;if(dv)row.created_at=new Date(dv).toISOString();
   var r=await sb.from('salg').update(row).eq('id',editId);
   btn.disabled=false;btn.textContent='Lagre endringer';
@@ -1316,6 +1340,11 @@ function init(){
   ['f-bkh','f-ramme','f-frakt'].forEach(function(id){document.getElementById(id).addEventListener('input',function(){calcT('f-');});});
   document.getElementById('f-tittel').addEventListener('input',sjekkUxAdvarsel);
   document.getElementById('f-ramme-info').addEventListener('input',sjekkUxAdvarsel);
+  /* Hentested – gjensidig utelukkende */
+  ['f','m'].forEach(function(p){
+    document.getElementById(p+'-hentes-soli').addEventListener('change',function(){if(this.checked)document.getElementById(p+'-hentes-fred').checked=false;});
+    document.getElementById(p+'-hentes-fred').addEventListener('change',function(){if(this.checked)document.getElementById(p+'-hentes-soli').checked=false;});
+  });
   document.getElementById('legg-til-verk-btn').addEventListener('click',leggTilEkstraVerk);
   document.getElementById('submit-btn').addEventListener('click',submitSale);
 
@@ -1362,6 +1391,7 @@ async function submitSale(){
     adresse:document.getElementById('f-adresse').value.trim(),
     levering:document.getElementById('f-levering').checked,
     montering:document.getElementById('f-montering').checked,
+    hentested:document.getElementById('f-hentes-soli').checked?'soli':document.getElementById('f-hentes-fred').checked?'fredrikstad':null,
     selger:document.getElementById('f-selger').value.trim(),
     notat:document.getElementById('f-notat').value.trim(),
     butikk:aktivButikk,hentet:false,faktura_sendt:false,betalt_kort:false
@@ -1409,6 +1439,7 @@ async function submitSale(){
   document.getElementById('f-ramme-info').value='';document.getElementById('f-notat').value='';
   document.getElementById('f-ux-advarsel').className='ux-advarsel';
   document.getElementById('f-levering').checked=false;document.getElementById('f-montering').checked=false;
+  document.getElementById('f-hentes-soli').checked=false;document.getElementById('f-hentes-fred').checked=false;
   var tc=document.querySelector('input[name="f-type"]:checked');if(tc)tc.checked=false;
   settFotoPreview('f-foto-preview','f-foto-fjern',null);fFotoUrl=null;
   document.getElementById('ekstra-verk-container').innerHTML='';
