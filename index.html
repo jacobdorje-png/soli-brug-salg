@@ -1115,22 +1115,6 @@ function emailPopup(e,epost){showPopup(e,[{icon:'✉️',label:'Apple Mail',href
 
 function lagKvittering(s){
   var tl=(s.tittel||'—')+(s.edisjon?' ('+s.edisjon+')':'');
-
-  /* Datoer: dagen etter salget kl 17-18, og hele påfølgende uke */
-  var salgsDato=new Date(s.created_at);
-
-  /* Første hentedato = neste dag */
-  var forsteDato=new Date(salgsDato);
-  forsteDato.setDate(forsteDato.getDate()+1);
-
-  /* Start på påfølgende uke (mandag etter forsteDato) */
-  var dagI=forsteDato.getDay(); /* 0=søn, 1=man … */
-  var dagerTilMan=dagI===0?1:(8-dagI);
-  var ukeSlutt=new Date(forsteDato);
-  ukeSlutt.setDate(forsteDato.getDate()+dagerTilMan+5); /* mandag + 5 = lørdag */
-
-  function fmtDato(d){return d.toLocaleDateString('nb-NO',{day:'2-digit',month:'2-digit',year:'2-digit'});}
-
   return[
     'Soli Brug Galleri',
     'Ordrenummer: '+onr(s.ordrenummer),
@@ -1143,8 +1127,8 @@ function lagKvittering(s){
     '',
     'Totalt: '+kr(s.total),
     '',
-    'Bildet kan hentes på Soli Brug tidligst '+fmtDato(forsteDato)+' 17.00–18.00,',
-    'og alle dager 13–18 i påfølgende uke tom. '+fmtDato(ukeSlutt)+'.',
+    'Bildet kan hentes på Soli Brug tidligst ___.___.26 17.00–18.00,',
+    'og alle dager 13–18 i påfølgende uke tom. ___.___.26.',
     '',
     'Tusen takk for handelen!',
     'Mvh:',
