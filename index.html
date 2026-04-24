@@ -27,7 +27,7 @@ input[type=text],input[type=email],input[type=tel],input[type=number],input[type
 input:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(122,92,58,.12)}
 input[readonly]{background:#e8e2da;color:var(--muted)}
 .total-inp{background:var(--accent)!important;color:#fff!important;font-weight:700!important;border-color:var(--accent)!important;font-size:1.1rem!important}
-textarea.notat-inp{width:100%;padding:.75rem 1rem;border:1.5px solid var(--border);border-radius:10px;font-family:'proxima-nova','Nunito',sans-serif;font-size:16px;color:#111;font-weight:500;background:#fdf9f5;-webkit-appearance:none;box-sizing:border-box;resize:vertical;min-height:80px;line-height:1.5}
+textarea.notat-inp{width:100%;padding:.75rem 1rem;border:1.5px solid var(--border);border-radius:10px;font-family:'proxima-nova','Nunito',sans-serif;font-size:16px;color:#111;font-weight:500;background:#fdf9f5;-webkit-appearance:none;box-sizing:border-box;resize:vertical;min-height:55px;line-height:1.5}
 textarea.notat-inp:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(122,92,58,.12)}
 
 /* BUTTONS */
@@ -141,16 +141,16 @@ body.butikk-fredrikstad .type-chip input[type=radio]{accent-color:#8B1a2e}
 .ramme-row{display:flex;gap:.5rem;align-items:flex-end}
 .ramme-pris{width:110px;flex-shrink:0}
 .ramme-info-wrap{flex:1;display:flex;flex-direction:column;gap:.3rem}
-.ramme-info-inp{width:100%;min-height:var(--touch);padding:.75rem .9rem;border:1.5px solid var(--border);border-radius:10px;font-family:'proxima-nova','Nunito',sans-serif;font-size:16px;color:#111;font-weight:600;background:#faf8f5;-webkit-appearance:none;box-sizing:border-box}
+.ramme-info-inp{width:100%;min-height:var(--touch);padding:.75rem .9rem;border:1.5px solid var(--border);border-radius:10px;font-family:'proxima-nova','Nunito',sans-serif;font-size:16px;color:#111;font-weight:600;background:#faf8f5;-webkit-appearance:none;box-sizing:border-box;height:var(--touch)}
 .ramme-info-inp:focus{outline:none;border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(122,92,58,.12)}
 .ux-advarsel{display:none;background:#fff3e0;border:1.5px solid var(--orange);border-radius:8px;padding:.65rem .85rem;font-size:.85rem;font-weight:700;color:var(--orange);line-height:1.4}
 .ux-advarsel.synlig{display:flex;align-items:flex-start;gap:.4rem}
 
 /* FOTO UPLOAD */
-.foto-upload-wrap{border:2px dashed var(--border);border-radius:10px;padding:1rem;text-align:center;cursor:pointer;background:#faf8f5;transition:border-color .15s}
+.foto-upload-wrap{border:2px dashed var(--border);border-radius:10px;padding:.5rem;text-align:center;cursor:pointer;background:#faf8f5;transition:border-color .15s}
 .foto-upload-wrap:hover,.foto-upload-wrap.dragover{border-color:var(--accent);background:#f5f0ea}
-.foto-upload-wrap .foto-icon{font-size:1.8rem;margin-bottom:.3rem}
-.foto-upload-wrap p{font-size:.82rem;color:var(--muted);font-weight:600}
+.foto-upload-wrap .foto-icon{font-size:1.3rem;margin-bottom:.1rem}
+.foto-upload-wrap p{font-size:.78rem;color:var(--muted);font-weight:600;margin:0}
 .foto-preview{width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-top:.5rem;display:none}
 .foto-fjern-btn{display:none;margin-top:.4rem;background:none;border:1px solid var(--danger);color:var(--danger);border-radius:6px;padding:.25rem .6rem;font-size:.75rem;font-weight:700;cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif}
 .foto-laster{display:none;font-size:.8rem;color:var(--muted);margin-top:.4rem;font-weight:600}
@@ -405,7 +405,7 @@ datalist{display:none!important}
           <div><span class="lbl">5% BKH (kr)</span><input type="number" id="f-bkh" placeholder="0" min="0" inputmode="numeric"></div>
         </div>
         <div>
-          <span class="lbl">Rammeinfo</span>
+          <span class="lbl">Rammepris &amp; Rammeinfo</span>
           <div class="ramme-row">
             <div class="ramme-pris"><input type="number" id="f-ramme" placeholder="kr" min="0" inputmode="numeric"></div>
             <div class="ramme-info-wrap">
@@ -420,7 +420,7 @@ datalist{display:none!important}
         <div><span class="lbl">Selger</span><input type="text" id="f-selger" placeholder="Hvem gjorde salget?" list="selger-list" autocomplete="off"><datalist id="selger-list"></datalist></div>
         <div><span class="lbl">Div. info om salget</span><textarea class="notat-inp" id="f-notat" placeholder="F.eks. ønsket edisjon, must ferdigstilles til dato…"></textarea></div>
         <div>
-          <span class="lbl">Bilde av kunstverket</span>
+          <span class="lbl">Bilde</span>
           <div class="foto-upload-wrap" id="f-foto-wrap">
             <div class="foto-icon">📷</div>
             <p>Trykk for å laste opp bilde</p>
@@ -471,9 +471,9 @@ datalist{display:none!important}
           <div><span class="lbl">Navn</span><input type="text" id="ir-navn" placeholder="Kundenavn" autocomplete="off"></div>
           <div><span class="lbl">Telefon</span><input type="tel" id="ir-tlf" placeholder="Telefon"></div>
         </div>
-        <div><span class="lbl">Beskrivelse av innramming</span><textarea class="notat-inp" id="ir-beskrivelse" placeholder="F.eks. Olje på lerret, hvit passe-partout, sort smal ramme…" style="min-height:70px"></textarea></div>
+        <div><span class="lbl">Beskrivelse av innramming</span><textarea class="notat-inp" id="ir-beskrivelse" placeholder="F.eks. Olje på lerret, hvit passe-partout, sort smal ramme…" style="min-height:55px"></textarea></div>
         <div><span class="lbl">Pris (kr)</span><input type="number" id="ir-pris" placeholder="0" min="0" inputmode="numeric" style="max-width:180px"></div>
-        <div><span class="lbl">Div. info</span><textarea class="notat-inp" id="ir-notat" placeholder="Ønsket ferdigdato, spesielle ønsker…" style="min-height:60px"></textarea></div>
+        <div><span class="lbl">Div. info</span><textarea class="notat-inp" id="ir-notat" placeholder="Ønsket ferdigdato, spesielle ønsker…" style="min-height:55px"></textarea></div>
         <div>
           <span class="lbl">Bilde av jobben</span>
           <div class="foto-upload-wrap" id="ir-foto-wrap">
@@ -553,7 +553,7 @@ datalist{display:none!important}
         <div><span class="lbl">5% BKH (kr)</span><input type="number" id="m-bkh" placeholder="0" min="0" inputmode="numeric"></div>
       </div>
       <div>
-        <span class="lbl">Rammeinfo</span>
+        <span class="lbl">Rammepris &amp; Rammeinfo</span>
         <div class="ramme-row">
           <div class="ramme-pris"><input type="number" id="m-ramme" placeholder="kr" min="0" inputmode="numeric"></div>
           <div class="ramme-info-wrap"><input class="ramme-info-inp" type="text" id="m-ramme-info" placeholder="UX / MR / flytende på hvit…"></div>
@@ -588,9 +588,9 @@ datalist{display:none!important}
         <div><span class="lbl">Navn</span><input type="text" id="ir-m-navn"></div>
         <div><span class="lbl">Telefon</span><input type="tel" id="ir-m-tlf"></div>
       </div>
-      <div><span class="lbl">Beskrivelse</span><textarea class="notat-inp" id="ir-m-beskrivelse" style="min-height:70px"></textarea></div>
+      <div><span class="lbl">Beskrivelse</span><textarea class="notat-inp" id="ir-m-beskrivelse" style="min-height:55px"></textarea></div>
       <div><span class="lbl">Pris (kr)</span><input type="number" id="ir-m-pris" placeholder="0" min="0" inputmode="numeric" style="max-width:180px"></div>
-      <div><span class="lbl">Div. info</span><textarea class="notat-inp" id="ir-m-notat" style="min-height:60px"></textarea></div>
+      <div><span class="lbl">Div. info</span><textarea class="notat-inp" id="ir-m-notat" style="min-height:55px"></textarea></div>
       <div>
         <span class="lbl">Bilde</span>
         <div class="foto-upload-wrap" id="ir-m-foto-wrap"><div class="foto-icon">📷</div><p>Trykk for å laste opp / bytte bilde</p></div>
