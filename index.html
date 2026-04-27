@@ -375,9 +375,6 @@ datalist{display:none!important}
   </div>
 
   <!-- ══════════════════════ SALG-SIDE ══════════════════════ -->
-  <div class="filter-wrap"><div class="filter-tabs" id="filter-tabs"></div></div>
-  <div class="arkiv-bar" id="arkiv-bar" style="display:none"><button class="arkiv-bar-btn" id="arkiver-btn">🗄 Arkiver disse salgene…</button></div>
-
   <div class="page active" id="page-salg">
 
     <!-- SKJEMA -->
@@ -460,6 +457,8 @@ datalist{display:none!important}
       <div id="form-msg"></div>
     </div>
 
+    <div class="filter-wrap"><div class="filter-tabs" id="filter-tabs"></div></div>
+    <div class="arkiv-bar" id="arkiv-bar" style="display:none"><button class="arkiv-bar-btn" id="arkiver-btn">🗄 Arkiver disse salgene…</button></div>
     <div class="search-wrap"><span class="search-icon">🔍</span><input type="search" id="search-input" placeholder="Søk i alle salg, inkl. arkiverte…"><button class="search-clear" id="search-clear">✕</button></div>
     <div class="search-info" id="search-info" style="display:none"></div>
 
@@ -486,6 +485,7 @@ datalist{display:none!important}
 
   <!-- ══════════════════════ INNRAMMING-SIDE ══════════════════════ -->
   <div class="page" id="page-innramming">
+    <div class="filter-wrap"><div class="filter-tabs" id="filter-tabs-ir"></div></div>
     <div class="section">
       <div class="section-head"><div class="stitle">Ny innrammingsjobb</div></div>
       <div class="fgrid">
@@ -802,7 +802,10 @@ function setMainTab(tab){
     document.body.className='butikk-innramming';
     var metaColor=document.querySelector('meta[name=theme-color]');
     if(metaColor)metaColor.content='#3a5a7a';
-    byggFilterTabs();
+    byggFilterTabs(); /* for faktura-count */
+    /* Fyll innramming-filterstripet med bare Faktura-tab */
+    var irWrap=document.getElementById('filter-tabs-ir');
+    if(irWrap){irWrap.innerHTML='';var irFt=document.createElement('button');irFt.className='ftab'+(visFaktura?' active':'');irFt.style.borderColor='#e07020';irFt.style.color=visFaktura?'#fff':'#e07020';if(visFaktura)irFt.style.background='#e07020';irFt.textContent='📄 Faktura';irFt.addEventListener('click',async function(){visFaktura=!visFaktura;if(visFaktura&&alleIr.length===0)await loadIr();setMainTab('innramming');});irWrap.appendChild(irFt);}
     if(alleIr.length===0)loadIr();
   }
 }
