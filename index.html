@@ -436,7 +436,7 @@ datalist{display:none!important}
           </div>
         </div>
         <div><span class="lbl">Frakt (kr)</span><input type="number" id="f-frakt" placeholder="0" min="0" inputmode="numeric"></div>
-        <div><span class="lbl">Total pris (kr)</span><input type="number" id="f-total" placeholder="0" readonly class="total-inp"></div>
+        <div><span class="lbl">Total pris (kr)</span><input type="number" id="f-total" placeholder="0" class="total-inp" inputmode="numeric"></div>
         <hr class="fdiv">
         <div><span class="lbl">Selger</span><input type="text" id="f-selger" placeholder="Hvem gjorde salget?" list="selger-list" autocomplete="off"><datalist id="selger-list"></datalist></div>
         <div><span class="lbl">Div. info om salget</span><textarea class="notat-inp" id="f-notat" placeholder="F.eks. ønsket edisjon, must ferdigstilles til dato…"></textarea></div>
@@ -592,7 +592,7 @@ datalist{display:none!important}
         </div>
       </div>
       <div><span class="lbl">Frakt (kr)</span><input type="number" id="m-frakt" placeholder="0" min="0" inputmode="numeric"></div>
-      <div><span class="lbl">Total pris (kr)</span><input type="number" id="m-total" placeholder="0" readonly class="total-inp"></div>
+      <div><span class="lbl">Total pris (kr)</span><input type="number" id="m-total" placeholder="0" class="total-inp" inputmode="numeric"></div>
       <hr class="fdiv">
       <div><span class="lbl">Selger</span><input type="text" id="m-selger" list="selger-list-m" autocomplete="off"><datalist id="selger-list-m"></datalist></div>
       <div><span class="lbl">Div. info om salget</span><textarea class="notat-inp" id="m-notat"></textarea></div>
@@ -644,7 +644,7 @@ var SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6I
 var BUCKET='bilder';
 var CODE='sbs';
 var sb=null,editId=null,irEditId=null,mode='nytt';
-var alleSalg=[],alleIr=[],aktivFilter='alle',irFilter='alle',sokeTekst='',visArkiv=false;
+var alleSalg=[],alleIr=[],aktivFilter='alle',irFilter='alle',sokeTekst='',visArkiv=false,visFaktura=false;
 var aktivButikk='soli'; /* 'soli' eller 'fredrikstad' */
 var arkivModus=null,arkivEnkeltId=null;
 /* Foto state */
@@ -792,7 +792,7 @@ function setMainTab(tab){
     document.body.className='butikk-'+tab;
     var metaColor=document.querySelector('meta[name=theme-color]');
     if(metaColor)metaColor.content=tab==='soli'?'#3a7a52':'#8B1a2e';
-    aktivFilter='alle';visArkiv=false;sokeTekst='';
+    aktivFilter='alle';visArkiv=false;visFaktura=false;sokeTekst='';
     document.getElementById('search-input').value='';
     oppdaterSokeUI();oppdaterArkivBar();
     oppdaterAutocomplete();byggFilterTabs();renderSalg();
@@ -860,27 +860,42 @@ function byggFilterTabs(){
   var wrap=document.getElementById('filter-tabs');wrap.innerHTML='';
   var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
   var arkiverte=alleSalg.filter(function(s){return!!s.arkiv&&s.butikk===aktivButikk;});
+  var fakturaAntall=aktive.filter(function(s){return s.skal_ha_faktura&&!s.faktura_sendt;}).length;
+
   var nylige=document.createElement('button');
-  nylige.className='ftab'+(aktivFilter==='alle'&&!visArkiv?' active':'');
+  nylige.className='ftab'+(aktivFilter==='alle'&&!visArkiv&&!visFaktura?' active':'');
   nylige.textContent='Nylige salg ('+aktive.length+')';
-  nylige.addEventListener('click',function(){aktivFilter='alle';visArkiv=false;sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
+  nylige.addEventListener('click',function(){aktivFilter='alle';visArkiv=false;visFaktura=false;sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
   wrap.appendChild(nylige);
+
   var kunstnere=[];
   aktive.forEach(function(s){if(s.kunstner&&kunstnere.indexOf(s.kunstner)===-1)kunstnere.push(s.kunstner);});
   kunstnere.sort();
   kunstnere.forEach(function(k){
     var antall=aktive.filter(function(s){return s.kunstner===k;}).length;
     var btn=document.createElement('button');
-    btn.className='ftab'+(aktivFilter===k&&!visArkiv?' active':'');
+    btn.className='ftab'+(aktivFilter===k&&!visArkiv&&!visFaktura?' active':'');
     btn.textContent=k+' ('+antall+')';
-    btn.addEventListener('click',function(){aktivFilter=k;visArkiv=false;sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
+    btn.addEventListener('click',function(){aktivFilter=k;visArkiv=false;visFaktura=false;sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
     wrap.appendChild(btn);
   });
+
+  /* Faktura-tab */
+  if(fakturaAntall>0){
+    var ft=document.createElement('button');
+    ft.className='ftab'+(visFaktura?' active':'');
+    ft.style.borderColor='#e07020';ft.style.color=visFaktura?'#fff':'#e07020';
+    if(visFaktura)ft.style.background='#e07020';
+    ft.textContent='📄 Faktura ('+fakturaAntall+')';
+    ft.addEventListener('click',function(){visFaktura=!visFaktura;visArkiv=false;aktivFilter='alle';sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
+    wrap.appendChild(ft);
+  }
+
   if(arkiverte.length>0){
     var at=document.createElement('button');
     at.className='ftab arkiv-tab'+(visArkiv?' active':'');
     at.textContent='🗄 Arkiv ('+arkiverte.length+')';
-    at.addEventListener('click',function(){visArkiv=true;aktivFilter='alle';sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
+    at.addEventListener('click',function(){visArkiv=true;visFaktura=false;aktivFilter='alle';sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
     wrap.appendChild(at);
   }
 }
@@ -917,6 +932,16 @@ function renderSalg(){
     visTotals(treff);return;
   }
   document.getElementById('search-info').style.display='none';
+
+  /* FAKTURA-VISNING */
+  if(visFaktura){
+    document.getElementById('sales-title').textContent='📄 Skal ha faktura';
+    document.getElementById('excel-btn').style.display='none';
+    var fakturaSalg=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk&&s.skal_ha_faktura&&!s.faktura_sendt;});
+    if(!fakturaSalg.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Ingen utestående fakturaer.';return;}
+    fakturaSalg.forEach(function(s){list.appendChild(makeCard(s,false));});
+    visTotals(fakturaSalg);return;
+  }
 
   /* ARKIVVISNING */
   if(visArkiv){
