@@ -890,7 +890,7 @@ function oppdaterSokeUI(){document.getElementById('search-clear').className='sea
 
 async function loadSales(bevarScroll){
   var scrollY=bevarScroll?window.scrollY:0;
-  document.getElementById('loading').style.display='block';
+  if(!bevarScroll){document.getElementById('loading').style.display='block';}
   document.getElementById('sales-list').innerHTML='';
   var r=await sb.from('salg').select('*').order('ordrenummer',{ascending:false});
   document.getElementById('loading').style.display='none';
@@ -1124,8 +1124,8 @@ async function utforArkivering(){
   document.getElementById('arkiv-lagre-btn').disabled=false;document.getElementById('arkiv-lagre-btn').textContent='Flytt til arkiv';
   if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
   document.getElementById('arkiv-modal-bg').classList.remove('open');
-  if(arkivModus==='gruppe'){aktivFilter='alle';visArkiv=false;}
-  loadSales();
+  if(arkivModus==='gruppe'){aktivFilter='alle';visArkiv=false;loadSales();}
+  else{loadSales(true);}
 }
 
 async function hentUtArkiv(an){
