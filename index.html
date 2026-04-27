@@ -880,16 +880,14 @@ function byggFilterTabs(){
     wrap.appendChild(btn);
   });
 
-  /* Faktura-tab */
-  if(fakturaAntall>0){
-    var ft=document.createElement('button');
-    ft.className='ftab'+(visFaktura?' active':'');
-    ft.style.borderColor='#e07020';ft.style.color=visFaktura?'#fff':'#e07020';
-    if(visFaktura)ft.style.background='#e07020';
-    ft.textContent='📄 Faktura ('+fakturaAntall+')';
-    ft.addEventListener('click',function(){visFaktura=!visFaktura;visArkiv=false;aktivFilter='alle';sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
-    wrap.appendChild(ft);
-  }
+  /* Faktura-tab – alltid synlig */
+  var ft=document.createElement('button');
+  ft.className='ftab'+(visFaktura?' active':'');
+  ft.style.borderColor='#e07020';ft.style.color=visFaktura?'#fff':'#e07020';
+  if(visFaktura)ft.style.background='#e07020';
+  ft.textContent='📄 Faktura'+(fakturaAntall>0?' ('+fakturaAntall+')':'');
+  ft.addEventListener('click',function(){visFaktura=!visFaktura;visArkiv=false;aktivFilter='alle';sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
+  wrap.appendChild(ft);
 
   if(arkiverte.length>0){
     var at=document.createElement('button');
