@@ -389,6 +389,7 @@ datalist{display:none!important}
       <div id="datetime-row"><span class="lbl">Tidspunkt</span><input type="datetime-local" id="f-dato"></div>
       <div class="fgrid">
         <div><span class="lbl">Navn</span><input type="text" id="f-navn" placeholder="Fullt navn" autocomplete="off"></div>
+        <div class="checkbox-row" style="background:#fffbf0;border:1.5px solid #f0d060;border-radius:10px;padding:.5rem .85rem;margin:.1rem 0"><input type="checkbox" id="f-gavekort"><label for="f-gavekort" style="color:#a07010;font-weight:700">🎁 Gavekort</label></div>
         <div class="frow">
           <div><span class="lbl">Telefon</span><input type="tel" id="f-telefon" placeholder="Telefon"></div>
           <div><span class="lbl">E-post</span><input type="email" id="f-epost" placeholder="E-post"></div>
@@ -548,6 +549,7 @@ datalist{display:none!important}
       <div><span class="lbl">Tidspunkt</span><input type="datetime-local" id="m-dato"></div>
       <hr class="fdiv">
       <div><span class="lbl">Navn</span><input type="text" id="m-navn" placeholder="Fullt navn"></div>
+      <div class="checkbox-row" style="background:#fffbf0;border:1.5px solid #f0d060;border-radius:10px;padding:.5rem .85rem;margin:.1rem 0"><input type="checkbox" id="m-gavekort"><label for="m-gavekort" style="color:#a07010;font-weight:700">🎁 Gavekort</label></div>
       <div class="frow">
         <div><span class="lbl">Telefon</span><input type="tel" id="m-telefon"></div>
         <div><span class="lbl">E-post</span><input type="email" id="m-epost"></div>
@@ -1033,6 +1035,7 @@ function makeCard(s,erGruppert){
   var ec=s.edisjon?'<span class="sc-edisjon">'+s.edisjon+'</span>':'';
   var typeChip=s.type?'<span class="sc-edisjon" style="background:#f0f0f0;margin-left:.25rem">'+s.type+'</span>':'';
   var arkivChip=s.arkiv?'<span class="sc-arkiv-chip">🗄 '+s.arkiv+'</span>':'';
+  var gaveChip=s.gavekort?'<span style="font-size:.7rem;font-weight:700;background:#fff8d6;color:#a07010;border:1.5px solid #f0d060;border-radius:20px;padding:.15rem .55rem">🎁 Gavekort</span>':'';
   var butikkChip=sokeTekst?'<span style="font-size:.65rem;font-weight:700;color:#fff;background:'+(s.butikk==='soli'?'#3a7c5c':'#8B1a2e')+';border-radius:20px;padding:.15rem .5rem;white-space:nowrap">'+(s.butikk==='soli'?'Soli':'Fredrikstad')+'</span>':'';
   var artHtml=erGruppert
     ?'<div class="sc-art-title-grouped">'+(s.kunstner||'—')+(s.tittel?' – <em style="font-weight:500">'+s.tittel+'</em>':'')+ec+typeChip+'</div>'
@@ -1051,7 +1054,7 @@ function makeCard(s,erGruppert){
   if(!henteHtml)henteHtml='<span class="badge-no">Hentes</span>';
 
   d.innerHTML=
-    '<div class="sc-top"><span class="sc-nr">'+onr(s.ordrenummer)+'</span>'+butikkChip+arkivChip+'<span class="sc-time">'+fmt(s.created_at)+'</span></div>'+
+    '<div class="sc-top"><span class="sc-nr">'+onr(s.ordrenummer)+'</span>'+butikkChip+arkivChip+gaveChip+'<span class="sc-time">'+fmt(s.created_at)+'</span></div>'+
     /* 1. KUNDEINFO ØVERST */
     '<div class="sc-customer"><div class="sc-customer-name">'+(s.navn||'—')+'</div><div class="sc-customer-detail">'+(k||'')+(k&&s.adresse?'<br>':'')+(s.adresse||'')+'</div></div>'+
     /* 2. KUNSTVERKINFO */
@@ -1350,6 +1353,7 @@ function openModal(s){
   document.getElementById('m-notat').value=s.notat||'';
   document.getElementById('m-levering').checked=!!s.levering;
   document.getElementById('m-montering').checked=!!s.montering;
+  document.getElementById('m-gavekort').checked=!!s.gavekort;
   document.getElementById('m-hentes-soli').checked=s.hentested==='soli';
   document.getElementById('m-hentes-fred').checked=s.hentested==='fredrikstad';
   var mType=document.querySelector('input[name="m-type"][value="'+( s.type||'')+'"]');
@@ -1366,7 +1370,7 @@ async function saveSale(){
   var btn=document.getElementById('btn-save'),msg=document.getElementById('modal-msg');
   btn.disabled=true;btn.textContent='Lagrer…';
   var mTypeValg=document.querySelector('input[name="m-type"]:checked');
-  var row={navn:document.getElementById('m-navn').value.trim(),telefon:document.getElementById('m-telefon').value.trim(),epost:document.getElementById('m-epost').value.trim(),adresse:document.getElementById('m-adresse').value.trim(),levering:document.getElementById('m-levering').checked,montering:document.getElementById('m-montering').checked,hentested:document.getElementById('m-hentes-soli').checked?'soli':document.getElementById('m-hentes-fred').checked?'fredrikstad':null,kunstner:document.getElementById('m-kunstner').value.trim(),tittel:document.getElementById('m-tittel').value.trim(),edisjon:document.getElementById('m-edisjon').value.trim(),type:mTypeValg?mTypeValg.value:'',pris:nv('m-pris'),bkh:nv('m-bkh'),ramme:nv('m-ramme'),frakt:nv('m-frakt'),total:nv('m-total'),ramme_info:document.getElementById('m-ramme-info').value.trim(),selger:document.getElementById('m-selger').value.trim(),notat:document.getElementById('m-notat').value.trim(),bilde_url:mFotoUrl};
+  var row={navn:document.getElementById('m-navn').value.trim(),telefon:document.getElementById('m-telefon').value.trim(),epost:document.getElementById('m-epost').value.trim(),adresse:document.getElementById('m-adresse').value.trim(),levering:document.getElementById('m-levering').checked,montering:document.getElementById('m-montering').checked,hentested:document.getElementById('m-hentes-soli').checked?'soli':document.getElementById('m-hentes-fred').checked?'fredrikstad':null,gavekort:document.getElementById('m-gavekort').checked,kunstner:document.getElementById('m-kunstner').value.trim(),tittel:document.getElementById('m-tittel').value.trim(),edisjon:document.getElementById('m-edisjon').value.trim(),type:mTypeValg?mTypeValg.value:'',pris:nv('m-pris'),bkh:nv('m-bkh'),ramme:nv('m-ramme'),frakt:nv('m-frakt'),total:nv('m-total'),ramme_info:document.getElementById('m-ramme-info').value.trim(),selger:document.getElementById('m-selger').value.trim(),notat:document.getElementById('m-notat').value.trim(),bilde_url:mFotoUrl};
   var dv=document.getElementById('m-dato').value;if(dv)row.created_at=new Date(dv).toISOString();
   var r=await sb.from('salg').update(row).eq('id',editId);
   if(r.error){btn.disabled=false;btn.textContent='Lagre endringer';msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
@@ -1651,7 +1655,8 @@ async function submitSale(){
     hentested:document.getElementById('f-hentes-soli').checked?'soli':document.getElementById('f-hentes-fred').checked?'fredrikstad':null,
     selger:document.getElementById('f-selger').value.trim(),
     notat:document.getElementById('f-notat').value.trim(),
-    butikk:aktivButikk,hentet:false,faktura_sendt:false,skal_ha_faktura:false,betalt_kort:false
+    butikk:aktivButikk,hentet:false,faktura_sendt:false,skal_ha_faktura:false,betalt_kort:false,
+    gavekort:document.getElementById('f-gavekort').checked
   };
   if(mode==='gammelt'){var dv=document.getElementById('f-dato').value;if(dv)baseRow.created_at=new Date(dv).toISOString();}
 
@@ -1698,6 +1703,7 @@ async function submitSale(){
   document.getElementById('f-ux-advarsel').className='ux-advarsel';
   document.getElementById('f-levering').checked=false;document.getElementById('f-montering').checked=false;
   document.getElementById('f-hentes-soli').checked=false;document.getElementById('f-hentes-fred').checked=false;
+  document.getElementById('f-gavekort').checked=false;
   var tc=document.querySelector('input[name="f-type"]:checked');if(tc)tc.checked=false;
   settFotoPreview('f-foto-preview','f-foto-fjern',null);fFotoUrl=null;
   document.getElementById('ekstra-verk-container').innerHTML='';
