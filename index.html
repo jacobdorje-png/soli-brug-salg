@@ -394,6 +394,15 @@ datalist{display:none!important}
           <div><span class="lbl">E-post</span><input type="email" id="f-epost" placeholder="E-post"></div>
         </div>
         <div><span class="lbl">Adresse</span><input type="text" id="f-adresse" placeholder="Gateadresse, postnummer sted"></div>
+        <button type="button" class="legg-til-verk-btn" id="gavekort-btn" style="border-color:#f0d060;color:#a07010">🎁 Legg til gavekort</button>
+        <div id="gavekort-felt" style="display:none;background:#fffbf0;border:1.5px solid #f0d060;border-radius:10px;padding:.85rem;margin-top:-.3rem">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem">
+            <span style="font-size:.85rem;font-weight:700;color:#a07010">🎁 Gavekort</span>
+            <button type="button" id="gavekort-fjern" style="background:none;border:none;color:#ccc;font-size:1.1rem;cursor:pointer;line-height:1">✕</button>
+          </div>
+          <div><span class="lbl">Beløp (kr)</span><input type="number" id="f-gavekort-pris" placeholder="0" min="0" inputmode="numeric" style="font-size:1.1rem;font-weight:700;max-width:200px"></div>
+          <div style="margin-top:.6rem"><span class="lbl">Info (valgfri)</span><input type="text" id="f-gavekort-notat" placeholder="F.eks. til hvem, fra hvem…"></div>
+        </div>
         <div class="frow">
           <div class="checkbox-row"><input type="checkbox" id="f-levering"><label for="f-levering">🚚 Levering</label></div>
           <div class="checkbox-row"><input type="checkbox" id="f-montering"><label for="f-montering">🔧 Montering</label></div>
@@ -402,8 +411,6 @@ datalist{display:none!important}
           <div class="checkbox-row"><input type="checkbox" id="f-hentes-soli"><label for="f-hentes-soli">📍 Hentes på Soli Brug</label></div>
           <div class="checkbox-row"><input type="checkbox" id="f-hentes-fred"><label for="f-hentes-fred">📍 Hentes i Fredrikstad</label></div>
         </div>
-        <hr class="fdiv">
-        <button type="button" class="legg-til-verk-btn" id="gavekort-btn" style="border-color:#f0d060;color:#a07010;margin-bottom:.2rem">🎁 Legg til gavekort</button>
         <div><span class="lbl">Kunstner</span><input type="text" id="f-kunstner" placeholder="Søk eller skriv navn…" list="kunstner-list" autocomplete="off"><datalist id="kunstner-list"></datalist></div>
         <div>
           <div class="tittel-row">
@@ -1465,20 +1472,9 @@ function settRammeChip(prefix,val){
 
 /* ── GAVEKORT ── */
 function leggTilGavekort(){
-  var container=document.getElementById('ekstra-verk-container');
-  var idx='gk'+ekstraVerkTeller;ekstraVerkTeller++;
-  var div=document.createElement('div');
-  div.className='ekstra-verk';div.dataset.idx=idx;div.dataset.type='gavekort';
-  div.innerHTML=
-    '<div class="ekstra-verk-header">'+
-      '<span class="ekstra-verk-nr" style="color:#a07010">🎁 Gavekort</span>'+
-      '<button class="fjern-verk-btn" onclick="this.closest(\'.ekstra-verk\').remove()">✕</button>'+
-    '</div>'+
-    '<div class="fgrid">'+
-      '<div><span class="lbl">Beløp (kr)</span><input type="number" data-field="pris" placeholder="0" min="0" inputmode="numeric" style="font-size:1.1rem;font-weight:700"></div>'+
-      '<div><span class="lbl">Div. info</span><input type="text" data-field="notat" placeholder="F.eks. til hvem, fra hvem…"></div>'+
-    '</div>';
-  container.appendChild(div);
+  var felt=document.getElementById('gavekort-felt');
+  felt.style.display='block';
+  document.getElementById('f-gavekort-pris').focus();
 }
 
 /* ── EKSTRA VERK ── */
@@ -1628,6 +1624,11 @@ function init(){
     container.appendChild(el);ekstraVerkTeller++;
   });
   document.getElementById('gavekort-btn').addEventListener('click',leggTilGavekort);
+  document.getElementById('gavekort-fjern').addEventListener('click',function(){
+    document.getElementById('gavekort-felt').style.display='none';
+    document.getElementById('f-gavekort-pris').value='';
+    document.getElementById('f-gavekort-notat').value='';
+  });
   document.getElementById('legg-til-verk-btn').addEventListener('click',leggTilEkstraVerk);
   document.getElementById('submit-btn').addEventListener('click',submitSale);
 
@@ -1693,6 +1694,18 @@ async function submitSale(){
     bilde_url:fFotoUrl
   })];
 
+  /* Gavekort (inline) */
+  var gavekortFelt=document.getElementById('gavekort-felt');
+  if(gavekortFelt&&gavekortFelt.style.display!=='none'){
+    var gkPris=parseFloat(document.getElementById('f-gavekort-pris').value)||0;
+    var gkNotat=document.getElementById('f-gavekort-notat').value.trim();
+    rows.push(Object.assign({},baseRow,{
+      kunstner:'Gavekort',tittel:'Gavekort',type:'Gavekort',
+      pris:gkPris,bkh:0,ramme:0,frakt:0,total:gkPris,
+      notat:gkNotat,bilde_url:null
+    }));
+  }
+
   /* Ekstra verk + gavekort */
   document.querySelectorAll('#ekstra-verk-container .ekstra-verk').forEach(function(el){
     var idx=el.dataset.idx;
@@ -1736,6 +1749,9 @@ async function submitSale(){
   document.getElementById('f-levering').checked=false;document.getElementById('f-montering').checked=false;
   document.getElementById('f-hentes-soli').checked=false;document.getElementById('f-hentes-fred').checked=false;
   document.getElementById('f-gavekort').checked=false;
+  document.getElementById('gavekort-felt').style.display='none';
+  document.getElementById('f-gavekort-pris').value='';
+  document.getElementById('f-gavekort-notat').value='';
   var tc=document.querySelector('input[name="f-type"]:checked');if(tc)tc.checked=false;
   settFotoPreview('f-foto-preview','f-foto-fjern',null);fFotoUrl=null;
   document.getElementById('ekstra-verk-container').innerHTML='';
