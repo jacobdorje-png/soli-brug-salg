@@ -389,7 +389,6 @@ datalist{display:none!important}
       <div id="datetime-row"><span class="lbl">Tidspunkt</span><input type="datetime-local" id="f-dato"></div>
       <div class="fgrid">
         <div><span class="lbl">Navn</span><input type="text" id="f-navn" placeholder="Fullt navn" autocomplete="off"></div>
-        <div class="checkbox-row" style="background:#fffbf0;border:1.5px solid #f0d060;border-radius:10px;padding:.5rem .85rem;margin:.1rem 0"><input type="checkbox" id="f-gavekort"><label for="f-gavekort" style="color:#a07010;font-weight:700">🎁 Gavekort</label></div>
         <div class="frow">
           <div><span class="lbl">Telefon</span><input type="tel" id="f-telefon" placeholder="Telefon"></div>
           <div><span class="lbl">E-post</span><input type="email" id="f-epost" placeholder="E-post"></div>
@@ -404,6 +403,7 @@ datalist{display:none!important}
           <div class="checkbox-row"><input type="checkbox" id="f-hentes-fred"><label for="f-hentes-fred">📍 Hentes i Fredrikstad</label></div>
         </div>
         <hr class="fdiv">
+        <button type="button" class="legg-til-verk-btn" id="gavekort-btn" style="border-color:#f0d060;color:#a07010;margin-bottom:.2rem">🎁 Legg til gavekort</button>
         <div><span class="lbl">Kunstner</span><input type="text" id="f-kunstner" placeholder="Søk eller skriv navn…" list="kunstner-list" autocomplete="off"><datalist id="kunstner-list"></datalist></div>
         <div>
           <div class="tittel-row">
@@ -549,7 +549,6 @@ datalist{display:none!important}
       <div><span class="lbl">Tidspunkt</span><input type="datetime-local" id="m-dato"></div>
       <hr class="fdiv">
       <div><span class="lbl">Navn</span><input type="text" id="m-navn" placeholder="Fullt navn"></div>
-      <div class="checkbox-row" style="background:#fffbf0;border:1.5px solid #f0d060;border-radius:10px;padding:.5rem .85rem;margin:.1rem 0"><input type="checkbox" id="m-gavekort"><label for="m-gavekort" style="color:#a07010;font-weight:700">🎁 Gavekort</label></div>
       <div class="frow">
         <div><span class="lbl">Telefon</span><input type="tel" id="m-telefon"></div>
         <div><span class="lbl">E-post</span><input type="email" id="m-epost"></div>
@@ -1036,10 +1035,14 @@ function makeCard(s,erGruppert){
   var typeChip=s.type?'<span class="sc-edisjon" style="background:#f0f0f0;margin-left:.25rem">'+s.type+'</span>':'';
   var arkivChip=s.arkiv?'<span class="sc-arkiv-chip">🗄 '+s.arkiv+'</span>':'';
   var gaveChip=s.gavekort?'<span style="font-size:.7rem;font-weight:700;background:#fff8d6;color:#a07010;border:1.5px solid #f0d060;border-radius:20px;padding:.15rem .55rem">🎁 Gavekort</span>':'';
+  var erGavekort=(s.type==='Gavekort'||s.kunstner==='Gavekort');
+  var gaveChipTittel=erGavekort?'<span style="font-size:.7rem;font-weight:700;background:#fff8d6;color:#a07010;border:1.5px solid #f0d060;border-radius:20px;padding:.15rem .55rem">🎁 Gavekort</span>':'';
   var butikkChip=sokeTekst?'<span style="font-size:.65rem;font-weight:700;color:#fff;background:'+(s.butikk==='soli'?'#3a7c5c':'#8B1a2e')+';border-radius:20px;padding:.15rem .5rem;white-space:nowrap">'+(s.butikk==='soli'?'Soli':'Fredrikstad')+'</span>':'';
-  var artHtml=erGruppert
-    ?'<div class="sc-art-title-grouped">'+(s.kunstner||'—')+(s.tittel?' – <em style="font-weight:500">'+s.tittel+'</em>':'')+ec+typeChip+'</div>'
-    :'<div class="sc-art-title">'+(s.kunstner||'—')+(s.tittel?' – <em style="font-weight:500">'+s.tittel+'</em>':'')+ec+typeChip+'</div>';
+  var artHtml=erGavekort
+    ?'<div class="sc-art-title">🎁 <strong>Gavekort</strong></div>'
+    :erGruppert
+      ?'<div class="sc-art-title-grouped">'+(s.kunstner||'—')+(s.tittel?' – <em style="font-weight:500">'+s.tittel+'</em>':'')+ec+typeChip+'</div>'
+      :'<div class="sc-art-title">'+(s.kunstner||'—')+(s.tittel?' – <em style="font-weight:500">'+s.tittel+'</em>':'')+ec+typeChip+'</div>';
   var fotoHtml=s.bilde_url?'<img class="sc-foto" src="'+s.bilde_url+'" data-action="foto">':'';
   var notatHtml=s.notat?'<div class="sc-notat"><div class="sc-notat-lbl">ℹ️ Info om salget</div>'+s.notat+'</div>':'';
   var selgerHtml=s.selger?'<div class="sc-selger">Selger: '+s.selger+'</div>':'';
@@ -1059,7 +1062,7 @@ function makeCard(s,erGruppert){
     '<div class="sc-customer"><div class="sc-customer-name">'+(s.navn||'—')+'</div><div class="sc-customer-detail">'+(k||'')+(k&&s.adresse?'<br>':'')+(s.adresse||'')+'</div></div>'+
     /* 2. KUNSTVERKINFO */
     artHtml+selgerHtml+fotoHtml+
-    '<div class="sc-amounts">'+amt('Pris',s.pris,null)+amt('BKH 5%',s.bkh,null)+amt('Ramme',s.ramme,s.ramme_info)+amt('Frakt',s.frakt,null)+'</div>'+
+    '<div class="sc-amounts">'+(erGavekort?amt('Beløp',s.pris,null):amt('Pris',s.pris,null)+amt('BKH 5%',s.bkh,null)+amt('Ramme',s.ramme,s.ramme_info)+amt('Frakt',s.frakt,null))+'</div>'+
     notatHtml+
     /* 3. HENTING NEDERST */
     '<div class="sc-foot"><div class="badge-wrap">'+henteHtml+'</div><span class="sc-total">'+kr(s.total)+'</span></div>'+
@@ -1460,6 +1463,24 @@ function settRammeChip(prefix,val){
   });
 }
 
+/* ── GAVEKORT ── */
+function leggTilGavekort(){
+  var container=document.getElementById('ekstra-verk-container');
+  var idx='gk'+ekstraVerkTeller;ekstraVerkTeller++;
+  var div=document.createElement('div');
+  div.className='ekstra-verk';div.dataset.idx=idx;div.dataset.type='gavekort';
+  div.innerHTML=
+    '<div class="ekstra-verk-header">'+
+      '<span class="ekstra-verk-nr" style="color:#a07010">🎁 Gavekort</span>'+
+      '<button class="fjern-verk-btn" onclick="this.closest(\'.ekstra-verk\').remove()">✕</button>'+
+    '</div>'+
+    '<div class="fgrid">'+
+      '<div><span class="lbl">Beløp (kr)</span><input type="number" data-field="pris" placeholder="0" min="0" inputmode="numeric" style="font-size:1.1rem;font-weight:700"></div>'+
+      '<div><span class="lbl">Div. info</span><input type="text" data-field="notat" placeholder="F.eks. til hvem, fra hvem…"></div>'+
+    '</div>';
+  container.appendChild(div);
+}
+
 /* ── EKSTRA VERK ── */
 var ekstraVerkTeller=0;
 function lagEkstraVerkHTML(idx){
@@ -1606,6 +1627,7 @@ function init(){
     if(prisInp&&bkhInp)prisInp.addEventListener('input',function(){var p=parseFloat(this.value)||0;if(p>0)bkhInp.value=Math.round(p*0.05);});
     container.appendChild(el);ekstraVerkTeller++;
   });
+  document.getElementById('gavekort-btn').addEventListener('click',leggTilGavekort);
   document.getElementById('legg-til-verk-btn').addEventListener('click',leggTilEkstraVerk);
   document.getElementById('submit-btn').addEventListener('click',submitSale);
 
@@ -1671,22 +1693,32 @@ async function submitSale(){
     bilde_url:fFotoUrl
   })];
 
-  /* Ekstra verk */
-  document.querySelectorAll('.ekstra-verk').forEach(function(el){
+  /* Ekstra verk + gavekort */
+  document.querySelectorAll('#ekstra-verk-container .ekstra-verk').forEach(function(el){
     var idx=el.dataset.idx;
-    var ekTypeValg=el.querySelector('input[name="ev-type-'+idx+'"]:checked');
-    var ekPris=parseFloat(el.querySelector('[data-field=pris]').value)||0;
-    var ekBkh=parseFloat(el.querySelector('[data-field=bkh]').value)||0;
-    var ekRamme=parseFloat(el.querySelector('[data-field=ramme]').value)||0;
-    rows.push(Object.assign({},baseRow,{
-      kunstner:el.querySelector('[data-field=kunstner]').value.trim(),
-      tittel:el.querySelector('[data-field=tittel]').value.trim(),
-      edisjon:el.querySelector('[data-field=edisjon]').value.trim(),
-      type:ekTypeValg?ekTypeValg.value:'',
-      pris:ekPris,bkh:ekBkh,ramme:ekRamme,frakt:0,total:ekPris+ekBkh+ekRamme,
-      ramme_info:el.querySelector('[data-field=ramme_info]').value.trim(),
-      bilde_url:null
-    }));
+    if(el.dataset.type==='gavekort'){
+      var p=parseFloat(el.querySelector('[data-field=pris]').value)||0;
+      var notat=el.querySelector('[data-field=notat]').value.trim();
+      rows.push(Object.assign({},baseRow,{
+        kunstner:'Gavekort',tittel:'Gavekort',type:'Gavekort',
+        pris:p,bkh:0,ramme:0,frakt:0,total:p,
+        notat:notat,bilde_url:null
+      }));
+    } else {
+      var ekTypeValg=el.querySelector('input[name="ev-type-'+idx+'"]:checked');
+      var ekPris=parseFloat(el.querySelector('[data-field=pris]').value)||0;
+      var ekBkh=parseFloat(el.querySelector('[data-field=bkh]').value)||0;
+      var ekRamme=parseFloat(el.querySelector('[data-field=ramme]').value)||0;
+      rows.push(Object.assign({},baseRow,{
+        kunstner:el.querySelector('[data-field=kunstner]').value.trim(),
+        tittel:el.querySelector('[data-field=tittel]').value.trim(),
+        edisjon:el.querySelector('[data-field=edisjon]').value.trim(),
+        type:ekTypeValg?ekTypeValg.value:'',
+        pris:ekPris,bkh:ekBkh,ramme:ekRamme,frakt:0,total:ekPris+ekBkh+ekRamme,
+        ramme_info:el.querySelector('[data-field=ramme_info]').value.trim(),
+        bilde_url:null
+      }));
+    }
   });
 
   var r=await sb.from('salg').insert(rows);
