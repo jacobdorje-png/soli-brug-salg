@@ -229,7 +229,7 @@ body.butikk-fredrikstad .ramme-chip.valgt{background:#8B1a2e;border-color:#8B1a2
 .sc-total{font-size:1.1rem;font-weight:700;color:var(--accent)}
 
 .sc-actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.6rem}
-.status-btn{display:flex;align-items:center;justify-content:center;gap:.4rem;min-height:44px;padding:.6rem .5rem;border-radius:10px;border:2px solid var(--border);font-family:'proxima-nova','Nunito',sans-serif;font-size:.85rem;font-weight:700;cursor:pointer;background:var(--white);color:var(--muted)}
+.status-btn{display:flex;align-items:center;justify-content:center;gap:.4rem;min-height:48px;padding:.7rem .5rem;border-radius:10px;border:2px solid var(--border);font-family:'proxima-nova','Nunito',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;background:var(--white);color:var(--muted)}
 .status-btn.ok-green{background:#d4edda;border-color:var(--green);color:var(--green)}
 .status-btn.ok-blue{background:#d0e4f7;border-color:var(--blue);color:var(--blue)}
 .status-btn.ok-orange{background:#fff3e0;border-color:#e07020;color:#e07020}
@@ -1363,7 +1363,6 @@ function openModal(s){
   document.getElementById('m-notat').value=s.notat||'';
   document.getElementById('m-levering').checked=!!s.levering;
   document.getElementById('m-montering').checked=!!s.montering;
-  document.getElementById('m-gavekort').checked=!!s.gavekort;
   document.getElementById('m-hentes-soli').checked=s.hentested==='soli';
   document.getElementById('m-hentes-fred').checked=s.hentested==='fredrikstad';
   var mType=document.querySelector('input[name="m-type"][value="'+( s.type||'')+'"]');
@@ -1380,7 +1379,7 @@ async function saveSale(){
   var btn=document.getElementById('btn-save'),msg=document.getElementById('modal-msg');
   btn.disabled=true;btn.textContent='Lagrer…';
   var mTypeValg=document.querySelector('input[name="m-type"]:checked');
-  var row={navn:document.getElementById('m-navn').value.trim(),telefon:document.getElementById('m-telefon').value.trim(),epost:document.getElementById('m-epost').value.trim(),adresse:document.getElementById('m-adresse').value.trim(),levering:document.getElementById('m-levering').checked,montering:document.getElementById('m-montering').checked,hentested:document.getElementById('m-hentes-soli').checked?'soli':document.getElementById('m-hentes-fred').checked?'fredrikstad':null,gavekort:document.getElementById('m-gavekort').checked,kunstner:document.getElementById('m-kunstner').value.trim(),tittel:document.getElementById('m-tittel').value.trim(),edisjon:document.getElementById('m-edisjon').value.trim(),type:mTypeValg?mTypeValg.value:'',pris:nv('m-pris'),bkh:nv('m-bkh'),ramme:nv('m-ramme'),frakt:nv('m-frakt'),total:nv('m-total'),ramme_info:document.getElementById('m-ramme-info').value.trim(),selger:document.getElementById('m-selger').value.trim(),notat:document.getElementById('m-notat').value.trim(),bilde_url:mFotoUrl};
+  var row={navn:document.getElementById('m-navn').value.trim(),telefon:document.getElementById('m-telefon').value.trim(),epost:document.getElementById('m-epost').value.trim(),adresse:document.getElementById('m-adresse').value.trim(),levering:document.getElementById('m-levering').checked,montering:document.getElementById('m-montering').checked,hentested:document.getElementById('m-hentes-soli').checked?'soli':document.getElementById('m-hentes-fred').checked?'fredrikstad':null,kunstner:document.getElementById('m-kunstner').value.trim(),tittel:document.getElementById('m-tittel').value.trim(),edisjon:document.getElementById('m-edisjon').value.trim(),type:mTypeValg?mTypeValg.value:'',pris:nv('m-pris'),bkh:nv('m-bkh'),ramme:nv('m-ramme'),frakt:nv('m-frakt'),total:nv('m-total'),ramme_info:document.getElementById('m-ramme-info').value.trim(),selger:document.getElementById('m-selger').value.trim(),notat:document.getElementById('m-notat').value.trim(),bilde_url:mFotoUrl};
   var dv=document.getElementById('m-dato').value;if(dv)row.created_at=new Date(dv).toISOString();
   var r=await sb.from('salg').update(row).eq('id',editId);
   if(r.error){btn.disabled=false;btn.textContent='Lagre endringer';msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
