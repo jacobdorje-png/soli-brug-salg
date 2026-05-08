@@ -1081,7 +1081,7 @@ function makeCard(s,erGruppert){
       '<button class="status-btn'+(s.sendt_innramming?' ok-blue':'')+'" data-action="sendt_innramming">'+(s.sendt_innramming?'✅':'☐')+' Sendt til innramming</button>'+
       '<button class="status-btn'+(s.sendt_hentemeld?' ok-green':'')+'" data-action="sendt_hentemeld">'+(s.sendt_hentemeld?'✅':'☐')+' Sendt hentemeld</button>'+
     '</div>'+
-    '<div class="sc-bottom-row"><button class="sc-copy-btn" data-action="copy">📋 Kopier kvittering</button>'+arkiverKnapp+'<button class="sc-arkiver-btn" data-action="print">🖨️ Skriv ut</button><button class="sc-edit-btn" data-action="edit">✏️ Rediger</button><button class="sc-edit-btn" data-action="slett" style="color:#c0392b">🗑</button></div>'+
+    '<div class="sc-bottom-row"><button class="sc-copy-btn" data-action="copy-ux">📋 Kvittering UX</button><button class="sc-copy-btn" data-action="copy-ex">📋 Kvittering EX</button>'+arkiverKnapp+'<button class="sc-arkiver-btn" data-action="print">🖨️ Skriv ut</button><button class="sc-edit-btn" data-action="edit">✏️ Rediger</button><button class="sc-edit-btn" data-action="slett" style="color:#c0392b">🗑</button></div>'+
     '<div class="sc-inline-notat"><textarea class="sc-inline-notat-inp" placeholder="Skriv en rask notat…" data-action="notat">'+escHtml(s.notat||'')+'</textarea></div>';
 
   d.querySelector('[data-action=hentet]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'hentet',this);});
@@ -1105,9 +1105,13 @@ function makeCard(s,erGruppert){
     setTimeout(function(){notatInp.style.height='auto';notatInp.style.height=notatInp.scrollHeight+'px';},0);
   }
   d.querySelector('[data-action=slett]').addEventListener('click',function(e){e.stopPropagation();slettSalg(s);});
-  d.querySelector('[data-action=copy]').addEventListener('click',function(e){
+  d.querySelector('[data-action=copy-ux]').addEventListener('click',function(e){
     e.stopPropagation();var btn=this;
-    navigator.clipboard.writeText(lagKvittering(s)).then(function(){btn.textContent='✅ Kopiert!';btn.classList.add('copied');setTimeout(function(){btn.innerHTML='📋 Kopier kvittering';btn.classList.remove('copied');},2500);});
+    navigator.clipboard.writeText(lagKvitteringUX(s)).then(function(){btn.textContent='✅ Kopiert!';btn.classList.add('copied');setTimeout(function(){btn.innerHTML='📋 Kvittering UX';btn.classList.remove('copied');},2500);});
+  });
+  d.querySelector('[data-action=copy-ex]').addEventListener('click',function(e){
+    e.stopPropagation();var btn=this;
+    navigator.clipboard.writeText(lagKvitteringEX(s)).then(function(){btn.textContent='✅ Kopiert!';btn.classList.add('copied');setTimeout(function(){btn.innerHTML='📋 Kvittering EX';btn.classList.remove('copied');},2500);});
   });
   var ab=d.querySelector('[data-action=arkiver]');if(ab)ab.addEventListener('click',function(e){e.stopPropagation();åpneArkivModal('enkelt',s.id);});
   var fb=d.querySelector('[data-action=foto]');if(fb)fb.addEventListener('click',function(e){e.stopPropagation();visFoto(s.bilde_url);});
@@ -1247,7 +1251,7 @@ document.addEventListener('click',function(e){if(!popup.contains(e.target))close
 function phonePopup(e,tlf){showPopup(e,[{icon:'📞',label:'Ring',href:'tel:'+tlf},{icon:'💬',label:'Send SMS',href:'sms:'+tlf}],tlf);}
 function emailPopup(e,epost){showPopup(e,[{icon:'✉️',label:'Apple Mail',href:'mailto:'+epost},{icon:'📧',label:'Gmail',href:'https://mail.google.com/mail/?view=cm&to='+encodeURIComponent(epost)}],epost);}
 
-function lagKvittering(s){
+function kvitteringBase(s){
   var tl=(s.tittel||'—')+(s.edisjon?' ('+s.edisjon+')':'');
   return[
     'Soli Brug Galleri',
@@ -1259,15 +1263,28 @@ function lagKvittering(s){
     '5% BKH: '+kr(s.bkh),
     (s.ramme?'Ramme: '+kr(s.ramme):null),
     '',
-    'Totalt: '+kr(s.total),
+    'Totalt: '+kr(s.total)
+  ].filter(function(l){return l!==null;});
+}
+function lagKvitteringUX(s){
+  return kvitteringBase(s).concat([
     '',
-    'Bildet kan hentes på Soli Brug tidligst ___.___.26 17.00–18.00,',
-    'og alle dager 13–18 i påfølgende uke tom. ___.___.26.',
+    'Bildet kan hentes på Soli Brug Fredrikstad søndag 31.5 mellom kl. 14-16.',
     '',
     'Tusen takk for handelen!',
     'Mvh:',
-    'Soli Brug'
-  ].filter(function(l){return l!==null;}).join('\n');
+    'Soli Brug Galleri'
+  ]).join('\n');
+}
+function lagKvitteringEX(s){
+  return kvitteringBase(s).concat([
+    '',
+    'Vi gir beskjed så fort bildet er klart for henting!',
+    '',
+    'Tusen takk for handelen!',
+    'Mvh:',
+    'Soli Brug Galleri'
+  ]).join('\n');
 }
 
 function exportExcel(){
