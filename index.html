@@ -443,9 +443,9 @@ datalist{display:none!important}
             <button type="button" class="ramme-chip" data-val="MR" onclick="velgRamme('f','MR',this)">MR</button>
             <button type="button" class="ramme-chip" data-val="UR" onclick="velgRamme('f','UR',this)">UR</button>
             <button type="button" class="ramme-chip" data-val="MAR" onclick="velgRamme('f','MAR',this)">MAR</button>
-            <input class="ramme-info-inp" type="text" id="f-ramme-info" placeholder="Annen…" style="flex:1;min-width:0">
-            <div class="ux-advarsel" id="f-ux-advarsel">⚠️ Dette bildet er solgt tidligere – er du sikker på at det er UX?</div>
           </div>
+          <input class="ramme-info-inp" type="text" id="f-ramme-info" placeholder="Annen rammeinfo…">
+          <div class="ux-advarsel" id="f-ux-advarsel">⚠️ Dette bildet er solgt tidligere – er du sikker på at det er UX?</div>
         </div>
         <div><span class="lbl">Frakt (kr)</span><input type="number" id="f-frakt" placeholder="0" min="0" inputmode="numeric"></div>
         <div><span class="lbl">Total pris (kr)</span><input type="number" id="f-total" placeholder="0" class="total-inp" inputmode="numeric"></div>
@@ -599,8 +599,8 @@ datalist{display:none!important}
           <button type="button" class="ramme-chip" data-val="MR" onclick="velgRamme('m','MR',this)">MR</button>
           <button type="button" class="ramme-chip" data-val="UR" onclick="velgRamme('m','UR',this)">UR</button>
           <button type="button" class="ramme-chip" data-val="MAR" onclick="velgRamme('m','MAR',this)">MAR</button>
-          <input class="ramme-info-inp" type="text" id="m-ramme-info" placeholder="Annen…" style="flex:1;min-width:0">
         </div>
+        <input class="ramme-info-inp" type="text" id="m-ramme-info" placeholder="Annen rammeinfo…">
       </div>
       <div><span class="lbl">Frakt (kr)</span><input type="number" id="m-frakt" placeholder="0" min="0" inputmode="numeric"></div>
       <div><span class="lbl">Total pris (kr)</span><input type="number" id="m-total" placeholder="0" class="total-inp" inputmode="numeric"></div>
@@ -1490,11 +1490,11 @@ function velgRamme(prefix,val,btn){
   else{inp.value=val;btn.classList.add('valgt');}
 }
 function settRammeChip(prefix,val){
-  var inp=document.getElementById(prefix+'-ramme-info');
-  if(!inp)return;
-  var row=inp.closest('.ramme-chips-row');
+  var row=document.getElementById(prefix+'-ramme-info');
   if(!row)return;
-  row.querySelectorAll('.ramme-chip').forEach(function(b){
+  var container=row.closest('div');
+  if(!container)return;
+  container.querySelectorAll('.ramme-chip').forEach(function(b){
     b.classList.toggle('valgt',b.dataset.val===(val||'').toUpperCase().trim());
   });
 }
