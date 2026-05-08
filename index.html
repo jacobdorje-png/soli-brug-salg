@@ -230,10 +230,12 @@ body.butikk-fredrikstad .ramme-chip.valgt{background:#8B1a2e;border-color:#8B1a2
 
 .sc-actions{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.6rem}
 .status-btn{display:flex;align-items:center;justify-content:center;gap:.4rem;min-height:48px;padding:.7rem .5rem;border-radius:10px;border:2px solid var(--border);font-family:'proxima-nova','Nunito',sans-serif;font-size:.88rem;font-weight:700;cursor:pointer;background:var(--white);color:var(--muted)}
+.status-btn.sm{font-size:.78rem;min-height:42px;padding:.5rem .4rem}
 .status-btn.ok-green{background:#d4edda;border-color:var(--green);color:var(--green)}
 .status-btn.ok-blue{background:#d0e4f7;border-color:var(--blue);color:var(--blue)}
 .status-btn.ok-orange{background:#fff3e0;border-color:#e07020;color:#e07020}
 .status-btn:active{opacity:.8}
+.sc-bottom-row .row1,.sc-bottom-row .row2{display:flex;gap:.4rem;width:100%}
 @media(min-width:600px){.sc-actions{display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:.4rem}.status-btn{min-height:32px;padding:.2rem .7rem;border-radius:20px;font-size:.75rem;border-width:1.5px}}
 
 .sc-customer{border-bottom:1px dashed var(--border);padding-bottom:.5rem;margin-bottom:.6rem}
@@ -245,11 +247,13 @@ body.butikk-fredrikstad .ramme-chip.valgt{background:#8B1a2e;border-color:#8B1a2
 .contact-link{display:inline-flex;align-items:center;gap:.25rem;color:var(--accent);font-weight:700;cursor:pointer;background:none;border:none;font-family:'proxima-nova','Nunito',sans-serif;font-size:.78rem;padding:.1rem 0;text-decoration:none;min-height:36px}
 .contact-link:active{opacity:.7}
 
-.sc-bottom-row{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
-.sc-copy-btn{display:flex;align-items:center;gap:.3rem;background:none;border:1.5px solid var(--border);border-radius:8px;padding:.5rem .7rem;min-height:42px;font-size:.76rem;font-weight:700;color:var(--muted);cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif;flex:1}
+.sc-bottom-row{display:flex;flex-direction:column;gap:.4rem;margin-top:.2rem}
+.sc-bottom-row .row1,.sc-bottom-row .row2{display:flex;gap:.4rem;width:100%}
+.sc-bottom-row .row1>*,.sc-bottom-row .row2>*{flex:1;justify-content:center;text-align:center}
+.sc-copy-btn{display:flex;align-items:center;justify-content:center;gap:.3rem;background:none;border:1.5px solid var(--border);border-radius:8px;padding:.5rem .4rem;min-height:42px;font-size:.76rem;font-weight:700;color:var(--muted);cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif}
 .sc-copy-btn.copied{background:#e8f5e9;border-color:var(--green);color:var(--green)}
-.sc-arkiver-btn{display:flex;align-items:center;gap:.3rem;background:none;border:1.5px solid #c8a870;border-radius:8px;padding:.5rem .7rem;min-height:42px;font-size:.76rem;font-weight:700;color:var(--arkiv);cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif}
-.sc-edit-btn{background:none;border:none;font-size:.76rem;color:#aaa;font-weight:600;cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif;text-decoration:underline;padding:.5rem .2rem;min-height:42px;display:flex;align-items:center;white-space:nowrap}
+.sc-arkiver-btn{display:flex;align-items:center;justify-content:center;gap:.3rem;background:none;border:1.5px solid #c8a870;border-radius:8px;padding:.5rem .4rem;min-height:42px;font-size:.76rem;font-weight:700;color:var(--arkiv);cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif}
+.sc-edit-btn{background:none;border:1.5px solid var(--border);border-radius:8px;font-size:.76rem;color:var(--muted);font-weight:700;cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif;padding:.5rem .4rem;min-height:42px;display:flex;align-items:center;justify-content:center;white-space:nowrap}
 
 /* GRAND TOTALS */
 #grand-totals{display:none;background:var(--accent);color:#fff;border-radius:var(--r);padding:1.1rem;margin-top:.6rem;transition:background .35s}
@@ -1078,10 +1082,21 @@ function makeCard(s,erGruppert){
       '<button class="status-btn'+(s.betalt_kort?' ok-green':'')+'" data-action="betalt_kort">'+(s.betalt_kort?'✅':'☐')+' Betalt kort</button>'+
       '<button class="status-btn'+(s.skal_ha_faktura?' ok-orange':'')+'" data-action="skal_faktura">📄 Skal ha faktura</button>'+
       '<button class="status-btn'+(s.faktura_sendt?' ok-green':'')+'" data-action="faktura">'+(s.faktura_sendt?'✅ Faktura sendt':'✉️ Faktura sendt')+'</button>'+
-      '<button class="status-btn'+(s.sendt_innramming?' ok-blue':'')+'" data-action="sendt_innramming">'+(s.sendt_innramming?'✅':'☐')+' Sendt til innramming</button>'+
-      '<button class="status-btn'+(s.sendt_hentemeld?' ok-green':'')+'" data-action="sendt_hentemeld">'+(s.sendt_hentemeld?'✅':'☐')+' Sendt hentemeld</button>'+
+      '<button class="status-btn'+(s.sendt_innramming?' ok-blue':'')+' sm" data-action="sendt_innramming">'+(s.sendt_innramming?'✅':'☐')+' Sendt til innramming</button>'+
+      '<button class="status-btn'+(s.sendt_hentemeld?' ok-green':'')+' sm" data-action="sendt_hentemeld">'+(s.sendt_hentemeld?'✅':'☐')+' Sendt hentemeld</button>'+
     '</div>'+
-    '<div class="sc-bottom-row"><button class="sc-copy-btn" data-action="copy-ux">📋 Kvittering UX</button><button class="sc-copy-btn" data-action="copy-ex">📋 Kvittering EX</button>'+arkiverKnapp+'<button class="sc-arkiver-btn" data-action="print">🖨️ Skriv ut</button><button class="sc-edit-btn" data-action="edit">✏️ Rediger</button><button class="sc-edit-btn" data-action="slett" style="color:#c0392b">🗑</button></div>'+
+    '<div class="sc-bottom-row">'+
+      '<div class="row1">'+
+        '<button class="sc-copy-btn" data-action="copy-ux">📋 Kvittering UX</button>'+
+        '<button class="sc-copy-btn" data-action="copy-ex">📋 Kvittering EX</button>'+
+        '<button class="sc-arkiver-btn" data-action="print">🖨️ Skriv ut</button>'+
+      '</div>'+
+      '<div class="row2">'+
+        '<button class="sc-edit-btn" data-action="edit">✏️ Rediger</button>'+
+        arkiverKnapp+
+        '<button class="sc-edit-btn" data-action="slett" style="color:#c0392b">🗑 Slett</button>'+
+      '</div>'+
+    '</div>'+
     '<div class="sc-inline-notat"><textarea class="sc-inline-notat-inp" placeholder="Skriv en rask notat…" data-action="notat">'+escHtml(s.notat||'')+'</textarea></div>';
 
   d.querySelector('[data-action=hentet]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'hentet',this);});
@@ -1772,9 +1787,10 @@ async function submitSale(){
   btn.disabled=false;btn.textContent='Registrer salg';
   if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
   msg.style.color='var(--green)';msg.textContent='✓ '+(rows.length>1?rows.length+' salg':'Salg')+' registrert!';
+  var totalSum=rows.reduce(function(t,r){return t+(r.total||0);},0);
   sendVarsel(
     'Nytt salg – '+(aktivButikk==='soli'?'Soli':'Fredrikstad'),
-    rows.map(function(r){return (r.kunstner?r.kunstner+' – ':'')+r.tittel;}).join('\n')+'\nKunde: '+navn+(rows[0].selger?'\nSelger: '+rows[0].selger:'')
+    rows.map(function(r){return (r.kunstner?r.kunstner+' – ':'')+r.tittel;}).join('\n')+'\nKunde: '+navn+'\nSum: '+kr(totalSum)
   );
   ['navn','telefon','epost','adresse','kunstner','tittel','edisjon','pris','bkh','ramme','frakt','total','selger'].forEach(function(k){document.getElementById('f-'+k).value='';});
   document.getElementById('f-ramme-info').value='';
