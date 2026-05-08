@@ -920,7 +920,11 @@ function byggFilterTabs(){
 function oppdaterArkivBar(){document.getElementById('arkiv-bar').style.display=(!visArkiv&&aktivFilter!=='alle')?'flex':'none';}
 function oppdaterSokeUI(){document.getElementById('search-clear').className='search-clear'+(sokeTekst.length>0?' vis':'');}
 
+var _loadSalesTimer=null;
 async function loadSales(bevarScroll){
+  /* Debounce – vent 300ms før faktisk last, avbryt hvis ny forespørsel kommer */
+  if(_loadSalesTimer)clearTimeout(_loadSalesTimer);
+  await new Promise(function(res){_loadSalesTimer=setTimeout(res,300);});
   var scrollY=bevarScroll?window.scrollY:0;
   if(!bevarScroll){document.getElementById('loading').style.display='block';}
   document.getElementById('sales-list').innerHTML='';
