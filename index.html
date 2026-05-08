@@ -138,11 +138,14 @@ body.butikk-fredrikstad .type-chip input[type=radio]{accent-color:#8B1a2e}
 .fjern-verk-btn{background:none;border:none;color:#ccc;font-size:1.1rem;cursor:pointer;padding:.1rem .3rem}
 .legg-til-verk-btn{width:100%;padding:.65rem;border:2px dashed var(--border);border-radius:10px;background:transparent;font-family:'proxima-nova','Nunito',sans-serif;font-size:.88rem;font-weight:700;color:var(--muted);cursor:pointer;margin-top:.5rem}
 .legg-til-verk-btn:active{opacity:.7}
-.ramme-row{display:flex;gap:.5rem;align-items:flex-end}
-.ramme-pris{width:110px;flex-shrink:0}
+.ramme-row{display:flex;gap:.5rem;align-items:stretch}
+.ramme-pris{width:100px;flex-shrink:0}
 .ramme-info-wrap{flex:1;display:flex;flex-direction:column;gap:.3rem}
-.ramme-chips{display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.2rem}
-.ramme-chip{padding:.3rem .6rem;border-radius:8px;border:1.5px solid var(--border);background:#faf8f5;font-family:'proxima-nova','Nunito',sans-serif;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer;min-height:38px;display:flex;align-items:center}
+.ramme-chips-row{display:flex;gap:.3rem;align-items:stretch}
+.ramme-chip{padding:.3rem .4rem;border-radius:8px;border:1.5px solid var(--border);background:#faf8f5;font-family:'proxima-nova','Nunito',sans-serif;font-size:.8rem;font-weight:700;color:var(--muted);cursor:pointer;min-height:var(--touch);display:flex;align-items:center;justify-content:center;min-width:42px}
+.ramme-chip.valgt{background:var(--accent);border-color:var(--accent);color:#fff}
+body.butikk-soli .ramme-chip.valgt{background:#3a7a52;border-color:#3a7a52}
+body.butikk-fredrikstad .ramme-chip.valgt{background:#8B1a2e;border-color:#8B1a2e}
 .ramme-chip.valgt{background:var(--accent);border-color:var(--accent);color:#fff}
 body.butikk-soli .ramme-chip.valgt{background:#3a7a52;border-color:#3a7a52}
 body.butikk-fredrikstad .ramme-chip.valgt{background:#8B1a2e;border-color:#8B1a2e}
@@ -422,8 +425,9 @@ datalist{display:none!important}
             <div class="edisjon-wrap"><span class="lbl">Edisjon</span><input type="text" id="f-edisjon" placeholder="39/250"></div>
           </div>
           <div class="type-row">
-            <label class="type-chip"><input type="radio" name="f-type" value="Original"> Original</label>
             <label class="type-chip"><input type="radio" name="f-type" value="Grafikk"> Grafikk</label>
+            <label class="type-chip"><input type="radio" name="f-type" value="Monotypi"> Monotypi</label>
+            <label class="type-chip"><input type="radio" name="f-type" value="Original"> Original</label>
           </div>
         </div>
         <hr class="fdiv">
@@ -433,18 +437,14 @@ datalist{display:none!important}
         </div>
         <div>
           <span class="lbl">Rammepris &amp; Rammeinfo</span>
-          <div class="ramme-row">
-            <div class="ramme-pris"><input type="number" id="f-ramme" placeholder="kr" min="0" inputmode="numeric"></div>
-            <div class="ramme-info-wrap">
-              <div class="ramme-chips">
-                <button type="button" class="ramme-chip" data-val="UX" onclick="velgRamme('f','UX',this)">UX</button>
-                <button type="button" class="ramme-chip" data-val="MR" onclick="velgRamme('f','MR',this)">MR</button>
-                <button type="button" class="ramme-chip" data-val="UR" onclick="velgRamme('f','UR',this)">UR</button>
-                <button type="button" class="ramme-chip" data-val="MAR" onclick="velgRamme('f','MAR',this)">MAR</button>
-              </div>
-              <input class="ramme-info-inp" type="text" id="f-ramme-info" placeholder="Annen rammeinfo…">
-              <div class="ux-advarsel" id="f-ux-advarsel">⚠️ Dette bildet er solgt tidligere – er du sikker på at det er UX?</div>
-            </div>
+          <div class="ramme-chips-row">
+            <input type="number" id="f-ramme" placeholder="kr" min="0" inputmode="numeric" style="width:90px;flex-shrink:0">
+            <button type="button" class="ramme-chip" data-val="UX" onclick="velgRamme('f','UX',this)">UX</button>
+            <button type="button" class="ramme-chip" data-val="MR" onclick="velgRamme('f','MR',this)">MR</button>
+            <button type="button" class="ramme-chip" data-val="UR" onclick="velgRamme('f','UR',this)">UR</button>
+            <button type="button" class="ramme-chip" data-val="MAR" onclick="velgRamme('f','MAR',this)">MAR</button>
+            <input class="ramme-info-inp" type="text" id="f-ramme-info" placeholder="Annen…" style="flex:1;min-width:0">
+            <div class="ux-advarsel" id="f-ux-advarsel">⚠️ Dette bildet er solgt tidligere – er du sikker på at det er UX?</div>
           </div>
         </div>
         <div><span class="lbl">Frakt (kr)</span><input type="number" id="f-frakt" placeholder="0" min="0" inputmode="numeric"></div>
@@ -581,8 +581,9 @@ datalist{display:none!important}
           <div class="edisjon-wrap"><span class="lbl">Edisjon</span><input type="text" id="m-edisjon" placeholder="39/250"></div>
         </div>
         <div class="type-row">
-          <label class="type-chip"><input type="radio" name="m-type" value="Original"> Original</label>
           <label class="type-chip"><input type="radio" name="m-type" value="Grafikk"> Grafikk</label>
+          <label class="type-chip"><input type="radio" name="m-type" value="Monotypi"> Monotypi</label>
+          <label class="type-chip"><input type="radio" name="m-type" value="Original"> Original</label>
         </div>
       </div>
       <hr class="fdiv">
@@ -592,16 +593,13 @@ datalist{display:none!important}
       </div>
       <div>
         <span class="lbl">Rammepris &amp; Rammeinfo</span>
-        <div class="ramme-row">
-          <div class="ramme-pris"><input type="number" id="m-ramme" placeholder="kr" min="0" inputmode="numeric"></div>
-          <div class="ramme-info-wrap">
-            <div class="ramme-chips">
-              <button type="button" class="ramme-chip" data-val="UX" onclick="velgRamme('m','UX',this)">UX</button>
-              <button type="button" class="ramme-chip" data-val="MR" onclick="velgRamme('m','MR',this)">MR</button>
-              <button type="button" class="ramme-chip" data-val="UR" onclick="velgRamme('m','UR',this)">UR</button>
-              <button type="button" class="ramme-chip" data-val="MAR" onclick="velgRamme('m','MAR',this)">MAR</button>
-            </div>
-            <input class="ramme-info-inp" type="text" id="m-ramme-info" placeholder="Annen rammeinfo…"></div>
+        <div class="ramme-chips-row">
+          <input type="number" id="m-ramme" placeholder="kr" min="0" inputmode="numeric" style="width:90px;flex-shrink:0">
+          <button type="button" class="ramme-chip" data-val="UX" onclick="velgRamme('m','UX',this)">UX</button>
+          <button type="button" class="ramme-chip" data-val="MR" onclick="velgRamme('m','MR',this)">MR</button>
+          <button type="button" class="ramme-chip" data-val="UR" onclick="velgRamme('m','UR',this)">UR</button>
+          <button type="button" class="ramme-chip" data-val="MAR" onclick="velgRamme('m','MAR',this)">MAR</button>
+          <input class="ramme-info-inp" type="text" id="m-ramme-info" placeholder="Annen…" style="flex:1;min-width:0">
         </div>
       </div>
       <div><span class="lbl">Frakt (kr)</span><input type="number" id="m-frakt" placeholder="0" min="0" inputmode="numeric"></div>
@@ -699,12 +697,11 @@ function sorterKD(data){
       return(a.ordrenummer||0)-(b.ordrenummer||0);
     });
   });
-  /* Sorter tittelgrupper: Grafikk øverst, Original nederst */
+  /* Sorter tittelgrupper: Grafikk øverst, Monotypi midten, Original nederst */
   rek.sort(function(a,b){
-    var ta=(grupper[a][0].type||'').toLowerCase();
-    var tb=(grupper[b][0].type||'').toLowerCase();
-    var ra=ta==='original'?1:0;
-    var rb=tb==='original'?1:0;
+    function tRang(t){var v=(t||'').toLowerCase();if(v==='grafikk')return 0;if(v==='monotypi')return 1;return 2;}
+    var ra=tRang(grupper[a][0].type);
+    var rb=tRang(grupper[b][0].type);
     if(ra!==rb)return ra-rb;
     return a.localeCompare(b,'nb');
   });
@@ -1486,17 +1483,18 @@ function escHtml(t){return(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 
 /* ── RAMME CHIPS ── */
 function velgRamme(prefix,val,btn){
-  var wrap=btn.closest('.ramme-chips');
-  wrap.querySelectorAll('.ramme-chip').forEach(function(b){b.classList.remove('valgt');});
+  var row=btn.closest('.ramme-chips-row');
+  row.querySelectorAll('.ramme-chip').forEach(function(b){b.classList.remove('valgt');});
   var inp=document.getElementById(prefix+'-ramme-info');
-  if(inp.value.trim()===val){inp.value='';} /* toggle av */
+  if(inp.value.trim()===val){inp.value='';}
   else{inp.value=val;btn.classList.add('valgt');}
 }
 function settRammeChip(prefix,val){
-  var koder=['UX','MR','UR','MAR'];
-  var wrap=document.querySelector('#'+prefix+'-ramme-info').closest('.ramme-info-wrap').querySelector('.ramme-chips');
-  if(!wrap)return;
-  wrap.querySelectorAll('.ramme-chip').forEach(function(b){
+  var inp=document.getElementById(prefix+'-ramme-info');
+  if(!inp)return;
+  var row=inp.closest('.ramme-chips-row');
+  if(!row)return;
+  row.querySelectorAll('.ramme-chip').forEach(function(b){
     b.classList.toggle('valgt',b.dataset.val===(val||'').toUpperCase().trim());
   });
 }
@@ -1521,8 +1519,9 @@ function lagEkstraVerkHTML(idx){
           '<div class="edisjon-wrap"><span class="lbl">Edisjon</span><input type="text" data-field="edisjon" placeholder="39/250"></div>'+
         '</div>'+
         '<div class="type-row">'+
-          '<label class="type-chip"><input type="radio" name="ev-type-'+idx+'" value="Original"> Original</label>'+
           '<label class="type-chip"><input type="radio" name="ev-type-'+idx+'" value="Grafikk"> Grafikk</label>'+
+          '<label class="type-chip"><input type="radio" name="ev-type-'+idx+'" value="Monotypi"> Monotypi</label>'+
+          '<label class="type-chip"><input type="radio" name="ev-type-'+idx+'" value="Original"> Original</label>'+
         '</div>'+
       '</div>'+
       '<div class="frow">'+
