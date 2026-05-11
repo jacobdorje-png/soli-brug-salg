@@ -480,7 +480,10 @@ datalist{display:none!important}
     <div class="section">
       <div class="sales-top">
         <div class="stitle" id="sales-title">Nylige salg</div>
-        <button class="excel-btn" id="excel-btn" style="display:none" onclick="exportExcel()">📊 Excel</button>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <button class="excel-btn" id="epost-btn" style="display:none;border-color:#1a5fa8;color:#1a5fa8" onclick="exportEpost()">✉️ E-poster</button>
+          <button class="excel-btn" id="excel-btn" style="display:none" onclick="exportExcel()">📊 Excel</button>
+        </div>
       </div>
       <div id="loading">Laster inn salg…</div>
       <div id="empty">Ingen salg ennå.</div>
@@ -959,7 +962,7 @@ function renderSalg(){
   /* SØKEMODUS */
   if(sokeTekst){
     document.getElementById('sales-title').textContent='Søkeresultat';
-    document.getElementById('excel-btn').style.display='none';
+    document.getElementById('excel-btn').style.display='none';document.getElementById('epost-btn').style.display='none';
     var treff=alleSalg.filter(function(s){return sokFilter(s,sokeTekst);});
     var ie=document.getElementById('search-info');
     ie.style.display='block';ie.textContent='Fant '+treff.length+' treff på «'+sokeTekst+'» (alle butikker, inkl. arkiverte)';
@@ -972,7 +975,7 @@ function renderSalg(){
   /* FAKTURA-VISNING */
   if(visFaktura){
     document.getElementById('sales-title').textContent='📄 Faktura – alle butikker';
-    document.getElementById('excel-btn').style.display='none';
+    document.getElementById('excel-btn').style.display='none';document.getElementById('epost-btn').style.display='none';
     /* Salg med skal_ha_faktura fra alle butikker (ikke arkiverte) */
     var fakturaSalg=alleSalg.filter(function(s){return!s.arkiv&&s.skal_ha_faktura;});
     /* Innrammingsjobber med skal_ha_faktura */
@@ -992,7 +995,7 @@ function renderSalg(){
   /* ARKIVVISNING */
   if(visArkiv){
     document.getElementById('sales-title').textContent='Arkiv';
-    document.getElementById('excel-btn').style.display='none';
+    document.getElementById('excel-btn').style.display='none';document.getElementById('epost-btn').style.display='none';
     var ark=alleSalg.filter(function(s){return!!s.arkiv&&s.butikk===aktivButikk;});
     if(!ark.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Arkivet er tomt.';return;}
     var grp={},rek=[];
@@ -1003,9 +1006,10 @@ function renderSalg(){
       var gt2=salg.reduce(function(a,s){return{total:a.total+(s.total||0)-(s.bkh||0),antall:a.antall+1};},{total:0,antall:0});
       var g=document.createElement('div');g.className='arkiv-gruppe';
       var h=document.createElement('div');h.className='arkiv-gruppe-header';
-      h.innerHTML='<div><div class="arkiv-gruppe-navn">🗄 '+an+'</div><div class="arkiv-gruppe-meta">'+gt2.antall+' salg · '+kr(gt2.total)+' eks. BKH</div></div><div style="display:flex;gap:.4rem"><button class="hent-ut-btn" data-action="excel">📊 Excel</button><button class="hent-ut-btn" data-action="hentut">Hent ut</button></div>';
+      h.innerHTML='<div><div class="arkiv-gruppe-navn">🗄 '+an+'</div><div class="arkiv-gruppe-meta">'+gt2.antall+' salg · '+kr(gt2.total)+' eks. BKH</div></div><div style="display:flex;gap:.4rem"><button class="hent-ut-btn" data-action="epost" style="border-color:#1a5fa8;color:#1a5fa8">✉️ E-poster</button><button class="hent-ut-btn" data-action="excel">📊 Excel</button><button class="hent-ut-btn" data-action="hentut">Hent ut</button></div>';
       h.querySelector('[data-action=hentut]').addEventListener('click',function(e){e.stopPropagation();if(confirm('Hente ut alle salg fra «'+an+'» tilbake?'))hentUtArkiv(an);});
       h.querySelector('[data-action=excel]').addEventListener('click',function(e){e.stopPropagation();exportArkivExcel(an,grp[an]);});
+      h.querySelector('[data-action=epost]').addEventListener('click',function(e){e.stopPropagation();exportEpostListe(grp[an],an);});
       var sd=document.createElement('div');sd.className='arkiv-gruppe-salg skjult';
       salg.forEach(function(s){sd.appendChild(makeCard(s,false));});
       g.appendChild(h);g.appendChild(sd);
@@ -1021,7 +1025,7 @@ function renderSalg(){
   var raaData=erAlle?aktive:aktive.filter(function(s){return s.kunstner===aktivFilter;});
   var butikkNavn=aktivButikk==='soli'?'Soli':'Fredrikstad';
   document.getElementById('sales-title').textContent=erAlle?'Nylige salg – '+butikkNavn:aktivFilter;
-  document.getElementById('excel-btn').style.display=raaData.length?'inline-flex':'none';
+  document.getElementById('excel-btn').style.display=raaData.length?'inline-flex':'none';document.getElementById('epost-btn').style.display=raaData.length?'inline-flex':'none';
   if(!raaData.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Ingen salg ennå.';return;}
   if(erAlle){raaData.forEach(function(s){list.appendChild(makeCard(s,false));});}
   else{
@@ -1316,6 +1320,28 @@ function lagKvitteringEX(s){
     'Mvh:',
     'Soli Brug Galleri'
   ]).join('\n');
+}
+
+function exportEpost(){
+  var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
+  var data=aktivFilter==='alle'?aktive:aktive.filter(function(s){return s.kunstner===aktivFilter;});
+  exportEpostListe(data,(aktivFilter==='alle'?'Nylige_salg':aktivFilter));
+}
+
+function exportEpostListe(salg,filnavn){
+  /* Unike, ikke-tomme e-poster */
+  var sett={},liste=[];
+  salg.forEach(function(s){
+    var e=(s.epost||'').trim().toLowerCase();
+    if(e&&!sett[e]){sett[e]=true;liste.push(s.epost.trim());}
+  });
+  if(!liste.length){alert('Ingen e-postadresser funnet.');return;}
+  var tekst=liste.join('\n');
+  var blob=new Blob([tekst],{type:'text/plain;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;
+  a.download=(filnavn||'epost').replace(/\s/g,'_')+'_eposter.txt';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
 }
 
 function exportExcel(){
