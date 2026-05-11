@@ -371,7 +371,10 @@ datalist{display:none!important}
 <div id="app">
   <header>
     <div><div class="hname">Soli Brug Salg</div><div class="hsub">Salgsoversikt</div></div>
-    <button id="logout-btn">Logg ut</button>
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <button id="refresh-btn" title="Oppdater" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;padding:.5rem .75rem;border-radius:8px;font-size:1.1rem;cursor:pointer;min-height:var(--touch);display:flex;align-items:center">↻</button>
+      <button id="logout-btn">Logg ut</button>
+    </div>
   </header>
 
   <!-- MAIN NAV -->
@@ -558,6 +561,13 @@ datalist{display:none!important}
     <div class="modal-head"><h2 id="modal-title">Rediger salg</h2><button class="modal-close-btn" id="modal-close">×</button></div>
     <div class="fgrid">
       <div><span class="lbl">Tidspunkt</span><input type="datetime-local" id="m-dato"></div>
+      <div>
+        <span class="lbl">Salgssted</span>
+        <div class="frow" style="gap:.5rem">
+          <label class="type-chip" style="flex:1;justify-content:center"><input type="radio" name="m-butikk" value="soli"> 🟢 Soli</label>
+          <label class="type-chip" style="flex:1;justify-content:center"><input type="radio" name="m-butikk" value="fredrikstad"> 🔴 Fredrikstad</label>
+        </div>
+      </div>
       <hr class="fdiv">
       <div><span class="lbl">Navn</span><input type="text" id="m-navn" placeholder="Fullt navn"></div>
       <div class="frow">
@@ -787,6 +797,11 @@ document.getElementById('login-btn').addEventListener('click',function(){
 });
 document.getElementById('code-input').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('login-btn').click();});
 document.getElementById('logout-btn').addEventListener('click',function(){sessionStorage.removeItem('sbauth');document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';});
+document.getElementById('refresh-btn').addEventListener('click',function(){
+  var btn=this;btn.style.transform='rotate(360deg)';btn.style.transition='transform .5s';
+  setTimeout(function(){btn.style.transform='';btn.style.transition='';},500);
+  loadSales();if(alleIr.length>0)loadIr();
+});
 if(sessionStorage.getItem('sbauth')==='1'){document.getElementById('login-screen').style.display='none';loadSB(function(){document.getElementById('app').style.display='block';init();});}
 
 /* ── MAIN TAB ── */
@@ -1390,6 +1405,8 @@ function openModal(s){
   editId=s.id;mFotoUrl=s.bilde_url||null;
   document.getElementById('modal-title').textContent='Rediger – '+onr(s.ordrenummer);
   document.getElementById('m-dato').value=toLocalInput(s.created_at);
+  var mButikk=document.querySelector('input[name="m-butikk"][value="'+(s.butikk||'fredrikstad')+'"]');
+  if(mButikk)mButikk.checked=true;
   ['navn','telefon','epost','adresse','kunstner','tittel','edisjon','pris','bkh','ramme','frakt','total','selger'].forEach(function(k){document.getElementById('m-'+k).value=s[k]||'';});
   document.getElementById('m-ramme-info').value=s.ramme_info||'';
   settRammeChip('m',s.ramme_info);
@@ -1412,7 +1429,8 @@ async function saveSale(){
   var btn=document.getElementById('btn-save'),msg=document.getElementById('modal-msg');
   btn.disabled=true;btn.textContent='Lagrer…';
   var mTypeValg=document.querySelector('input[name="m-type"]:checked');
-  var row={navn:document.getElementById('m-navn').value.trim(),telefon:document.getElementById('m-telefon').value.trim(),epost:document.getElementById('m-epost').value.trim(),adresse:document.getElementById('m-adresse').value.trim(),levering:document.getElementById('m-levering').checked,montering:document.getElementById('m-montering').checked,hentested:document.getElementById('m-hentes-soli').checked?'soli':document.getElementById('m-hentes-fred').checked?'fredrikstad':null,kunstner:document.getElementById('m-kunstner').value.trim(),tittel:document.getElementById('m-tittel').value.trim(),edisjon:document.getElementById('m-edisjon').value.trim(),type:mTypeValg?mTypeValg.value:'',pris:nv('m-pris'),bkh:nv('m-bkh'),ramme:nv('m-ramme'),frakt:nv('m-frakt'),total:nv('m-total'),ramme_info:document.getElementById('m-ramme-info').value.trim(),selger:document.getElementById('m-selger').value.trim(),notat:document.getElementById('m-notat').value.trim(),bilde_url:mFotoUrl};
+  var mButikkValg=document.querySelector('input[name="m-butikk"]:checked');
+  var row={navn:document.getElementById('m-navn').value.trim(),telefon:document.getElementById('m-telefon').value.trim(),epost:document.getElementById('m-epost').value.trim(),adresse:document.getElementById('m-adresse').value.trim(),levering:document.getElementById('m-levering').checked,montering:document.getElementById('m-montering').checked,hentested:document.getElementById('m-hentes-soli').checked?'soli':document.getElementById('m-hentes-fred').checked?'fredrikstad':null,butikk:mButikkValg?mButikkValg.value:'fredrikstad',kunstner:document.getElementById('m-kunstner').value.trim(),tittel:document.getElementById('m-tittel').value.trim(),edisjon:document.getElementById('m-edisjon').value.trim(),type:mTypeValg?mTypeValg.value:'',pris:nv('m-pris'),bkh:nv('m-bkh'),ramme:nv('m-ramme'),frakt:nv('m-frakt'),total:nv('m-total'),ramme_info:document.getElementById('m-ramme-info').value.trim(),selger:document.getElementById('m-selger').value.trim(),notat:document.getElementById('m-notat').value.trim(),bilde_url:mFotoUrl};
   var dv=document.getElementById('m-dato').value;if(dv)row.created_at=new Date(dv).toISOString();
   var r=await sb.from('salg').update(row).eq('id',editId);
   if(r.error){btn.disabled=false;btn.textContent='Lagre endringer';msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
