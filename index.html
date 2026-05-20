@@ -1270,7 +1270,7 @@ function visKvitteringMeny(e,s,type){
   var label=type==='ux'?'Kvittering UX':'Kvittering EX';
   var epost=s.epost||'';
   var tlf=s.telefon||'';
-  var emne=encodeURIComponent('Soli Brug Galleri – '+onr(s.ordrenummer));
+  var emne=encodeURIComponent('Soli Brug');
   var kropp=encodeURIComponent(tekst);
   var items=[];
   if(epost)items.push({icon:'✉️',label:'Send e-post til '+epost,href:'mailto:'+epost+'?subject='+emne+'&body='+kropp});
