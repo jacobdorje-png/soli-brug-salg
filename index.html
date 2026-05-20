@@ -93,8 +93,13 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 /* Fredrikstad – brun */
 #tab-fredrikstad{color:#8B1a2e}
 #tab-fredrikstad.active{color:#fff;background:#8B1a2e;border-bottom-color:#6b1222;border-radius:6px 6px 0 0}
-/* Innramming – blågrå */
-#tab-innramming{color:#3a5a7a}
+/* Chat – varm grønn-grå */
+#tab-chat{color:#4a7a5a}
+#tab-chat.active{color:#fff;background:#4a7a5a;border-bottom-color:#3a6048;border-radius:6px 6px 0 0}
+.chat-melding-boks{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:.65rem .85rem}
+.chat-melding-boks .chat-avsender{font-size:.72rem;font-weight:700;color:var(--accent);margin-bottom:.2rem}
+.chat-melding-boks .chat-tid{font-size:.65rem;color:var(--muted);float:right;margin-top:.1rem}
+.chat-melding-boks .chat-tekst{font-size:.88rem;color:#111;line-height:1.5;white-space:pre-wrap}
 #tab-innramming.active{color:#fff;background:#3a5a7a;border-bottom-color:#2d4860;border-radius:6px 6px 0 0}
 
 /* PAGES */
@@ -385,6 +390,7 @@ datalist{display:none!important}
     <button class="main-tab active" id="tab-soli" onclick="setMainTab('soli')">🛒 Salg Soli</button>
     <button class="main-tab" id="tab-fredrikstad" onclick="setMainTab('fredrikstad')">🛒 Salg Fredrikstad</button>
     <button class="main-tab" id="tab-innramming" onclick="setMainTab('innramming')">🖼 Innramming</button>
+    <button class="main-tab" id="tab-chat" onclick="setMainTab('chat')">💬 Chat</button>
   </div>
 
   <!-- ══════════════════════ SALG-SIDE ══════════════════════ -->
@@ -549,7 +555,27 @@ datalist{display:none!important}
   </div>
 </div>
 
-<!-- ══════ ARKIV MODAL ══════ -->
+<!-- ══════ CHAT-SIDE ══════ -->
+<div class="page" id="page-chat">
+  <div class="section" style="margin-bottom:0;border-radius:var(--r) var(--r) 0 0">
+    <div class="section-head">
+      <div class="stitle" id="chat-tittel">💬 Intern chat</div>
+      <div id="chat-antall" style="font-size:.75rem;color:var(--muted);font-weight:600"></div>
+    </div>
+    <div id="chat-list" style="display:flex;flex-direction:column;gap:.6rem;max-height:55vh;overflow-y:auto;padding-right:.2rem"></div>
+  </div>
+  <div style="position:sticky;bottom:0;background:var(--bg);padding:.6rem .85rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.5rem">
+    <div style="display:flex;gap:.5rem;align-items:center">
+      <span style="font-size:.75rem;font-weight:700;color:var(--muted)">Navn:</span>
+      <input type="text" id="chat-navn" placeholder="Ditt navn" style="flex:1;min-height:40px;font-size:.9rem">
+    </div>
+    <div style="display:flex;gap:.5rem">
+      <textarea id="chat-melding" class="notat-inp" placeholder="Skriv en melding til teamet…" style="flex:1;min-height:60px;resize:none"></textarea>
+      <button id="chat-send-btn" class="btn-primary" style="width:auto;padding:.5rem 1rem;min-height:60px;font-size:.9rem">Send</button>
+    </div>
+    <div id="chat-msg" style="font-size:.82rem;text-align:center;min-height:1em;font-weight:600"></div>
+  </div>
+</div>
 <div class="modal-bg" id="arkiv-modal-bg">
   <div class="modal-box sm">
     <div class="modal-head"><h2 class="arkiv-color">🗄 Arkiver salg</h2><button class="modal-close-btn" id="arkiv-modal-close">×</button></div>
@@ -813,11 +839,13 @@ if(sessionStorage.getItem('sbauth')==='1'){document.getElementById('login-screen
 
 /* ── MAIN TAB ── */
 function setMainTab(tab){
-  ['soli','fredrikstad','innramming'].forEach(function(t){
+  ['soli','fredrikstad','innramming','chat'].forEach(function(t){
     var el=document.getElementById('tab-'+t);if(el)el.className='main-tab'+(tab===t?' active':'');
   });
-  document.getElementById('page-salg').className='page'+(tab!=='innramming'?' active':'');
+  document.getElementById('page-salg').className='page'+(tab==='soli'||tab==='fredrikstad'?' active':'');
   document.getElementById('page-innramming').className='page'+(tab==='innramming'?' active':'');
+  document.getElementById('page-chat').className='page'+(tab==='chat'?' active':'');
+  if(tab==='chat')loadChat();
   if(tab==='soli'||tab==='fredrikstad'){
     aktivButikk=tab;
     /* Bakgrunnsfarge og header-farge */
@@ -1547,6 +1575,44 @@ async function saveIr(){
   closeIrModal();loadIr();
 }
 
+/* ══════════════ CHAT ══════════════ */
+var alleChat=[];
+async function loadChat(){
+  var r=await sb.from('chat').select('*').order('created_at',{ascending:true});
+  if(r.error)return;
+  alleChat=r.data||[];
+  renderChat();
+}
+function renderChat(){
+  var list=document.getElementById('chat-list');list.innerHTML='';
+  document.getElementById('chat-antall').textContent=alleChat.length+' meldinger';
+  if(!alleChat.length){list.innerHTML='<p style="color:var(--muted);text-align:center;font-size:.88rem;padding:1rem">Ingen meldinger ennå.</p>';return;}
+  alleChat.forEach(function(m){
+    var d=document.createElement('div');d.className='chat-melding-boks';
+    d.innerHTML='<div><span class="chat-avsender">'+escHtml(m.avsender)+'</span><span class="chat-tid">'+fmt(m.created_at)+'</span></div><div class="chat-tekst">'+escHtml(m.melding)+'</div>';
+    list.appendChild(d);
+  });
+  /* Scroll til bunnen */
+  list.scrollTop=list.scrollHeight;
+}
+async function sendChatMelding(){
+  var navn=document.getElementById('chat-navn').value.trim();
+  var melding=document.getElementById('chat-melding').value.trim();
+  var msg=document.getElementById('chat-msg');
+  if(!navn){msg.style.color='var(--danger)';msg.textContent='Skriv inn ditt navn.';return;}
+  if(!melding){msg.style.color='var(--danger)';msg.textContent='Skriv en melding.';return;}
+  document.getElementById('chat-send-btn').disabled=true;
+  var r=await sb.from('chat').insert([{avsender:navn,melding:melding}]);
+  document.getElementById('chat-send-btn').disabled=false;
+  if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
+  document.getElementById('chat-melding').value='';
+  msg.style.color='var(--green)';msg.textContent='✓ Sendt!';
+  setTimeout(function(){msg.textContent='';},2000);
+  /* Lagre navn i localStorage for neste gang */
+  try{localStorage.setItem('chat-navn',navn);}catch(e){}
+  loadChat();
+}
+
 /* ══════════════ INIT ══════════════ */
 async function slettSalg(s){
   if(!confirm('Slette salg '+onr(s.ordrenummer)+' – '+(s.kunstner||s.navn||'')+'?\nDette kan ikke angres.'))return;
@@ -1782,6 +1848,11 @@ function init(){
   document.getElementById('ir-btn-cancel').addEventListener('click',closeIrModal);
   document.getElementById('ir-modal-close').addEventListener('click',closeIrModal);
   document.getElementById('ir-modal-bg').addEventListener('click',function(e){if(e.target===this)closeIrModal();});
+
+  /* Chat */
+  document.getElementById('chat-send-btn').addEventListener('click',sendChatMelding);
+  document.getElementById('chat-melding').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChatMelding();}});
+  try{var lagretNavn=localStorage.getItem('chat-navn');if(lagretNavn)document.getElementById('chat-navn').value=lagretNavn;}catch(e){}
 
   loadSales();
 }
