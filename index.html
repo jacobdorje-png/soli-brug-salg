@@ -492,7 +492,7 @@ datalist{display:none!important}
         <div class="stitle" id="sales-title">Nylige salg</div>
         <div style="display:flex;gap:.5rem;align-items:center">
           <button class="excel-btn" id="epost-btn" style="display:none;border-color:#1a5fa8;color:#1a5fa8" onclick="exportEpost()">✉️ E-poster</button>
-          <button class="excel-btn" id="excel-enkel-btn" style="display:none;border-color:#9a7040;color:#9a7040" onclick="exportExcelEnkel()">📋 Enkel</button>
+          <button class="excel-btn" id="excel-enkel-btn" style="display:none;border-color:#9a7040;color:#9a7040" onclick="exportExcelEnkel()">📋 Oppstilling</button>
           <button class="excel-btn" id="excel-btn" style="display:none" onclick="exportExcel()">📊 Excel</button>
         </div>
       </div>
@@ -1039,7 +1039,7 @@ function renderSalg(){
       var gt2=salg.reduce(function(a,s){return{total:a.total+(s.total||0)-(s.bkh||0),antall:a.antall+1};},{total:0,antall:0});
       var g=document.createElement('div');g.className='arkiv-gruppe';
       var h=document.createElement('div');h.className='arkiv-gruppe-header';
-      h.innerHTML='<div><div class="arkiv-gruppe-navn">🗄 '+an+'</div><div class="arkiv-gruppe-meta">'+gt2.antall+' salg · '+kr(gt2.total)+' eks. BKH</div></div><div style="display:flex;gap:.4rem;flex-wrap:wrap"><button class="hent-ut-btn" data-action="epost" style="border-color:#1a5fa8;color:#1a5fa8">✉️ E-poster</button><button class="hent-ut-btn" data-action="enkel">📋 Enkel</button><button class="hent-ut-btn" data-action="excel">📊 Excel</button><button class="hent-ut-btn" data-action="hentut">Hent ut</button></div>';
+      h.innerHTML='<div><div class="arkiv-gruppe-navn">🗄 '+an+'</div><div class="arkiv-gruppe-meta">'+gt2.antall+' salg · '+kr(gt2.total)+' eks. BKH</div></div><div style="display:flex;gap:.4rem;flex-wrap:wrap"><button class="hent-ut-btn" data-action="epost" style="border-color:#1a5fa8;color:#1a5fa8">✉️ E-poster</button><button class="hent-ut-btn" data-action="enkel">📋 Oppstilling</button><button class="hent-ut-btn" data-action="excel">📊 Excel</button><button class="hent-ut-btn" data-action="hentut">Hent ut</button></div>';
       h.querySelector('[data-action=hentut]').addEventListener('click',function(e){e.stopPropagation();if(confirm('Hente ut alle salg fra «'+an+'» tilbake?'))hentUtArkiv(an);});
       h.querySelector('[data-action=excel]').addEventListener('click',function(e){e.stopPropagation();exportArkivExcel(an,grp[an]);});
       h.querySelector('[data-action=enkel]').addEventListener('click',function(e){e.stopPropagation();exportEnkelListe(grp[an],an);});
@@ -1425,14 +1425,14 @@ function exportEnkelListe(salg,filnavn){
         ws[addr].s={
           border:borderAll,
           alignment:{horizontal:'center',vertical:'center'},
-          font:{name:'Calibri',sz:bold?12:11,bold:bold}
+          font:{name:'Calibri Light',sz:bold?12:11,bold:bold}
         };
       }
     }
 
     var wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,(filnavn||'Salg').substring(0,31));
-    XLSX.writeFile(wb,(filnavn||'salg').replace(/\s/g,'_')+'_enkel.xlsx');
+    XLSX.writeFile(wb,(filnavn||'salg').replace(/\s/g,'_')+'_oppstilling.xlsx');
   }
   if(window.XLSX&&window.XLSX.__hasStyle){lagXlsx();}
   else{
