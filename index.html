@@ -1388,40 +1388,108 @@ function exportExcelEnkel(){
 
 function exportEnkelListe(salg,filnavn){
   if(!salg.length){alert('Ingen salg å eksportere.');return;}
+
+  function getType(s){
+    var t=(s.type||'').toLowerCase();
+    if(t==='monotypi')return 'monotypi';
+    if(t==='grafikk')return 'grafikk';
+    return 'maleri';
+  }
+  function sorterEtterTittel(arr){
+    return arr.slice().sort(function(a,b){
+      return (a.tittel||'').toLowerCase().localeCompare((b.tittel||'').toLowerCase(),'nb');
+    });
+  }
+  var maleri  =sorterEtterTittel(salg.filter(function(s){return getType(s)==='maleri';}));
+  var monotypi=sorterEtterTittel(salg.filter(function(s){return getType(s)==='monotypi';}));
+  var grafikk =sorterEtterTittel(salg.filter(function(s){return getType(s)==='grafikk';}));
+
   var utenTittelTeller=0;
-  var rader=salg.map(function(s){
-    var tittel=(s.tittel||'').trim();
-    if(!tittel){utenTittelTeller++;tittel='Uten tittel '+utenTittelTeller;}
-    return{tittel:tittel,pris:s.pris||0};
-  });
-  var totalPris=rader.reduce(function(t,r){return t+(r.pris||0);},0);
-  var kunstnerSum=Math.round(totalPris*0.6);
+  function lagRader(arr){
+    return arr.map(function(s){
+      var tittel=(s.tittel||'').trim();
+      if(!tittel){utenTittelTeller++;tittel='Uten tittel '+utenTittelTeller;}
+      return{tittel:tittel,pris:s.pris||0};
+    });
+  }
+  var maleriR=lagRader(maleri),monotypiR=lagRader(monotypi),grafikkR=lagRader(grafikk);
+  var maleriSum  =maleriR.reduce(function(t,r){return t+r.pris;},0);
+  var monotypiSum=monotypiR.reduce(function(t,r){return t+r.pris;},0);
+  var grafikkSum =grafikkR.reduce(function(t,r){return t+r.pris;},0);
+  var totalSum   =maleriSum+monotypiSum+grafikkSum;
+  var kunstnerSum=Math.round(totalSum*0.6);
 
   function lagXlsx(){
     var XLSX=window.XLSX;
     var wsData=[];
+    var headerRows=[];     /* seksjonsoverskrifter */
+    var subtotalRows=[];   /* sum per seksjon */
+    var prisRows=[];       /* alle rader med priser */
+    var sumRow,kunstnerRow,utleggRow,totalRow;
+
     wsData.push(['Tittel','Pris']);
     wsData.push(['','']);
-    rader.forEach(function(r){wsData.push([r.tittel,kr(r.pris)]);});
+
+    function addSection(navn,rader,sum){
+      if(!rader.length)return;
+      headerRows.push(wsData.length);
+      wsData.push([navn,'']);
+      rader.forEach(function(r){
+        prisRows.push(wsData.length);
+        wsData.push([r.tittel,r.pris]);
+      });
+      subtotalRows.push(wsData.length);
+      wsData.push(['',sum]);
+      wsData.push(['','']);
+    }
+    addSection('Maleri/original',maleriR,maleriSum);
+    addSection('Monotypi',monotypiR,monotypiSum);
+    addSection('Grafikk',grafikkR,grafikkSum);
+
+    sumRow=wsData.length;
+    wsData.push(['Sum:',totalSum]);
     wsData.push(['','']);
-    wsData.push(['Sum:','Total: '+kr(totalPris)]);
+    kunstnerRow=wsData.length;
+    wsData.push(['60% til kunstner',kunstnerSum]);
     wsData.push(['','']);
-    wsData.push(['60% til kunstner',kr(kunstnerSum)]);
+    utleggRow=wsData.length;
+    wsData.push(['Diverse utlegg','']);
+    wsData.push(['','']);
+    totalRow=wsData.length;
+    wsData.push(['Total sum:','']);
 
     var ws=XLSX.utils.aoa_to_sheet(wsData);
     ws['!cols']=[{wch:36},{wch:20}];
     ws['!rows']=wsData.map(function(){return{hpt:22};});
 
+    /* Formel for Total sum: 60% til kunstner − Diverse utlegg (tom = 0) */
+    var kunstnerAddr='B'+(kunstnerRow+1);
+    var utleggAddr  ='B'+(utleggRow+1);
+    ws[XLSX.utils.encode_cell({r:totalRow,c:1})]={
+      t:'n',f:kunstnerAddr+'-IF('+utleggAddr+'="",0,'+utleggAddr+')'
+    };
+
     var border={style:'thin',color:{rgb:'888888'}};
     var borderAll={top:border,bottom:border,left:border,right:border};
-    var sisteRad=wsData.length;
 
-    /* Sørg for at alle celler eksisterer og har stil */
-    for(var R=0;R<sisteRad;R++){
+    var boldSet={};
+    [0].concat(headerRows,subtotalRows,[sumRow,kunstnerRow,utleggRow,totalRow]).forEach(function(r){boldSet[r]=true;});
+
+    /* Sett tallformat på prisrader, subtotal, sum, kunstner, total */
+    var tallRader=prisRows.concat(subtotalRows,[sumRow,kunstnerRow,totalRow]);
+    var tallSet={};tallRader.forEach(function(r){tallSet[r]=true;});
+
+    for(var R=0;R<wsData.length;R++){
       for(var C=0;C<2;C++){
         var addr=XLSX.utils.encode_cell({r:R,c:C});
         if(!ws[addr])ws[addr]={t:'s',v:''};
-        var bold=(R===0)||(R===rader.length+2)||(R===sisteRad-1);
+        if(C===1&&tallSet[R]&&typeof ws[addr].v==='number'){
+          ws[addr].t='n';ws[addr].z='# ##0" kr"';
+        }
+        if(C===1&&R===totalRow){
+          ws[addr].z='# ##0" kr"';
+        }
+        var bold=!!boldSet[R];
         ws[addr].s={
           border:borderAll,
           alignment:{horizontal:'center',vertical:'center'},
