@@ -1392,26 +1392,74 @@ function exportEnkelListe(salg,filnavn){
   var rader=salg.map(function(s){
     var tittel=(s.tittel||'').trim();
     if(!tittel){utenTittelTeller++;tittel='Uten tittel '+utenTittelTeller;}
-    return[tittel,s.pris||0];
+    return{tittel:tittel,pris:s.pris||0};
   });
-  var totalPris=rader.reduce(function(t,r){return t+(r[1]||0);},0);
+  var totalPris=rader.reduce(function(t,r){return t+(r.pris||0);},0);
   var antall=rader.length;
 
   function lagXlsx(){
     var XLSX=window.XLSX;
-    var wsData=[['Tittel','Pris (kr)']];
-    rader.forEach(function(r){wsData.push(r);});
-    wsData.push(['','']);
-    wsData.push(['Antall: '+antall,'Total: '+totalPris]);
+    /* Bygg data: header, mellomrom, varer, mellomrom, sumlinje */
+    var wsData=[
+      ['Tittel','Pris'],
+      ['',''] /* mellomrom etter header */
+    ];
+    rader.forEach(function(r){wsData.push([r.tittel,kr(r.pris)]);});
+    wsData.push(['','']); /* mellomrom før sum */
+    wsData.push(['Antall: '+antall,'Total: '+kr(totalPris)]);
 
     var ws=XLSX.utils.aoa_to_sheet(wsData);
-    ws['!cols']=[{wch:32},{wch:14}];
+    ws['!cols']=[{wch:36},{wch:18}];
+    /* Sett radhøyder */
+    ws['!rows']=wsData.map(function(){return{hpt:22};});
+
+    /* Stilsetting: kant rundt alle celler, midtstilling, fet header og sum */
+    var border={style:'thin',color:{rgb:'888888'}};
+    var borderAll={top:border,bottom:border,left:border,right:border};
+    var sisteRad=wsData.length;
+    for(var R=0;R<sisteRad;R++){
+      for(var C=0;C<2;C++){
+        var addr=XLSX.utils.encode_cell({r:R,c:C});
+        if(!ws[addr])ws[addr]={t:'s',v:''};
+        ws[addr].s={
+          border:borderAll,
+          alignment:{horizontal:'center',vertical:'center'},
+          font:{name:'Calibri',sz:11}
+        };
+      }
+    }
+    /* Header fet og bakgrunn */
+    [0,1].forEach(function(C){
+      var addr=XLSX.utils.encode_cell({r:0,c:C});
+      ws[addr].s={
+        border:borderAll,
+        alignment:{horizontal:'center',vertical:'center'},
+        font:{name:'Calibri',sz:12,bold:true},
+        fill:{fgColor:{rgb:'F0E8D8'}}
+      };
+    });
+    /* Sumlinje fet og bakgrunn */
+    [0,1].forEach(function(C){
+      var addr=XLSX.utils.encode_cell({r:sisteRad-1,c:C});
+      ws[addr].s={
+        border:borderAll,
+        alignment:{horizontal:'center',vertical:'center'},
+        font:{name:'Calibri',sz:12,bold:true},
+        fill:{fgColor:{rgb:'F0E8D8'}}
+      };
+    });
+
     var wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,(filnavn||'Salg').substring(0,31));
     XLSX.writeFile(wb,(filnavn||'salg').replace(/\s/g,'_')+'_enkel.xlsx');
   }
-  if(window.XLSX){lagXlsx();}
-  else{var s2=document.createElement('script');s2.src='https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js';s2.onload=lagXlsx;document.head.appendChild(s2);}
+  if(window.XLSX&&window.XLSX.__hasStyle){lagXlsx();}
+  else{
+    var s2=document.createElement('script');
+    s2.src='https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js';
+    s2.onload=function(){window.XLSX.__hasStyle=true;lagXlsx();};
+    document.head.appendChild(s2);
+  }
 }
 
 function exportEpost(){
