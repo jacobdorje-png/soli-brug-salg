@@ -1490,10 +1490,10 @@ function exportEnkelListe(salg,filnavn){
         var addr=XLSX.utils.encode_cell({r:R,c:C});
         if(!ws[addr])ws[addr]={t:'s',v:''};
         if(C===1&&tallSet[R]&&typeof ws[addr].v==='number'){
-          ws[addr].t='n';ws[addr].z='# ##0" kr"';
+          ws[addr].t='n';ws[addr].z='[$-407]#,##0" kr"';
         }
         if(C===1&&R===totalRow){
-          ws[addr].z='# ##0" kr"';
+          ws[addr].z='[$-407]#,##0" kr"';
         }
         var bold=!!boldSet[R];
         ws[addr].s={
