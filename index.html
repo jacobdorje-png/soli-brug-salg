@@ -582,6 +582,13 @@ datalist{display:none!important}
     <div class="modal-head"><h2 class="arkiv-color">🗄 Arkiver salg</h2><button class="modal-close-btn" id="arkiv-modal-close">×</button></div>
     <p class="arkiv-modal-tekst" id="arkiv-modal-tekst"></p>
     <div class="arkiv-eksisterende" id="arkiv-chips"></div>
+    <span class="arkiv-ny-lbl">Hurtigvalg: kvartal</span>
+    <div style="display:flex;gap:.4rem;margin-bottom:.5rem;flex-wrap:wrap">
+      <button type="button" class="ramme-chip" onclick="velgKvartal(1)">Kvartal 1</button>
+      <button type="button" class="ramme-chip" onclick="velgKvartal(2)">Kvartal 2</button>
+      <button type="button" class="ramme-chip" onclick="velgKvartal(3)">Kvartal 3</button>
+      <button type="button" class="ramme-chip" onclick="velgKvartal(4)">Kvartal 4</button>
+    </div>
     <span class="arkiv-ny-lbl">Eller skriv nytt mappenavn</span>
     <input type="text" id="arkiv-navn-input" placeholder="F.eks. Pushwagner vår 2026" list="arkiv-list"><datalist id="arkiv-list"></datalist>
     <button class="arkiv-btn-lagre" id="arkiv-lagre-btn">Flytt til arkiv</button>
@@ -1043,14 +1050,24 @@ function renderSalg(){
     var uniq=[];rek.forEach(function(n){if(uniq.indexOf(n)===-1)uniq.push(n);});
     uniq.forEach(function(an){
       var salg=grp[an];
-      var gt2=salg.reduce(function(a,s){return{total:a.total+(s.total||0)-(s.bkh||0),antall:a.antall+1};},{total:0,antall:0});
+      var gt2=salg.reduce(function(a,s){
+        var bkhVerdi=(s.pris||0)>2000?(s.bkh||0):0;
+        return{total:a.total+(s.total||0)-(s.bkh||0),antall:a.antall+1,bkh:a.bkh+bkhVerdi};
+      },{total:0,antall:0,bkh:0});
+      var alleBetalt=salg.length>0&&salg.every(function(s){return s.bkh_betalt;});
+      var noenBetalt=salg.some(function(s){return s.bkh_betalt;});
+      var betaltStatus=alleBetalt?'<span style="background:#d4edda;color:#198754;border:1.5px solid #198754;padding:.15rem .55rem;border-radius:20px;font-size:.7rem;font-weight:700;margin-left:.5rem">💰 BKH betalt</span>':
+                       (noenBetalt?'<span style="background:#fff3e0;color:#e07020;border:1.5px solid #e07020;padding:.15rem .55rem;border-radius:20px;font-size:.7rem;font-weight:700;margin-left:.5rem">⚠️ Delvis BKH betalt</span>':'');
       var g=document.createElement('div');g.className='arkiv-gruppe';
       var h=document.createElement('div');h.className='arkiv-gruppe-header';
-      h.innerHTML='<div><div class="arkiv-gruppe-navn">🗄 '+an+'</div><div class="arkiv-gruppe-meta">'+gt2.antall+' salg · '+kr(gt2.total)+' eks. BKH</div></div><div style="display:flex;gap:.4rem;flex-wrap:wrap"><button class="hent-ut-btn" data-action="epost" style="border-color:#1a5fa8;color:#1a5fa8">✉️ E-poster</button><button class="hent-ut-btn" data-action="enkel">📋 Oppstilling</button><button class="hent-ut-btn" data-action="excel">📊 Excel</button><button class="hent-ut-btn" data-action="hentut">Hent ut</button></div>';
+      var bkhBtnTekst=alleBetalt?'💰 BKH betalt ✓':'💰 Marker BKH betalt';
+      var bkhBtnStyle=alleBetalt?'border-color:#198754;color:#198754;background:#e8f5e9':'border-color:#198754;color:#198754';
+      h.innerHTML='<div><div class="arkiv-gruppe-navn">🗄 '+an+betaltStatus+'</div><div class="arkiv-gruppe-meta">'+gt2.antall+' salg · '+kr(gt2.total)+' eks. BKH · BKH: '+kr(gt2.bkh)+'</div></div><div style="display:flex;gap:.4rem;flex-wrap:wrap"><button class="hent-ut-btn" data-action="bkh" style="'+bkhBtnStyle+'">'+bkhBtnTekst+'</button><button class="hent-ut-btn" data-action="epost" style="border-color:#1a5fa8;color:#1a5fa8">✉️ E-poster</button><button class="hent-ut-btn" data-action="enkel">📋 Oppstilling</button><button class="hent-ut-btn" data-action="excel">📊 Excel</button><button class="hent-ut-btn" data-action="hentut">Hent ut</button></div>';
       h.querySelector('[data-action=hentut]').addEventListener('click',function(e){e.stopPropagation();if(confirm('Hente ut alle salg fra «'+an+'» tilbake?'))hentUtArkiv(an);});
       h.querySelector('[data-action=excel]').addEventListener('click',function(e){e.stopPropagation();exportArkivExcel(an,grp[an]);});
       h.querySelector('[data-action=enkel]').addEventListener('click',function(e){e.stopPropagation();exportEnkelListe(grp[an],an);});
       h.querySelector('[data-action=epost]').addEventListener('click',function(e){e.stopPropagation();exportEpostListe(grp[an],an);});
+      h.querySelector('[data-action=bkh]').addEventListener('click',function(e){e.stopPropagation();markerBkhBetalt(an,grp[an],alleBetalt);});
       var sd=document.createElement('div');sd.className='arkiv-gruppe-salg skjult';
       salg.forEach(function(s){sd.appendChild(makeCard(s,false));});
       g.appendChild(h);g.appendChild(sd);
@@ -1256,6 +1273,27 @@ async function utforArkivering(){
   document.getElementById('arkiv-modal-bg').classList.remove('open');
   if(arkivModus==='gruppe'){aktivFilter='alle';visArkiv=false;loadSales();}
   else{loadSales(true);}
+}
+
+function velgKvartal(n){
+  var aar=new Date().getFullYear();
+  document.getElementById('arkiv-navn-input').value='Kvartal '+n+' '+aar;
+}
+
+async function markerBkhBetalt(arkivNavn,salg,erBetalt){
+  if(erBetalt){
+    if(!confirm('Fjerne BKH-betalt-status på alle '+salg.length+' salg i «'+arkivNavn+'»?'))return;
+    var ids=salg.map(function(s){return s.id;});
+    var r=await sb.from('salg').update({bkh_betalt:false}).in('id',ids);
+    if(!r.error)loadSales();
+    else alert('Feil: '+r.error.message);
+  } else {
+    if(!confirm('Markere alle '+salg.length+' salg i «'+arkivNavn+'» som BKH betalt?'))return;
+    var ids2=salg.map(function(s){return s.id;});
+    var r2=await sb.from('salg').update({bkh_betalt:true}).in('id',ids2);
+    if(!r2.error)loadSales();
+    else alert('Feil: '+r2.error.message);
+  }
 }
 
 async function hentUtArkiv(an){
