@@ -457,7 +457,7 @@ datalist{display:none!important}
             <button type="button" class="ramme-chip" data-val="MAR" onclick="velgRamme('f','MAR',this)">MAR</button>
           </div>
           <input class="ramme-info-inp" type="text" id="f-ramme-info" placeholder="Annen rammeinfo…">
-          <div class="ux-advarsel" id="f-ux-advarsel">⚠️ Dette bildet er solgt tidligere – er du sikker på at det er UX?</div>
+          <div class="ux-advarsel" id="f-ux-advarsel">⚠️ Dette bildet kan være solgt som UX tidligere – sjekk opp!</div>
         </div>
         <div><span class="lbl">Frakt (kr)</span><input type="number" id="f-frakt" placeholder="0" min="0" inputmode="numeric"></div>
         <div><span class="lbl">Total pris (kr)</span><input type="number" id="f-total" placeholder="0" class="total-inp" inputmode="numeric"></div>
@@ -882,11 +882,18 @@ function setMode(m){
 
 function sjekkUxAdvarsel(){
   var tittel=document.getElementById('f-tittel').value.trim();
+  var kunstner=document.getElementById('f-kunstner').value.trim();
   var ri=document.getElementById('f-ramme-info').value.trim();
   var advarsel=document.getElementById('f-ux-advarsel');
   if(erUX(ri)&&tittel){
-    var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
-    var harUX=aktive.some(function(s){return normTittel(s.tittel)===normTittel(tittel)&&erUX(s.ramme_info);});
+    /* Sjekk på tvers av alle butikker, både aktive og arkiverte */
+    var harUX=alleSalg.some(function(s){
+      if(!erUX(s.ramme_info))return false;
+      if(normTittel(s.tittel)!==normTittel(tittel))return false;
+      /* Hvis kunstner er fylt inn, krev samme kunstner – ellers bare tittel */
+      if(kunstner&&s.kunstner)return normTittel(s.kunstner)===normTittel(kunstner);
+      return true;
+    });
     advarsel.className='ux-advarsel'+(harUX?' synlig':'');
   } else {advarsel.className='ux-advarsel';}
 }
@@ -1788,6 +1795,7 @@ function velgRamme(prefix,val,btn){
   var inp=document.getElementById(prefix+'-ramme-info');
   if(inp.value.trim()===val){inp.value='';}
   else{inp.value=val;btn.classList.add('valgt');}
+  if(prefix==='f')sjekkUxAdvarsel();
 }
 function settRammeChip(prefix,val){
   var row=document.getElementById(prefix+'-ramme-info');
@@ -1956,6 +1964,7 @@ function init(){
   document.getElementById('f-pris').addEventListener('input',function(){var p=nv('f-pris');document.getElementById('f-bkh').value=p>0?Math.round(p*0.05):'';calcT('f-');});
   ['f-bkh','f-ramme','f-frakt'].forEach(function(id){document.getElementById(id).addEventListener('input',function(){calcT('f-');});});
   document.getElementById('f-tittel').addEventListener('input',sjekkUxAdvarsel);
+  document.getElementById('f-kunstner').addEventListener('input',sjekkUxAdvarsel);
   document.getElementById('f-ramme-info').addEventListener('input',sjekkUxAdvarsel);
   /* Hentested – gjensidig utelukkende */
   ['f','m'].forEach(function(p){
