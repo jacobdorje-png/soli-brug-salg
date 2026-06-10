@@ -492,7 +492,6 @@ datalist{display:none!important}
       <div class="sales-top">
         <div class="stitle" id="sales-title">Nylige salg</div>
         <div style="display:flex;gap:.5rem;align-items:center">
-          <button class="excel-btn" id="flytt-ekstra-btn" style="display:none;border-color:#a07020;color:#a07020" onclick="visFlyttModal()">📋 Flytt til…</button>
           <button class="excel-btn" id="epost-btn" style="display:none;border-color:#1a5fa8;color:#1a5fa8" onclick="exportEpost()">✉️ E-poster</button>
           <button class="excel-btn" id="excel-enkel-btn" style="display:none;border-color:#9a7040;color:#9a7040" onclick="exportExcelEnkel()">📋 Oppstilling</button>
           <button class="excel-btn" id="excel-btn" style="display:none" onclick="exportExcel()">📊 Excel</button>
@@ -1129,10 +1128,6 @@ function renderSalg(){
   document.getElementById('sales-title').textContent=erAlle?'Nylige salg – '+butikkNavn:(erEkstraliste?'📋 '+ekstralisteNavn:aktivFilter);
   document.getElementById('excel-btn').style.display=raaData.length?'inline-flex':'none';document.getElementById('epost-btn').style.display=raaData.length?'inline-flex':'none';document.getElementById('excel-enkel-btn').style.display=raaData.length?'inline-flex':'none';
 
-  /* Flytt til-knapp synlig kun i ekstralistevisning */
-  var flyttBtn=document.getElementById('flytt-ekstra-btn');
-  if(flyttBtn){flyttBtn.style.display=(erEkstraliste&&raaData.length)?'inline-flex':'none';}
-
   if(!raaData.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Ingen salg ennå.';return;}
   if(erAlle){raaData.forEach(function(s){list.appendChild(makeCard(s,false));});}
   else if(erEkstraliste){
@@ -1177,7 +1172,7 @@ function makeCard(s,erGruppert){
   var typeChip=s.type?'<span class="sc-edisjon" style="background:#f0f0f0;margin-left:.25rem">'+s.type+'</span>':'';
   var arkivChip=s.arkiv?'<span class="sc-arkiv-chip">🗄 '+s.arkiv+'</span>':'';
   var gaveChip=s.gavekort?'<span style="font-size:.7rem;font-weight:700;background:#fff8d6;color:#a07010;border:1.5px solid #f0d060;border-radius:20px;padding:.15rem .55rem">🎁 Gavekort</span>':'';
-  var ekstraChip=s.ekstraliste?'<span style="font-size:.7rem;font-weight:700;background:#fef7e8;color:#7a5020;border:1.5px solid #d4b06e;border-radius:20px;padding:.15rem .55rem">📋 '+s.ekstraliste+'</span>':'';
+  var ekstraChip=s.ekstraliste?'<span data-action="flytt-ekstra" style="cursor:pointer;font-size:.7rem;font-weight:700;background:#fef7e8;color:#7a5020;border:1.5px solid #d4b06e;border-radius:20px;padding:.15rem .55rem">📋 '+s.ekstraliste+' ↺</span>':'';
   var erGavekort=(s.type==='Gavekort'||s.kunstner==='Gavekort');
   var gaveChipTittel=erGavekort?'<span style="font-size:.7rem;font-weight:700;background:#fff8d6;color:#a07010;border:1.5px solid #f0d060;border-radius:20px;padding:.15rem .55rem">🎁 Gavekort</span>':'';
   var butikkChip=sokeTekst?'<span style="font-size:.65rem;font-weight:700;color:#fff;background:'+(s.butikk==='soli'?'#3a7c5c':'#8B1a2e')+';border-radius:20px;padding:.15rem .5rem;white-space:nowrap">'+(s.butikk==='soli'?'Soli':'Fredrikstad')+'</span>':'';
@@ -1239,6 +1234,8 @@ function makeCard(s,erGruppert){
   d.querySelector('[data-action=sendt_hentemeld]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'sendt_hentemeld',this);});
   d.querySelector('[data-action=edit]').addEventListener('click',function(e){e.stopPropagation();openModal(s);});
   d.querySelector('[data-action=print]').addEventListener('click',function(e){e.stopPropagation();skrivUtKort(s);});
+  var flyttEl=d.querySelector('[data-action=flytt-ekstra]');
+  if(flyttEl)flyttEl.addEventListener('click',function(e){e.stopPropagation();visFlyttModalSalg(s);});
   /* Inline notat – lagre ved blur */
   var notatInp=d.querySelector('[data-action=notat]');
   if(notatInp){
@@ -1334,18 +1331,22 @@ function velgKvartal(n){
   document.getElementById('arkiv-navn-input').value='Kvartal '+n+' '+aar;
 }
 
-/* ── FLYTT EKSTRALISTE ── */
-function visFlyttModal(){
-  if(!aktivFilter||aktivFilter.indexOf('__ekstra:')!==0)return;
-  var fraNavn=aktivFilter.substring(9);
-  var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
-  var salg=aktive.filter(function(s){return s.ekstraliste===fraNavn;});
-  document.getElementById('flytt-modal-tekst').textContent='Flytt alle '+salg.length+' salg fra «'+fraNavn+'» til:';
+/* ── FLYTT EKSTRALISTE (per salg) ── */
+var flyttSalgId=null;
+function visFlyttModalSalg(s){
+  flyttSalgId=s.id;
+  var fraNavn=s.ekstraliste||'';
+  var kunstner=s.kunstner||'(ukjent)';
+  var tittel=s.tittel||'(uten tittel)';
+  document.getElementById('flytt-modal-tekst').textContent='Flytt salget «'+kunstner+' – '+tittel+'» fra «'+fraNavn+'» til:';
   /* Finn alle eksisterende ekstralister fra alle butikker */
   var eksisterende=[];
-  alleSalg.forEach(function(s){
-    if(s.ekstraliste&&s.ekstraliste!==fraNavn&&eksisterende.indexOf(s.ekstraliste)===-1)eksisterende.push(s.ekstraliste);
+  alleSalg.forEach(function(x){
+    if(x.ekstraliste&&x.ekstraliste!==fraNavn&&eksisterende.indexOf(x.ekstraliste)===-1)eksisterende.push(x.ekstraliste);
   });
+  /* Inkluder også nåværende periode hvis ikke allerede med */
+  var naa=naavarendeEkstraliste();
+  if(naa!==fraNavn&&eksisterende.indexOf(naa)===-1)eksisterende.push(naa);
   var chips=document.getElementById('flytt-chips');chips.innerHTML='';
   sorterEkstralisteNavn(eksisterende).forEach(function(navn){
     var c=document.createElement('button');
@@ -1353,29 +1354,25 @@ function visFlyttModal(){
     c.addEventListener('click',function(){document.getElementById('flytt-navn-input').value=navn;});
     chips.appendChild(c);
   });
-  document.getElementById('flytt-navn-input').value=naavarendeEkstraliste()===fraNavn?'':naavarendeEkstraliste();
+  document.getElementById('flytt-navn-input').value='';
   document.getElementById('flytt-modal-msg').textContent='';
   document.getElementById('flytt-modal-bg').classList.add('open');
   setTimeout(function(){document.getElementById('flytt-navn-input').focus();},100);
 }
 async function utforFlytting(){
+  if(!flyttSalgId)return;
   var nyttNavn=document.getElementById('flytt-navn-input').value.trim();
   var msg=document.getElementById('flytt-modal-msg');
-  if(!nyttNavn){msg.style.color='var(--danger)';msg.textContent='Skriv et navn på listen.';return;}
-  var fraNavn=aktivFilter.substring(9);
-  if(nyttNavn===fraNavn){msg.style.color='var(--danger)';msg.textContent='Det er samme listenavn.';return;}
-  var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
-  var ids=aktive.filter(function(s){return s.ekstraliste===fraNavn;}).map(function(s){return s.id;});
-  if(!ids.length){msg.textContent='Ingen salg å flytte.';return;}
+  if(!nyttNavn){msg.style.color='var(--danger)';msg.textContent='Skriv eller velg et listenavn.';return;}
   document.getElementById('flytt-lagre-btn').disabled=true;
   document.getElementById('flytt-lagre-btn').textContent='Flytter…';
-  var r=await sb.from('salg').update({ekstraliste:nyttNavn}).in('id',ids);
+  var r=await sb.from('salg').update({ekstraliste:nyttNavn}).eq('id',flyttSalgId);
   document.getElementById('flytt-lagre-btn').disabled=false;
   document.getElementById('flytt-lagre-btn').textContent='Flytt';
   if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
   document.getElementById('flytt-modal-bg').classList.remove('open');
-  aktivFilter='__ekstra:'+nyttNavn;
-  loadSales();
+  flyttSalgId=null;
+  loadSales(true);
 }
 
 /* ── EKSTRALISTE ── */
