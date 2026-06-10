@@ -1360,9 +1360,15 @@ function kvitteringBase(s){
   ].filter(function(l){return l!==null;});
 }
 function lagKvitteringUX(s){
-  return kvitteringBase(s).concat([
-    '',
-    'Bildet kan hentes på Soli Brug Fredrikstad søndag 31.5 mellom kl. 14-16.',
+  var base=kvitteringBase(s);
+  if(s.butikk==='soli'){
+    base=base.concat([
+      '',
+      'Bildet kan hentes på Soli Brug tidligst kl. 17-18 den 2. august, og alle dager 13-18 påfølgende uke tom. 9. august.'
+    ]);
+  }
+  /* For Fredrikstad: ingen henteinfo – legges inn manuelt ved behov */
+  return base.concat([
     '',
     'Tusen takk for handelen!',
     'Mvh:',
@@ -1576,8 +1582,9 @@ function makeIrCard(x){
   var statusLabels={aktiv:'Pågående',ferdig:'✅ Ferdig',hentet:'📦 Hentet'};
   var fotoHtml=x.bilde_url?'<img class="ir-foto" src="'+x.bilde_url+'" data-action="foto">':'';
   var notatHtml=x.notat?'<div class="ir-notat">'+x.notat+'</div>':'';
+  var ordreChip=x.ordrenummer?'<span class="sc-nr" style="background:#3a5a7a;margin-right:.5rem">'+x.ordrenummer+'</span>':'';
   d.innerHTML=
-    '<div class="ir-top"><div><div class="ir-name">'+(x.navn||'—')+'</div>'+(x.telefon?'<div class="ir-tlf">📞 '+x.telefon+'</div>':'')+'</div><span class="ir-status-chip '+x.status+'">'+(statusLabels[x.status]||x.status)+'</span></div>'+
+    '<div class="ir-top"><div>'+ordreChip+'<div class="ir-name" style="display:inline-block">'+(x.navn||'—')+'</div>'+(x.telefon?'<div class="ir-tlf">📞 '+x.telefon+'</div>':'')+'</div><span class="ir-status-chip '+x.status+'">'+(statusLabels[x.status]||x.status)+'</span></div>'+
     (x.beskrivelse?'<div class="ir-beskrivelse">'+x.beskrivelse+'</div>':'')+
     '<div class="ir-pris">'+kr(x.pris)+'</div>'+
     fotoHtml+notatHtml+
@@ -1585,19 +1592,47 @@ function makeIrCard(x){
     '<div class="ir-actions">'+
       '<button class="ir-btn ferdig-btn'+(x.status==='ferdig'?' ok':'')+'" data-action="ferdig">'+(x.status==='ferdig'?'✅ Ferdig':'Marker ferdig')+'</button>'+
       '<button class="ir-btn hentet-btn'+(x.status==='hentet'?' ok':'')+'" data-action="hentet">'+(x.status==='hentet'?'📦 Hentet':'Marker hentet')+'</button>'+
+      '<button class="ir-btn'+(x.sendt_hentemeld?' ok':'')+'" data-action="sendt_hentemeld" style="border-color:var(--green);color:'+(x.sendt_hentemeld?'#fff':'var(--green)')+';'+(x.sendt_hentemeld?'background:var(--green);':'')+'">'+(x.sendt_hentemeld?'✅ ':'☐ ')+'Sendt hentemeld</button>'+
       '<button class="ir-btn'+(x.skal_ha_faktura?' ok':'')+'" data-action="ir_faktura" style="border-color:#e07020;color:'+(x.skal_ha_faktura?'#fff':'#e07020')+';'+(x.skal_ha_faktura?'background:#e07020;':'')+'">📄 Faktura</button>'+
+      '<button class="ir-btn" data-action="mottatt" style="border-color:var(--blue);color:var(--blue)">📋 Kvittering for mottatt</button>'+
       '<button class="ir-btn" data-action="edit" style="margin-left:auto">✏️ Rediger</button>'+
     '</div>';
   var fb=d.querySelector('[data-action=foto]');if(fb)fb.addEventListener('click',function(){visFoto(x.bilde_url);});
   d.querySelector('[data-action=ferdig]').addEventListener('click',function(){setIrStatus(x,x.status==='ferdig'?'aktiv':'ferdig',this);});
   d.querySelector('[data-action=hentet]').addEventListener('click',function(){setIrStatus(x,x.status==='hentet'?'aktiv':'hentet',this);});
+  d.querySelector('[data-action=sendt_hentemeld]').addEventListener('click',async function(){
+    var nv=!x.sendt_hentemeld;
+    var r=await sb.from('innramming').update({sendt_hentemeld:nv}).eq('id',x.id);
+    if(!r.error){x.sendt_hentemeld=nv;loadIr();}
+  });
   d.querySelector('[data-action=ir_faktura]').addEventListener('click',async function(){
     var nv=!x.skal_ha_faktura;
     var r=await sb.from('innramming').update({skal_ha_faktura:nv}).eq('id',x.id);
     if(!r.error){x.skal_ha_faktura=nv;loadIr();}
   });
+  d.querySelector('[data-action=mottatt]').addEventListener('click',function(e){visMottattKvittering(e,x);});
   d.querySelector('[data-action=edit]').addEventListener('click',function(){openIrModal(x);});
   return d;
+}
+
+function visMottattKvittering(e,x){
+  var navn=(x.navn||'').trim()||'kunde';
+  var idag=new Date();
+  var dato=idag.getDate()+'.'+(idag.getMonth()+1)+'.'+idag.getFullYear();
+  var tekst='Hei '+navn+' har i dag '+dato+' levert inn et verk til innramming.\n\n'+
+            'Jeg gir beskjed så snart bildet er klart til henting.\n\n'+
+            'Du hører fra meg!\n\n'+
+            'Mvh Jacob Dørje, Soli Brug';
+  var epost=x.epost||'',tlf=x.telefon||'';
+  var emne=encodeURIComponent('Soli Brug – Innramming');
+  var kropp=encodeURIComponent(tekst);
+  var items=[];
+  if(epost)items.push({icon:'✉️',label:'Send e-post til '+epost,href:'mailto:'+epost+'?subject='+emne+'&body='+kropp});
+  if(tlf)items.push({icon:'💬',label:'Send SMS til '+tlf,href:'sms:'+tlf+'&body='+kropp});
+  items.push({icon:'📋',label:'Kopier til utklippstavle',href:'#',copy:tekst});
+  showPopup(e,items,'Kvittering for mottatt',function(item){
+    if(item.copy)navigator.clipboard.writeText(item.copy);
+  });
 }
 
 async function setIrStatus(x,status,btn){
