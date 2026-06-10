@@ -430,6 +430,7 @@ datalist{display:none!important}
           <div class="checkbox-row"><input type="checkbox" id="f-hentes-soli"><label for="f-hentes-soli">📍 Hentes på Soli Brug</label></div>
           <div class="checkbox-row"><input type="checkbox" id="f-hentes-fred"><label for="f-hentes-fred">📍 Hentes i Fredrikstad</label></div>
         </div>
+        <div class="checkbox-row" style="background:#fef7e8;border:1.5px solid #d4b06e;border-radius:10px;padding:.55rem .85rem"><input type="checkbox" id="f-ekstraliste"><label for="f-ekstraliste" style="color:#7a5020;font-weight:700">📋 Legg til i ekstraliste (<span id="f-ekstraliste-periode"></span>)</label></div>
         <div><span class="lbl">Kunstner</span><input type="text" id="f-kunstner" placeholder="Søk eller skriv navn…" list="kunstner-list" autocomplete="off"><datalist id="kunstner-list"></datalist></div>
         <div>
           <div class="tittel-row">
@@ -491,6 +492,7 @@ datalist{display:none!important}
       <div class="sales-top">
         <div class="stitle" id="sales-title">Nylige salg</div>
         <div style="display:flex;gap:.5rem;align-items:center">
+          <button class="excel-btn" id="flytt-ekstra-btn" style="display:none;border-color:#a07020;color:#a07020" onclick="visFlyttModal()">📋 Flytt til…</button>
           <button class="excel-btn" id="epost-btn" style="display:none;border-color:#1a5fa8;color:#1a5fa8" onclick="exportEpost()">✉️ E-poster</button>
           <button class="excel-btn" id="excel-enkel-btn" style="display:none;border-color:#9a7040;color:#9a7040" onclick="exportExcelEnkel()">📋 Oppstilling</button>
           <button class="excel-btn" id="excel-btn" style="display:none" onclick="exportExcel()">📊 Excel</button>
@@ -596,6 +598,19 @@ datalist{display:none!important}
   </div>
 </div>
 
+<!-- ══════ FLYTT EKSTRALISTE MODAL ══════ -->
+<div class="modal-bg" id="flytt-modal-bg">
+  <div class="modal-box sm">
+    <div class="modal-head"><h2 style="color:#a07020">📋 Flytt til ekstraliste</h2><button class="modal-close-btn" id="flytt-modal-close">×</button></div>
+    <p class="arkiv-modal-tekst" id="flytt-modal-tekst"></p>
+    <div class="arkiv-eksisterende" id="flytt-chips"></div>
+    <span class="arkiv-ny-lbl">Eller skriv nytt listenavn</span>
+    <input type="text" id="flytt-navn-input" placeholder="F.eks. Mai-Jun 2026">
+    <button class="arkiv-btn-lagre" id="flytt-lagre-btn" style="background:#a07020;border-color:#a07020">Flytt</button>
+    <div class="modal-msg" id="flytt-modal-msg"></div>
+  </div>
+</div>
+
 <!-- ══════ REDIGER SALG MODAL ══════ -->
 <div class="modal-bg" id="modal-bg">
   <div class="modal-box">
@@ -624,6 +639,7 @@ datalist{display:none!important}
         <div class="checkbox-row"><input type="checkbox" id="m-hentes-soli"><label for="m-hentes-soli">📍 Hentes på Soli Brug</label></div>
         <div class="checkbox-row"><input type="checkbox" id="m-hentes-fred"><label for="m-hentes-fred">📍 Hentes i Fredrikstad</label></div>
       </div>
+      <div><span class="lbl">📋 Ekstraliste (tom = ingen)</span><input type="text" id="m-ekstraliste" placeholder="F.eks. Mar-Apr 2026"></div>
       <hr class="fdiv">
       <div><span class="lbl">Kunstner</span><input type="text" id="m-kunstner" list="kunstner-list-m" autocomplete="off"><datalist id="kunstner-list-m"></datalist></div>
       <div>
@@ -962,14 +978,35 @@ function byggFilterTabs(){
   wrap.appendChild(ft);
 
   var kunstnere=[];
-  aktive.forEach(function(s){if(s.kunstner&&kunstnere.indexOf(s.kunstner)===-1)kunstnere.push(s.kunstner);});
+  aktive.forEach(function(s){
+    if(s.ekstraliste)return; /* Ekstraliste-salg får ikke egen kunstnerfane */
+    if(s.kunstner&&kunstnere.indexOf(s.kunstner)===-1)kunstnere.push(s.kunstner);
+  });
   kunstnere.sort();
   kunstnere.forEach(function(k){
-    var antall=aktive.filter(function(s){return s.kunstner===k;}).length;
+    var antall=aktive.filter(function(s){return s.kunstner===k&&!s.ekstraliste;}).length;
     var btn=document.createElement('button');
     btn.className='ftab'+(aktivFilter===k&&!visArkiv&&!visFaktura?' active':'');
     btn.textContent=k+' ('+antall+')';
     btn.addEventListener('click',function(){aktivFilter=k;visArkiv=false;visFaktura=false;sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
+    wrap.appendChild(btn);
+  });
+
+  /* Ekstraliste-faner */
+  var ekstralister=[];
+  aktive.forEach(function(s){
+    if(s.ekstraliste&&ekstralister.indexOf(s.ekstraliste)===-1)ekstralister.push(s.ekstraliste);
+  });
+  sorterEkstralisteNavn(ekstralister).forEach(function(navn){
+    var antall=aktive.filter(function(s){return s.ekstraliste===navn;}).length;
+    var btn=document.createElement('button');
+    var erValgt=aktivFilter==='__ekstra:'+navn&&!visArkiv&&!visFaktura;
+    btn.className='ftab'+(erValgt?' active':'');
+    btn.style.borderColor='#d4b06e';
+    btn.style.color=erValgt?'#fff':'#7a5020';
+    if(erValgt)btn.style.background='#a07020';
+    btn.textContent='📋 '+navn+' ('+antall+')';
+    btn.addEventListener('click',function(){aktivFilter='__ekstra:'+navn;visArkiv=false;visFaktura=false;sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
     wrap.appendChild(btn);
   });
 
@@ -1080,12 +1117,28 @@ function renderSalg(){
   /* NORMAL */
   var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
   var erAlle=aktivFilter==='alle';
-  var raaData=erAlle?aktive:aktive.filter(function(s){return s.kunstner===aktivFilter;});
+  var erEkstraliste=aktivFilter.indexOf&&aktivFilter.indexOf('__ekstra:')===0;
+  var ekstralisteNavn=erEkstraliste?aktivFilter.substring(9):null;
+
+  var raaData;
+  if(erAlle){raaData=aktive;}
+  else if(erEkstraliste){raaData=aktive.filter(function(s){return s.ekstraliste===ekstralisteNavn;});}
+  else{raaData=aktive.filter(function(s){return s.kunstner===aktivFilter&&!s.ekstraliste;});}
+
   var butikkNavn=aktivButikk==='soli'?'Soli':'Fredrikstad';
-  document.getElementById('sales-title').textContent=erAlle?'Nylige salg – '+butikkNavn:aktivFilter;
+  document.getElementById('sales-title').textContent=erAlle?'Nylige salg – '+butikkNavn:(erEkstraliste?'📋 '+ekstralisteNavn:aktivFilter);
   document.getElementById('excel-btn').style.display=raaData.length?'inline-flex':'none';document.getElementById('epost-btn').style.display=raaData.length?'inline-flex':'none';document.getElementById('excel-enkel-btn').style.display=raaData.length?'inline-flex':'none';
+
+  /* Flytt til-knapp synlig kun i ekstralistevisning */
+  var flyttBtn=document.getElementById('flytt-ekstra-btn');
+  if(flyttBtn){flyttBtn.style.display=(erEkstraliste&&raaData.length)?'inline-flex':'none';}
+
   if(!raaData.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Ingen salg ennå.';return;}
   if(erAlle){raaData.forEach(function(s){list.appendChild(makeCard(s,false));});}
+  else if(erEkstraliste){
+    /* Sortert alfabetisk på kunstner, så Maleri/Original → Monotypi → Grafikk */
+    sorterEkstraliste(raaData).forEach(function(s){list.appendChild(makeCard(s,false));});
+  }
   else{
     var data=sorterKD(raaData);
     var grupper={},displayTittel={},rekkefolge=[];
@@ -1124,6 +1177,7 @@ function makeCard(s,erGruppert){
   var typeChip=s.type?'<span class="sc-edisjon" style="background:#f0f0f0;margin-left:.25rem">'+s.type+'</span>':'';
   var arkivChip=s.arkiv?'<span class="sc-arkiv-chip">🗄 '+s.arkiv+'</span>':'';
   var gaveChip=s.gavekort?'<span style="font-size:.7rem;font-weight:700;background:#fff8d6;color:#a07010;border:1.5px solid #f0d060;border-radius:20px;padding:.15rem .55rem">🎁 Gavekort</span>':'';
+  var ekstraChip=s.ekstraliste?'<span style="font-size:.7rem;font-weight:700;background:#fef7e8;color:#7a5020;border:1.5px solid #d4b06e;border-radius:20px;padding:.15rem .55rem">📋 '+s.ekstraliste+'</span>':'';
   var erGavekort=(s.type==='Gavekort'||s.kunstner==='Gavekort');
   var gaveChipTittel=erGavekort?'<span style="font-size:.7rem;font-weight:700;background:#fff8d6;color:#a07010;border:1.5px solid #f0d060;border-radius:20px;padding:.15rem .55rem">🎁 Gavekort</span>':'';
   var butikkChip=sokeTekst?'<span style="font-size:.65rem;font-weight:700;color:#fff;background:'+(s.butikk==='soli'?'#3a7c5c':'#8B1a2e')+';border-radius:20px;padding:.15rem .5rem;white-space:nowrap">'+(s.butikk==='soli'?'Soli':'Fredrikstad')+'</span>':'';
@@ -1146,7 +1200,7 @@ function makeCard(s,erGruppert){
   if(!henteHtml)henteHtml='<span class="badge-no">Hentes</span>';
 
   d.innerHTML=
-    '<div class="sc-top"><span class="sc-nr">'+onr(s.ordrenummer)+'</span>'+butikkChip+arkivChip+gaveChip+'<span class="sc-time">'+fmt(s.created_at)+'</span></div>'+
+    '<div class="sc-top"><span class="sc-nr">'+onr(s.ordrenummer)+'</span>'+butikkChip+arkivChip+gaveChip+ekstraChip+'<span class="sc-time">'+fmt(s.created_at)+'</span></div>'+
     /* 1. KUNDEINFO ØVERST */
     '<div class="sc-customer"><div class="sc-customer-name">'+(s.navn||'—')+'</div><div class="sc-customer-detail">'+(k||'')+(k&&s.adresse?'<br>':'')+(s.adresse||'')+'</div></div>'+
     /* 2. KUNSTVERKINFO */
@@ -1278,6 +1332,88 @@ async function utforArkivering(){
 function velgKvartal(n){
   var aar=new Date().getFullYear();
   document.getElementById('arkiv-navn-input').value='Kvartal '+n+' '+aar;
+}
+
+/* ── FLYTT EKSTRALISTE ── */
+function visFlyttModal(){
+  if(!aktivFilter||aktivFilter.indexOf('__ekstra:')!==0)return;
+  var fraNavn=aktivFilter.substring(9);
+  var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
+  var salg=aktive.filter(function(s){return s.ekstraliste===fraNavn;});
+  document.getElementById('flytt-modal-tekst').textContent='Flytt alle '+salg.length+' salg fra «'+fraNavn+'» til:';
+  /* Finn alle eksisterende ekstralister fra alle butikker */
+  var eksisterende=[];
+  alleSalg.forEach(function(s){
+    if(s.ekstraliste&&s.ekstraliste!==fraNavn&&eksisterende.indexOf(s.ekstraliste)===-1)eksisterende.push(s.ekstraliste);
+  });
+  var chips=document.getElementById('flytt-chips');chips.innerHTML='';
+  sorterEkstralisteNavn(eksisterende).forEach(function(navn){
+    var c=document.createElement('button');
+    c.className='arkiv-chip';c.textContent='📋 '+navn;
+    c.addEventListener('click',function(){document.getElementById('flytt-navn-input').value=navn;});
+    chips.appendChild(c);
+  });
+  document.getElementById('flytt-navn-input').value=naavarendeEkstraliste()===fraNavn?'':naavarendeEkstraliste();
+  document.getElementById('flytt-modal-msg').textContent='';
+  document.getElementById('flytt-modal-bg').classList.add('open');
+  setTimeout(function(){document.getElementById('flytt-navn-input').focus();},100);
+}
+async function utforFlytting(){
+  var nyttNavn=document.getElementById('flytt-navn-input').value.trim();
+  var msg=document.getElementById('flytt-modal-msg');
+  if(!nyttNavn){msg.style.color='var(--danger)';msg.textContent='Skriv et navn på listen.';return;}
+  var fraNavn=aktivFilter.substring(9);
+  if(nyttNavn===fraNavn){msg.style.color='var(--danger)';msg.textContent='Det er samme listenavn.';return;}
+  var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
+  var ids=aktive.filter(function(s){return s.ekstraliste===fraNavn;}).map(function(s){return s.id;});
+  if(!ids.length){msg.textContent='Ingen salg å flytte.';return;}
+  document.getElementById('flytt-lagre-btn').disabled=true;
+  document.getElementById('flytt-lagre-btn').textContent='Flytter…';
+  var r=await sb.from('salg').update({ekstraliste:nyttNavn}).in('id',ids);
+  document.getElementById('flytt-lagre-btn').disabled=false;
+  document.getElementById('flytt-lagre-btn').textContent='Flytt';
+  if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
+  document.getElementById('flytt-modal-bg').classList.remove('open');
+  aktivFilter='__ekstra:'+nyttNavn;
+  loadSales();
+}
+
+/* ── EKSTRALISTE ── */
+function naavarendeEkstraliste(){
+  var d=new Date();
+  var aar=d.getFullYear();
+  var perioder=['Jan-Feb','Jan-Feb','Mar-Apr','Mar-Apr','Mai-Jun','Mai-Jun','Jul-Aug','Jul-Aug','Sep-Okt','Sep-Okt','Nov-Des','Nov-Des'];
+  return perioder[d.getMonth()]+' '+aar;
+}
+function sorterEkstraliste(data){
+  /* Alfabetisk på kunstner, så Maleri/Original → Monotypi → Grafikk innad */
+  function typeRangE(s){
+    var t=(s.type||'').toLowerCase();
+    if(t==='grafikk')return 2;
+    if(t==='monotypi')return 1;
+    return 0;
+  }
+  return data.slice().sort(function(a,b){
+    var ka=(a.kunstner||'').toLowerCase();
+    var kb=(b.kunstner||'').toLowerCase();
+    if(ka!==kb)return ka.localeCompare(kb,'nb');
+    var ra=typeRangE(a),rb=typeRangE(b);
+    if(ra!==rb)return ra-rb;
+    return (a.tittel||'').localeCompare(b.tittel||'','nb');
+  });
+}
+function sorterEkstralisteNavn(arr){
+  /* Sorter "Mar-Apr 2026" osv. kronologisk */
+  var orden=['Jan-Feb','Mar-Apr','Mai-Jun','Jul-Aug','Sep-Okt','Nov-Des'];
+  return arr.slice().sort(function(a,b){
+    var ma=a.match(/(\S+)\s+(\d+)$/),mb=b.match(/(\S+)\s+(\d+)$/);
+    if(ma&&mb){
+      if(ma[2]!==mb[2])return parseInt(ma[2])-parseInt(mb[2]);
+      var oa=orden.indexOf(ma[1]),ob=orden.indexOf(mb[1]);
+      if(oa>=0&&ob>=0)return oa-ob;
+    }
+    return a.localeCompare(b,'nb');
+  });
 }
 
 async function markerBkhBetalt(arkivNavn,salg,erBetalt){
@@ -1700,6 +1836,7 @@ function openModal(s){
   document.getElementById('m-montering').checked=!!s.montering;
   document.getElementById('m-hentes-soli').checked=s.hentested==='soli';
   document.getElementById('m-hentes-fred').checked=s.hentested==='fredrikstad';
+  document.getElementById('m-ekstraliste').value=s.ekstraliste||'';
   var mType=document.querySelector('input[name="m-type"][value="'+( s.type||'')+'"]');
   if(mType)mType.checked=true; else{var prev=document.querySelector('input[name="m-type"]:checked');if(prev)prev.checked=false;}
   settFotoPreview('m-foto-preview','m-foto-fjern',s.bilde_url);
@@ -1715,7 +1852,7 @@ async function saveSale(){
   btn.disabled=true;btn.textContent='Lagrer…';
   var mTypeValg=document.querySelector('input[name="m-type"]:checked');
   var mButikkValg=document.querySelector('input[name="m-butikk"]:checked');
-  var row={navn:document.getElementById('m-navn').value.trim(),telefon:document.getElementById('m-telefon').value.trim(),epost:document.getElementById('m-epost').value.trim(),adresse:document.getElementById('m-adresse').value.trim(),levering:document.getElementById('m-levering').checked,montering:document.getElementById('m-montering').checked,hentested:document.getElementById('m-hentes-soli').checked?'soli':document.getElementById('m-hentes-fred').checked?'fredrikstad':null,butikk:mButikkValg?mButikkValg.value:'fredrikstad',kunstner:document.getElementById('m-kunstner').value.trim(),tittel:document.getElementById('m-tittel').value.trim(),edisjon:document.getElementById('m-edisjon').value.trim(),type:mTypeValg?mTypeValg.value:'',pris:nv('m-pris'),bkh:nv('m-bkh'),ramme:nv('m-ramme'),frakt:nv('m-frakt'),total:nv('m-total'),ramme_info:document.getElementById('m-ramme-info').value.trim(),selger:document.getElementById('m-selger').value.trim(),notat:document.getElementById('m-notat').value.trim(),bilde_url:mFotoUrl};
+  var row={navn:document.getElementById('m-navn').value.trim(),telefon:document.getElementById('m-telefon').value.trim(),epost:document.getElementById('m-epost').value.trim(),adresse:document.getElementById('m-adresse').value.trim(),levering:document.getElementById('m-levering').checked,montering:document.getElementById('m-montering').checked,hentested:document.getElementById('m-hentes-soli').checked?'soli':document.getElementById('m-hentes-fred').checked?'fredrikstad':null,butikk:mButikkValg?mButikkValg.value:'fredrikstad',kunstner:document.getElementById('m-kunstner').value.trim(),tittel:document.getElementById('m-tittel').value.trim(),edisjon:document.getElementById('m-edisjon').value.trim(),type:mTypeValg?mTypeValg.value:'',pris:nv('m-pris'),bkh:nv('m-bkh'),ramme:nv('m-ramme'),frakt:nv('m-frakt'),total:nv('m-total'),ramme_info:document.getElementById('m-ramme-info').value.trim(),selger:document.getElementById('m-selger').value.trim(),notat:document.getElementById('m-notat').value.trim(),bilde_url:mFotoUrl,ekstraliste:document.getElementById('m-ekstraliste').value.trim()||null};
   var dv=document.getElementById('m-dato').value;if(dv)row.created_at=new Date(dv).toISOString();
   var r=await sb.from('salg').update(row).eq('id',editId);
   if(r.error){btn.disabled=false;btn.textContent='Lagre endringer';msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
@@ -2054,6 +2191,13 @@ function init(){
   document.getElementById('ir-modal-close').addEventListener('click',closeIrModal);
   document.getElementById('ir-modal-bg').addEventListener('click',function(e){if(e.target===this)closeIrModal();});
 
+  document.getElementById('flytt-modal-close').addEventListener('click',function(){document.getElementById('flytt-modal-bg').classList.remove('open');});
+  document.getElementById('flytt-modal-bg').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+  document.getElementById('flytt-lagre-btn').addEventListener('click',utforFlytting);
+  document.getElementById('flytt-navn-input').addEventListener('keydown',function(e){if(e.key==='Enter')utforFlytting();});
+  /* Vis nåværende periode i ekstraliste-label */
+  document.getElementById('f-ekstraliste-periode').textContent=naavarendeEkstraliste();
+
   /* Chat */
   document.getElementById('chat-send-btn').addEventListener('click',sendChatMelding);
   document.getElementById('chat-melding').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChatMelding();}});
@@ -2079,7 +2223,8 @@ async function submitSale(){
     hentested:document.getElementById('f-hentes-soli').checked?'soli':document.getElementById('f-hentes-fred').checked?'fredrikstad':null,
     selger:document.getElementById('f-selger').value.trim(),
     notat:document.getElementById('f-notat').value.trim(),
-    butikk:aktivButikk,hentet:false,faktura_sendt:false,skal_ha_faktura:false,betalt_kort:false
+    butikk:aktivButikk,hentet:false,faktura_sendt:false,skal_ha_faktura:false,betalt_kort:false,
+    ekstraliste:document.getElementById('f-ekstraliste').checked?naavarendeEkstraliste():null
   };
   if(mode==='gammelt'){var dv=document.getElementById('f-dato').value;if(dv)baseRow.created_at=new Date(dv).toISOString();}
 
@@ -2152,6 +2297,7 @@ async function submitSale(){
   document.getElementById('gavekort-felt').style.display='none';
   document.getElementById('f-gavekort-pris').value='';
   document.getElementById('f-gavekort-notat').value='';
+  document.getElementById('f-ekstraliste').checked=false;
   var tc=document.querySelector('input[name="f-type"]:checked');if(tc)tc.checked=false;
   settFotoPreview('f-foto-preview','f-foto-fjern',null);fFotoUrl=null;
   document.getElementById('ekstra-verk-container').innerHTML='';
