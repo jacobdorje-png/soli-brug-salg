@@ -649,7 +649,11 @@ datalist{display:none!important}
         <div class="checkbox-row"><input type="checkbox" id="m-hentes-soli"><label for="m-hentes-soli">📍 Hentes på Soli Brug</label></div>
         <div class="checkbox-row"><input type="checkbox" id="m-hentes-fred"><label for="m-hentes-fred">📍 Hentes i Fredrikstad</label></div>
       </div>
-      <div><span class="lbl">📋 Ekstraliste (tom = ingen)</span><input type="text" id="m-ekstraliste" placeholder="F.eks. Mar-Apr 2026"></div>
+      <div>
+        <span class="lbl">📋 Ekstraliste (tom = ingen)</span>
+        <div id="m-ekstraliste-chips" style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.4rem"></div>
+        <input type="text" id="m-ekstraliste" placeholder="F.eks. Mar-Apr 2026">
+      </div>
       <hr class="fdiv">
       <div><span class="lbl">Kunstner</span><input type="text" id="m-kunstner" list="kunstner-list-m" autocomplete="off"><datalist id="kunstner-list-m"></datalist></div>
       <div>
@@ -978,15 +982,14 @@ function oppdaterSelgerFilter(){
   /* "Alle"-knapp */
   var alleBtn=document.createElement('button');
   alleBtn.className='selger-knapp'+(!selgerFilter?' aktiv':'');
-  alleBtn.textContent='Alle ('+aktive.length+')';
+  alleBtn.textContent='Alle';
   alleBtn.addEventListener('click',function(){selgerFilter='';oppdaterSelgerFilter();renderSalg();});
   wrap.appendChild(alleBtn);
   /* Én knapp per selger */
   selgere.forEach(function(n){
-    var antall=aktive.filter(function(s){return s.selger===n;}).length;
     var btn=document.createElement('button');
     btn.className='selger-knapp'+(selgerFilter===n?' aktiv':'');
-    btn.textContent=n+' ('+antall+')';
+    btn.textContent=n;
     btn.addEventListener('click',function(){selgerFilter=(selgerFilter===n?'':n);oppdaterSelgerFilter();renderSalg();});
     wrap.appendChild(btn);
   });
@@ -1880,6 +1883,28 @@ function openModal(s){
   document.getElementById('m-hentes-soli').checked=s.hentested==='soli';
   document.getElementById('m-hentes-fred').checked=s.hentested==='fredrikstad';
   document.getElementById('m-ekstraliste').value=s.ekstraliste||'';
+  /* Bygg hurtigvalg-knapper for ekstraliste */
+  var chipsEl=document.getElementById('m-ekstraliste-chips');
+  chipsEl.innerHTML='';
+  var eksisterende=[];
+  alleSalg.forEach(function(x){
+    if(x.ekstraliste&&eksisterende.indexOf(x.ekstraliste)===-1)eksisterende.push(x.ekstraliste);
+  });
+  var naa=naavarendeEkstraliste();
+  if(eksisterende.indexOf(naa)===-1)eksisterende.push(naa);
+  sorterEkstralisteNavn(eksisterende).forEach(function(navn){
+    var c=document.createElement('button');
+    c.type='button';
+    c.className='ramme-chip';
+    if(s.ekstraliste===navn)c.classList.add('valgt');
+    c.textContent='📋 '+navn;
+    c.addEventListener('click',function(){
+      var inp=document.getElementById('m-ekstraliste');
+      if(inp.value.trim()===navn){inp.value='';chipsEl.querySelectorAll('.ramme-chip').forEach(function(b){b.classList.remove('valgt');});}
+      else{inp.value=navn;chipsEl.querySelectorAll('.ramme-chip').forEach(function(b){b.classList.remove('valgt');});c.classList.add('valgt');}
+    });
+    chipsEl.appendChild(c);
+  });
   var mType=document.querySelector('input[name="m-type"][value="'+( s.type||'')+'"]');
   if(mType)mType.checked=true; else{var prev=document.querySelector('input[name="m-type"]:checked');if(prev)prev.checked=false;}
   settFotoPreview('m-foto-preview','m-foto-fjern',s.bilde_url);
