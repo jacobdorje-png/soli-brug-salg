@@ -736,7 +736,7 @@ var SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6I
 var BUCKET='bilder';
 var CODE='sbs';
 var sb=null,editId=null,irEditId=null,mode='nytt';
-var alleSalg=[],alleIr=[],aktivFilter='alle',irFilter='alle',sokeTekst='',visArkiv=false,visFaktura=false,selgerFilter='';
+var alleSalg=[],alleIr=[],aktivFilter='alle',irFilter='alle',sokeTekst='',visArkiv=false,visFaktura=false,visVip=false,selgerFilter='';
 var aktivButikk='soli'; /* 'soli' eller 'fredrikstad' */
 var arkivModus=null,arkivEnkeltId=null;
 /* Foto state */
@@ -890,7 +890,7 @@ function setMainTab(tab){
     document.body.className='butikk-'+tab;
     var metaColor=document.querySelector('meta[name=theme-color]');
     if(metaColor)metaColor.content=tab==='soli'?'#3a7a52':'#8B1a2e';
-    aktivFilter='alle';visArkiv=false;visFaktura=false;selgerFilter='';sokeTekst='';
+    aktivFilter='alle';visArkiv=false;visFaktura=false;visVip=false;selgerFilter='';sokeTekst='';
     document.getElementById('search-input').value='';
     oppdaterSokeUI();oppdaterArkivBar();
     oppdaterAutocomplete();byggFilterTabs();renderSalg();
@@ -1007,7 +1007,7 @@ function byggFilterTabs(){
   var nylige=document.createElement('button');
   nylige.className='ftab'+(aktivFilter==='alle'&&!visArkiv&&!visFaktura?' active':'');
   nylige.textContent='Nylige salg ('+aktive.length+')';
-  nylige.addEventListener('click',function(){aktivFilter='alle';visArkiv=false;visFaktura=false;sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
+  nylige.addEventListener('click',function(){aktivFilter='alle';visArkiv=false;visFaktura=false;visVip=false;sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
   wrap.appendChild(nylige);
 
   /* Faktura-tab – alltid synlig, rett ved siden av Nylige salg */
@@ -1017,12 +1017,22 @@ function byggFilterTabs(){
   if(visFaktura)ft.style.background='#e07020';
   ft.textContent='📄 Faktura'+(fakturaAntall>0?' ('+fakturaAntall+')':'');
   ft.addEventListener('click',async function(){
-    visFaktura=!visFaktura;visArkiv=false;aktivFilter='alle';sokeTekst='';
+    visFaktura=!visFaktura;visArkiv=false;visVip=false;aktivFilter='alle';sokeTekst='';
     document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();
     if(visFaktura&&alleIr.length===0)await loadIr();
     renderSalg();byggFilterTabs();
   });
   wrap.appendChild(ft);
+
+  /* VIP-tab – alltid synlig */
+  var vipAntall=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk&&s.vip;}).length;
+  var vt=document.createElement('button');
+  vt.className='ftab'+(visVip?' active':'');
+  vt.style.borderColor='#d4a500';vt.style.color=visVip?'#fff':'#a07000';
+  if(visVip)vt.style.background='#d4a500';
+  vt.textContent='⭐ VIP'+(vipAntall>0?' ('+vipAntall+')':'');
+  vt.addEventListener('click',function(){visVip=!visVip;visArkiv=false;visFaktura=false;aktivFilter='alle';sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
+  wrap.appendChild(vt);
 
   var kunstnere=[];
   aktive.forEach(function(s){
@@ -1035,7 +1045,7 @@ function byggFilterTabs(){
     var btn=document.createElement('button');
     btn.className='ftab'+(aktivFilter===k&&!visArkiv&&!visFaktura?' active':'');
     btn.textContent=k+' ('+antall+')';
-    btn.addEventListener('click',function(){aktivFilter=k;visArkiv=false;visFaktura=false;sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
+    btn.addEventListener('click',function(){aktivFilter=k;visArkiv=false;visFaktura=false;visVip=false;sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
     wrap.appendChild(btn);
   });
 
@@ -1053,7 +1063,7 @@ function byggFilterTabs(){
     btn.style.color=erValgt?'#fff':'#7a5020';
     if(erValgt)btn.style.background='#a07020';
     btn.textContent='📋 '+navn+' ('+antall+')';
-    btn.addEventListener('click',function(){aktivFilter='__ekstra:'+navn;visArkiv=false;visFaktura=false;sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
+    btn.addEventListener('click',function(){aktivFilter='__ekstra:'+navn;visArkiv=false;visFaktura=false;visVip=false;sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
     wrap.appendChild(btn);
   });
 
@@ -1061,7 +1071,7 @@ function byggFilterTabs(){
     var at=document.createElement('button');
     at.className='ftab arkiv-tab'+(visArkiv?' active':'');
     at.textContent='🗄 Arkiv ('+arkiverte.length+')';
-    at.addEventListener('click',function(){visArkiv=true;visFaktura=false;aktivFilter='alle';sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
+    at.addEventListener('click',function(){visArkiv=true;visFaktura=false;visVip=false;aktivFilter='alle';sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
     wrap.appendChild(at);
   }
 }
@@ -1102,6 +1112,24 @@ function renderSalg(){
     visTotals(treff);return;
   }
   document.getElementById('search-info').style.display='none';
+
+  /* VIP-VISNING – kompakt liste */
+  if(visVip){
+    document.getElementById('sales-title').textContent='⭐ VIP-kunder – '+(aktivButikk==='soli'?'Soli':'Fredrikstad');
+    document.getElementById('excel-btn').style.display='none';
+    document.getElementById('epost-btn').style.display='none';
+    document.getElementById('excel-enkel-btn').style.display='none';
+    var vipSalg=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk&&s.vip;});
+    /* Sortert alfabetisk på kundenavn */
+    vipSalg.sort(function(a,b){return((a.navn||'').toLowerCase()).localeCompare((b.navn||'').toLowerCase(),'nb');});
+    if(!vipSalg.length){
+      document.getElementById('empty').style.display='block';
+      document.getElementById('empty').textContent='Ingen VIP-salg ennå. Trykk på ⭐ VIP-chipen på et salgskort for å markere det.';
+      return;
+    }
+    vipSalg.forEach(function(s){list.appendChild(makeVipKort(s));});
+    return;
+  }
 
   /* FAKTURA-VISNING */
   if(visFaktura){
@@ -1222,6 +1250,7 @@ function makeCard(s,erGruppert){
   var arkivChip=s.arkiv?'<span class="sc-arkiv-chip">🗄 '+s.arkiv+'</span>':'';
   var gaveChip=s.gavekort?'<span style="font-size:.7rem;font-weight:700;background:#fff8d6;color:#a07010;border:1.5px solid #f0d060;border-radius:20px;padding:.15rem .55rem">🎁 Gavekort</span>':'';
   var ekstraChip=s.ekstraliste?'<span data-action="flytt-ekstra" style="cursor:pointer;font-size:.7rem;font-weight:700;background:#fef7e8;color:#7a5020;border:1.5px solid #d4b06e;border-radius:20px;padding:.15rem .55rem">📋 '+s.ekstraliste+' ↺</span>':'';
+  var vipChip=s.vip?'<span data-action="vip-toggle" style="cursor:pointer;font-size:.7rem;font-weight:700;background:#fff4d9;color:#a07000;border:1.5px solid #d4a500;border-radius:20px;padding:.15rem .55rem">⭐ VIP</span>':'<span data-action="vip-toggle" style="cursor:pointer;font-size:.7rem;font-weight:700;background:transparent;color:#a07000;border:1.5px dashed #d4a500;border-radius:20px;padding:.15rem .55rem;opacity:.65">⭐ VIP</span>';
   var erGavekort=(s.type==='Gavekort'||s.kunstner==='Gavekort');
   var gaveChipTittel=erGavekort?'<span style="font-size:.7rem;font-weight:700;background:#fff8d6;color:#a07010;border:1.5px solid #f0d060;border-radius:20px;padding:.15rem .55rem">🎁 Gavekort</span>':'';
   var butikkChip=sokeTekst?'<span style="font-size:.65rem;font-weight:700;color:#fff;background:'+(s.butikk==='soli'?'#3a7c5c':'#8B1a2e')+';border-radius:20px;padding:.15rem .5rem;white-space:nowrap">'+(s.butikk==='soli'?'Soli':'Fredrikstad')+'</span>':'';
@@ -1244,7 +1273,7 @@ function makeCard(s,erGruppert){
   if(!henteHtml)henteHtml='<span class="badge-no">Hentes</span>';
 
   d.innerHTML=
-    '<div class="sc-top"><span class="sc-nr">'+onr(s.ordrenummer)+'</span>'+butikkChip+arkivChip+gaveChip+ekstraChip+'<span class="sc-time">'+fmt(s.created_at)+'</span></div>'+
+    '<div class="sc-top"><span class="sc-nr">'+onr(s.ordrenummer)+'</span>'+butikkChip+arkivChip+gaveChip+ekstraChip+vipChip+'<span class="sc-time">'+fmt(s.created_at)+'</span></div>'+
     /* 1. KUNDEINFO ØVERST */
     '<div class="sc-customer"><div class="sc-customer-name">'+(s.navn||'—')+'</div><div class="sc-customer-detail">'+(k||'')+(k&&s.adresse?'<br>':'')+(s.adresse||'')+'</div></div>'+
     /* 2. KUNSTVERKINFO */
@@ -1285,6 +1314,13 @@ function makeCard(s,erGruppert){
   d.querySelector('[data-action=print]').addEventListener('click',function(e){e.stopPropagation();skrivUtKort(s);});
   var flyttEl=d.querySelector('[data-action=flytt-ekstra]');
   if(flyttEl)flyttEl.addEventListener('click',function(e){e.stopPropagation();visFlyttModalSalg(s);});
+  var vipEl=d.querySelector('[data-action=vip-toggle]');
+  if(vipEl)vipEl.addEventListener('click',async function(e){
+    e.stopPropagation();
+    var nv=!s.vip;
+    var r=await sb.from('salg').update({vip:nv}).eq('id',s.id);
+    if(!r.error){s.vip=nv;loadSales(true);}
+  });
   /* Inline notat – lagre ved blur */
   var notatInp=d.querySelector('[data-action=notat]');
   if(notatInp){
@@ -1804,6 +1840,31 @@ function renderIr(){
   data.forEach(function(x){list.appendChild(makeIrCard(x));});
 }
 
+function makeVipKort(s){
+  var d=document.createElement('div');
+  d.className='salgskort';
+  d.style.borderLeft='4px solid #d4a500';
+  var tlfHtml=s.telefon?'<div style="font-size:.85rem;color:#666;font-weight:600;margin-top:.15rem">📞 '+s.telefon+'</div>':'';
+  d.innerHTML=
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem">'+
+      '<div style="flex:1">'+
+        '<div style="font-size:1.05rem;font-weight:700;color:#111;margin-bottom:.1rem">⭐ '+(s.navn||'(uten navn)')+'</div>'+
+        tlfHtml+
+        '<div style="font-size:.88rem;color:#222;font-weight:600;margin-top:.3rem">'+(s.kunstner||'—')+(s.tittel?' – <em style="font-weight:500">'+s.tittel+'</em>':'')+'</div>'+
+      '</div>'+
+      '<div style="text-align:right;flex-shrink:0">'+
+        '<div style="font-size:1.05rem;font-weight:700;color:var(--accent)">'+kr(s.total||0)+'</div>'+
+        '<button data-action="vip-fjern" style="margin-top:.4rem;background:none;border:1.5px solid #d4a500;color:#a07000;border-radius:6px;padding:.25rem .55rem;font-size:.72rem;font-weight:700;cursor:pointer;font-family:\'proxima-nova\',\'Nunito\',sans-serif">Fjern VIP</button>'+
+      '</div>'+
+    '</div>';
+  d.querySelector('[data-action=vip-fjern]').addEventListener('click',async function(e){
+    e.stopPropagation();
+    var r=await sb.from('salg').update({vip:false}).eq('id',s.id);
+    if(!r.error)loadSales(true);
+  });
+  return d;
+}
+
 function makeIrCard(x){
   var d=document.createElement('div');d.className='ir-card status-'+x.status;
   var statusLabels={aktiv:'Pågående',ferdig:'✅ Ferdig',hentet:'📦 Hentet'};
@@ -1946,7 +2007,8 @@ async function saveSale(){
         type:ekType?ekType.value:'',
         ramme_info:el.querySelector('[data-field=ramme_info]').value.trim(),
         pris:p,bkh:b,ramme:rm,frakt:0,total:p+b+rm,
-        hentet:false,faktura_sendt:false,skal_ha_faktura:false,betalt_kort:false
+        hentet:false,faktura_sendt:false,skal_ha_faktura:false,betalt_kort:false,
+        bilde_url:el.dataset.bildeUrl||null
       });
     });
     await sb.from('salg').insert(eksRows);
@@ -2094,6 +2156,16 @@ function lagEkstraVerkHTML(idx){
           '</div>'+
         '</div>'+
       '</div>'+
+      '<div>'+
+        '<span class="lbl">Bilde (valgfritt)</span>'+
+        '<div class="foto-upload-wrap" id="ev-foto-wrap-'+idx+'">'+
+          '<div class="foto-icon">📷</div>'+
+          '<p>Trykk for å laste opp bilde</p>'+
+        '</div>'+
+        '<img class="foto-preview" id="ev-foto-preview-'+idx+'">'+
+        '<button type="button" class="foto-fjern-btn" id="ev-foto-fjern-'+idx+'">✕ Fjern bilde</button>'+
+        '<div class="foto-laster" id="ev-foto-laster-'+idx+'">⏳ Laster opp…</div>'+
+      '</div>'+
     '</div>'+
   '</div>';
 }
@@ -2102,11 +2174,16 @@ function leggTilEkstraVerk(){
   var container=document.getElementById('ekstra-verk-container');
   var div=document.createElement('div');div.innerHTML=lagEkstraVerkHTML(ekstraVerkTeller);
   var el=div.firstChild;
+  var currentIdx=ekstraVerkTeller;
   /* Auto-BKH */
   var prisInp=el.querySelector('[data-field=pris]');
   var bkhInp=el.querySelector('[data-field=bkh]');
   prisInp.addEventListener('input',function(){var p=parseFloat(this.value)||0;if(p>0)bkhInp.value=Math.round(p*0.05);});
   container.appendChild(el);
+  /* Bildeopplasting – lagre URL i en data-attributt på elementet */
+  setupFotoWrap('ev-foto-wrap-'+currentIdx,'ev-foto-preview-'+currentIdx,'ev-foto-fjern-'+currentIdx,'ev-foto-laster-'+currentIdx,function(url){
+    el.dataset.bildeUrl=url||'';
+  });
   ekstraVerkTeller++;
 }
 function fjernEkstraVerk(idx){
@@ -2217,12 +2294,17 @@ function init(){
   /* Legg til verk fra redigeringsmodal */
   document.getElementById('modal-legg-til-btn').addEventListener('click',function(){
     var container=document.getElementById('modal-ekstra-container');
-    var div=document.createElement('div');div.innerHTML=lagEkstraVerkHTML(ekstraVerkTeller);
+    var currentIdx=ekstraVerkTeller;
+    var div=document.createElement('div');div.innerHTML=lagEkstraVerkHTML(currentIdx);
     var el=div.firstChild;
     var prisInp=el.querySelector('[data-field=pris]');
     var bkhInp=el.querySelector('[data-field=bkh]');
     if(prisInp&&bkhInp)prisInp.addEventListener('input',function(){var p=parseFloat(this.value)||0;if(p>0)bkhInp.value=Math.round(p*0.05);});
-    container.appendChild(el);ekstraVerkTeller++;
+    container.appendChild(el);
+    setupFotoWrap('ev-foto-wrap-'+currentIdx,'ev-foto-preview-'+currentIdx,'ev-foto-fjern-'+currentIdx,'ev-foto-laster-'+currentIdx,function(url){
+      el.dataset.bildeUrl=url||'';
+    });
+    ekstraVerkTeller++;
   });
   document.getElementById('gavekort-btn').addEventListener('click',leggTilGavekort);
   document.getElementById('gavekort-fjern').addEventListener('click',function(){
@@ -2342,7 +2424,7 @@ async function submitSale(){
         type:ekTypeValg?ekTypeValg.value:'',
         pris:ekPris,bkh:ekBkh,ramme:ekRamme,frakt:0,total:ekPris+ekBkh+ekRamme,
         ramme_info:el.querySelector('[data-field=ramme_info]').value.trim(),
-        bilde_url:null
+        bilde_url:el.dataset.bildeUrl||null
       }));
     }
   });
