@@ -868,10 +868,25 @@ document.getElementById('login-btn').addEventListener('click',function(){
 });
 document.getElementById('code-input').addEventListener('keydown',function(e){if(e.key==='Enter')document.getElementById('login-btn').click();});
 document.getElementById('logout-btn').addEventListener('click',function(){sessionStorage.removeItem('sbauth');document.getElementById('app').style.display='none';document.getElementById('login-screen').style.display='flex';});
-document.getElementById('refresh-btn').addEventListener('click',function(){
-  var btn=this;btn.style.transform='rotate(360deg)';btn.style.transition='transform .5s';
-  setTimeout(function(){btn.style.transform='';btn.style.transition='';},500);
-  loadSales();if(alleIr.length>0)loadIr();
+document.getElementById('refresh-btn').addEventListener('click',async function(){
+  var btn=this;
+  var orig=btn.innerHTML;
+  btn.disabled=true;
+  btn.innerHTML='↻';
+  btn.style.transition='transform .8s ease-in-out';
+  btn.style.transform='rotate(720deg)';
+  /* Last alt – salg, innramming og chat */
+  var promises=[loadSales(true),loadIr()];
+  if(document.getElementById('page-chat').classList.contains('active'))promises.push(loadChat());
+  try{await Promise.all(promises);}catch(e){}
+  /* Vis "✓" et øyeblikk for tilbakemelding */
+  btn.style.transition='';
+  btn.style.transform='';
+  btn.innerHTML='✓';
+  setTimeout(function(){
+    btn.innerHTML=orig;
+    btn.disabled=false;
+  },800);
 });
 if(sessionStorage.getItem('sbauth')==='1'){document.getElementById('login-screen').style.display='none';loadSB(function(){document.getElementById('app').style.display='block';init();});}
 
@@ -1079,20 +1094,24 @@ function byggFilterTabs(){
 function oppdaterArkivBar(){document.getElementById('arkiv-bar').style.display=(!visArkiv&&aktivFilter!=='alle')?'flex':'none';}
 function oppdaterSokeUI(){document.getElementById('search-clear').className='search-clear'+(sokeTekst.length>0?' vis':'');}
 
-var _loadSalesTimer=null;
+var _loadSalesPending=false;
 async function loadSales(bevarScroll){
-  /* Debounce – vent 300ms før faktisk last, avbryt hvis ny forespørsel kommer */
-  if(_loadSalesTimer)clearTimeout(_loadSalesTimer);
-  await new Promise(function(res){_loadSalesTimer=setTimeout(res,300);});
-  var scrollY=bevarScroll?window.scrollY:0;
-  if(!bevarScroll){document.getElementById('loading').style.display='block';}
-  document.getElementById('sales-list').innerHTML='';
-  var r=await sb.from('salg').select('*').order('ordrenummer',{ascending:false});
-  document.getElementById('loading').style.display='none';
-  if(r.error){document.getElementById('sales-list').innerHTML='<p style="color:var(--danger);font-weight:700">Feil: '+r.error.message+'</p>';return;}
-  alleSalg=r.data||[];
-  oppdaterAutocomplete();byggFilterTabs();oppdaterArkivBar();oppdaterSelgerFilter();renderSalg();
-  if(bevarScroll)requestAnimationFrame(function(){window.scrollTo(0,scrollY);});
+  /* Forhindre parallelle kall, men aldri henging */
+  if(_loadSalesPending)return;
+  _loadSalesPending=true;
+  try{
+    var scrollY=bevarScroll?window.scrollY:0;
+    if(!bevarScroll){document.getElementById('loading').style.display='block';}
+    document.getElementById('sales-list').innerHTML='';
+    var r=await sb.from('salg').select('*').order('ordrenummer',{ascending:false});
+    document.getElementById('loading').style.display='none';
+    if(r.error){document.getElementById('sales-list').innerHTML='<p style="color:var(--danger);font-weight:700">Feil: '+r.error.message+'</p>';return;}
+    alleSalg=r.data||[];
+    oppdaterAutocomplete();byggFilterTabs();oppdaterArkivBar();oppdaterSelgerFilter();renderSalg();
+    if(bevarScroll)requestAnimationFrame(function(){window.scrollTo(0,scrollY);});
+  } finally {
+    _loadSalesPending=false;
+  }
 }
 
 function renderSalg(){
