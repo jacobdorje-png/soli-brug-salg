@@ -194,10 +194,11 @@ body.butikk-innramming .search-wrap{background:#edf1f5;border-top-color:rgba(58,
 
 .sales-top{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.7rem;padding-bottom:.6rem;border-bottom:1px solid var(--border)}
 .excel-btn{display:inline-flex;align-items:center;gap:.35rem;background:none;border:1.5px solid var(--green);color:var(--green);padding:.4rem .8rem;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif;min-height:38px}
-.selger-filter-wrap{display:flex;align-items:center;gap:.5rem;margin:0 .85rem .65rem;padding:.55rem .75rem;background:#fafafa;border:1.5px solid var(--border);border-radius:10px}
+.selger-filter-wrap{display:flex;align-items:center;gap:.5rem;margin:0 .85rem .65rem;padding:.55rem .75rem;background:#fafafa;border:1.5px solid var(--border);border-radius:10px;flex-wrap:wrap}
 .selger-lbl{font-size:.82rem;font-weight:700;color:var(--muted);flex-shrink:0}
-.selger-select{flex:1;min-height:40px;padding:.4rem .6rem;border:1.5px solid var(--border);border-radius:8px;background:var(--white);font-family:'proxima-nova','Nunito',sans-serif;font-size:.88rem;font-weight:600;color:#111;cursor:pointer}
-.selger-clear{background:none;border:1.5px solid var(--border);border-radius:8px;min-width:36px;min-height:40px;cursor:pointer;font-size:.95rem;color:var(--muted);font-weight:700}
+.selger-knapper{display:flex;gap:.35rem;flex-wrap:wrap;flex:1}
+.selger-knapp{padding:.35rem .7rem;border-radius:18px;border:1.5px solid var(--border);background:var(--white);font-family:'proxima-nova','Nunito',sans-serif;font-size:.78rem;font-weight:700;color:var(--muted);cursor:pointer;min-height:34px}
+.selger-knapp.aktiv{background:#e07020;border-color:#e07020;color:#fff}
 .selger-filter-wrap.aktiv{background:#fff3e0;border-color:#e07020}
 .selger-filter-wrap.aktiv .selger-lbl{color:#e07020}
 
@@ -505,8 +506,7 @@ datalist{display:none!important}
       </div>
       <div class="selger-filter-wrap">
         <span class="selger-lbl">👤 Selger:</span>
-        <select id="selger-filter" class="selger-select"><option value="">Alle selgere</option></select>
-        <button id="selger-clear" class="selger-clear" style="display:none" title="Fjern filter">✕</button>
+        <div id="selger-knapper" class="selger-knapper"></div>
       </div>
       <div id="loading">Laster inn salg…</div>
       <div id="empty">Ingen salg ennå.</div>
@@ -962,8 +962,8 @@ function oppdaterAutocomplete(){
 }
 
 function oppdaterSelgerFilter(){
-  var sel=document.getElementById('selger-filter');
-  if(!sel)return;
+  var wrap=document.getElementById('selger-knapper');
+  if(!wrap)return;
   /* Hent unike selgere fra aktive salg i nåværende butikk */
   var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
   var selgere=[];
@@ -972,22 +972,27 @@ function oppdaterSelgerFilter(){
     if(n&&selgere.indexOf(n)===-1)selgere.push(n);
   });
   selgere.sort(function(a,b){return a.localeCompare(b,'nb');});
-  sel.innerHTML='<option value="">Alle selgere ('+aktive.length+')</option>';
+  /* Hvis valgt selger ikke finnes mer, nullstill */
+  if(selgerFilter&&selgere.indexOf(selgerFilter)<0)selgerFilter='';
+  wrap.innerHTML='';
+  /* "Alle"-knapp */
+  var alleBtn=document.createElement('button');
+  alleBtn.className='selger-knapp'+(!selgerFilter?' aktiv':'');
+  alleBtn.textContent='Alle ('+aktive.length+')';
+  alleBtn.addEventListener('click',function(){selgerFilter='';oppdaterSelgerFilter();renderSalg();});
+  wrap.appendChild(alleBtn);
+  /* Én knapp per selger */
   selgere.forEach(function(n){
     var antall=aktive.filter(function(s){return s.selger===n;}).length;
-    var opt=document.createElement('option');
-    opt.value=n;opt.textContent=n+' ('+antall+')';
-    sel.appendChild(opt);
+    var btn=document.createElement('button');
+    btn.className='selger-knapp'+(selgerFilter===n?' aktiv':'');
+    btn.textContent=n+' ('+antall+')';
+    btn.addEventListener('click',function(){selgerFilter=(selgerFilter===n?'':n);oppdaterSelgerFilter();renderSalg();});
+    wrap.appendChild(btn);
   });
-  /* Bevar valgt selger hvis den fortsatt finnes */
-  if(selgerFilter&&selgere.indexOf(selgerFilter)>=0)sel.value=selgerFilter;
-  else {selgerFilter='';sel.value='';}
   /* Visuell indikator når filter er aktivt */
-  var wrap=document.querySelector('.selger-filter-wrap');
-  if(wrap){
-    wrap.className='selger-filter-wrap'+(selgerFilter?' aktiv':'');
-    document.getElementById('selger-clear').style.display=selgerFilter?'inline-flex':'none';
-  }
+  var filterWrap=document.querySelector('.selger-filter-wrap');
+  if(filterWrap)filterWrap.className='selger-filter-wrap'+(selgerFilter?' aktiv':'');
 }
 
 function byggFilterTabs(){
@@ -2235,16 +2240,6 @@ function init(){
   document.getElementById('flytt-navn-input').addEventListener('keydown',function(e){if(e.key==='Enter')utforFlytting();});
   /* Vis nåværende periode i ekstraliste-label */
   document.getElementById('f-ekstraliste-periode').textContent=naavarendeEkstraliste();
-
-  /* Selger-filter */
-  document.getElementById('selger-filter').addEventListener('change',function(){
-    selgerFilter=this.value;
-    oppdaterSelgerFilter();renderSalg();
-  });
-  document.getElementById('selger-clear').addEventListener('click',function(){
-    selgerFilter='';document.getElementById('selger-filter').value='';
-    oppdaterSelgerFilter();renderSalg();
-  });
 
   /* Chat */
   document.getElementById('chat-send-btn').addEventListener('click',sendChatMelding);
