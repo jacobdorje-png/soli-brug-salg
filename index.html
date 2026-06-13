@@ -1097,6 +1097,9 @@ async function loadSales(bevarScroll){
 
 function renderSalg(){
   var list=document.getElementById('sales-list');list.innerHTML='';
+  /* Vis selger-filter som standard – skjules kun i VIP-visning */
+  var selgerWrapDef=document.querySelector('.selger-filter-wrap');
+  if(selgerWrapDef)selgerWrapDef.style.display='';
   document.getElementById('empty').style.display='none';
   document.getElementById('grand-totals').style.display='none';
 
@@ -1119,6 +1122,8 @@ function renderSalg(){
     document.getElementById('excel-btn').style.display='none';
     document.getElementById('epost-btn').style.display='none';
     document.getElementById('excel-enkel-btn').style.display='none';
+    var selgerWrap=document.querySelector('.selger-filter-wrap');
+    if(selgerWrap)selgerWrap.style.display='none';
     var vipSalg=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk&&s.vip;});
     /* Sortert alfabetisk på kundenavn */
     vipSalg.sort(function(a,b){return((a.navn||'').toLowerCase()).localeCompare((b.navn||'').toLowerCase(),'nb');});
