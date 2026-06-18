@@ -1868,7 +1868,7 @@ function makeVipKort(s){
   var d=document.createElement('div');
   d.className='salgskort';
   d.style.borderLeft='4px solid #d4a500';
-  var tlfHtml=s.telefon?'<div style="font-size:.85rem;color:#666;font-weight:600;margin-top:.15rem">📞 '+s.telefon+'</div>':'';
+  var tlfHtml=s.telefon?'<div style="margin-top:.15rem"><button class="contact-link" data-tlf="'+s.telefon+'" style="font-size:.85rem;color:#3a7a52">📞 '+s.telefon+'</button></div>':'';
   d.innerHTML=
     '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:.5rem">'+
       '<div style="flex:1">'+
@@ -1886,6 +1886,7 @@ function makeVipKort(s){
     var r=await sb.from('salg').update({vip:false}).eq('id',s.id);
     if(!r.error)loadSales(true);
   });
+  var vipTlfBtn=d.querySelector('[data-tlf]');if(vipTlfBtn)vipTlfBtn.addEventListener('click',function(e){e.stopPropagation();phonePopup(e,this.dataset.tlf);});
   return d;
 }
 
@@ -1895,8 +1896,9 @@ function makeIrCard(x){
   var fotoHtml=x.bilde_url?'<img class="ir-foto" src="'+x.bilde_url+'" data-action="foto">':'';
   var notatHtml=x.notat?'<div class="ir-notat">'+x.notat+'</div>':'';
   var ordreChip=x.ordrenummer?'<span class="sc-nr" style="background:#3a5a7a;margin-right:.5rem">'+x.ordrenummer+'</span>':'';
+  var tlfHtml=x.telefon?'<div class="ir-tlf"><button class="contact-link" data-tlf="'+x.telefon+'" style="font-size:.85rem;color:#3a5a7a">📞 '+x.telefon+'</button></div>':'';
   d.innerHTML=
-    '<div class="ir-top"><div>'+ordreChip+'<div class="ir-name" style="display:inline-block">'+(x.navn||'—')+'</div>'+(x.telefon?'<div class="ir-tlf">📞 '+x.telefon+'</div>':'')+'</div><span class="ir-status-chip '+x.status+'">'+(statusLabels[x.status]||x.status)+'</span></div>'+
+    '<div class="ir-top"><div>'+ordreChip+'<div class="ir-name" style="display:inline-block">'+(x.navn||'—')+'</div>'+tlfHtml+'</div><span class="ir-status-chip '+x.status+'">'+(statusLabels[x.status]||x.status)+'</span></div>'+
     (x.beskrivelse?'<div class="ir-beskrivelse">'+x.beskrivelse+'</div>':'')+
     '<div class="ir-pris">'+kr(x.pris)+'</div>'+
     fotoHtml+notatHtml+
@@ -1910,6 +1912,7 @@ function makeIrCard(x){
       '<button class="ir-btn" data-action="edit" style="margin-left:auto">✏️ Rediger</button>'+
     '</div>';
   var fb=d.querySelector('[data-action=foto]');if(fb)fb.addEventListener('click',function(){visFoto(x.bilde_url);});
+  var tlfBtn=d.querySelector('[data-tlf]');if(tlfBtn)tlfBtn.addEventListener('click',function(e){e.stopPropagation();phonePopup(e,this.dataset.tlf);});
   d.querySelector('[data-action=ferdig]').addEventListener('click',function(){setIrStatus(x,x.status==='ferdig'?'aktiv':'ferdig',this);});
   d.querySelector('[data-action=hentet]').addEventListener('click',function(){setIrStatus(x,x.status==='hentet'?'aktiv':'hentet',this);});
   d.querySelector('[data-action=sendt_hentemeld]').addEventListener('click',async function(){
@@ -1931,7 +1934,9 @@ function visMottattKvittering(e,x){
   var navn=(x.navn||'').trim()||'kunde';
   var idag=new Date();
   var dato=idag.getDate()+'.'+(idag.getMonth()+1)+'.'+idag.getFullYear();
+  var ordreLinje=x.ordrenummer?'Ordrenummer: '+x.ordrenummer+'\n\n':'';
   var tekst='Hei '+navn+' har i dag '+dato+' levert inn et verk til innramming.\n\n'+
+            ordreLinje+
             'Jeg gir beskjed så snart bildet er klart til henting.\n\n'+
             'Du hører fra meg!\n\n'+
             'Mvh Jacob Dørje, Soli Brug';
