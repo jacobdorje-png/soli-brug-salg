@@ -199,6 +199,10 @@ body.butikk-soli #floating-search #fs-toggle-btn{background:#3a7a52}
 body.butikk-fredrikstad #floating-search #fs-toggle-btn{background:#8B1a2e}
 body.butikk-innramming #floating-search #fs-toggle-btn{background:#3a5a7a}
 #floating-search #fs-toggle-btn:active{transform:scale(.94)}
+#fs-scroll-btns{display:flex;flex-direction:column;gap:.4rem;margin-bottom:.5rem;align-items:center}
+#floating-search.expanded #fs-scroll-btns{display:none}
+.fs-scroll-btn{width:44px;height:44px;border-radius:22px;border:none;background:rgba(255,255,255,.95);color:#333;font-size:1.15rem;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center;font-weight:700;transition:transform .12s}
+.fs-scroll-btn:active{transform:scale(.9)}
 #floating-search.aktiv #fs-toggle-btn{background:#e07020!important}
 #floating-search #fs-input-wrap{display:none;position:fixed;bottom:24px;right:24px;left:24px;background:var(--white);border-radius:29px;padding:.4rem .5rem .4rem 1rem;box-shadow:0 4px 20px rgba(0,0,0,.25);align-items:center;gap:.4rem;max-width:600px;margin-left:auto}
 #floating-search .fs-icon{font-size:1.1rem;opacity:.55;flex-shrink:0}
@@ -390,6 +394,10 @@ datalist{display:none!important}
 <div id="lightbox"><img id="lightbox-img" src="" alt=""></div>
 
 <div id="floating-search" class="collapsed">
+  <div id="fs-scroll-btns">
+    <button id="fs-scroll-top" class="fs-scroll-btn" title="Til toppen">⇈</button>
+    <button id="fs-scroll-bottom" class="fs-scroll-btn" title="Til bunnen">⇊</button>
+  </div>
   <button id="fs-toggle-btn" title="Søk">🔍</button>
   <div id="fs-input-wrap">
     <span class="fs-icon">🔍</span>
@@ -2414,6 +2422,12 @@ function init(){
   document.getElementById('fs-close-btn').addEventListener('click',function(){
     document.getElementById('floating-search').classList.remove('expanded');
     document.getElementById('search-input').blur();
+  });
+  document.getElementById('fs-scroll-top').addEventListener('click',function(){
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+  document.getElementById('fs-scroll-bottom').addEventListener('click',function(){
+    window.scrollTo({top:document.documentElement.scrollHeight,behavior:'smooth'});
   });
 
   /* Chat */
