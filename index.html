@@ -16,7 +16,7 @@ body.butikk-fredrikstad{background:#f5eaec}
 :root{--bg:#f0ebe3;--white:#fff;--border:#d5c8b8;--accent:#7a5c3a;--muted:#555;--danger:#c0392b;--green:#1e8a3e;--blue:#1a5fa8;--orange:#c06010;--r:12px;--touch:48px;--arkiv:#9a7040}
 
 /* LOGIN */
-#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:1.5rem;gap:1.5rem}
+#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:1.5rem;gap:1.5rem;position:fixed;inset:0;background:var(--bg);z-index:250}
 .logo{font-size:2.2rem;font-weight:700;text-align:center;color:var(--accent);line-height:1.2}
 .sub{color:var(--muted);font-size:1rem;font-weight:500}
 .login-card{background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:1.75rem 1.5rem;width:100%;max-width:360px;box-shadow:0 4px 20px rgba(0,0,0,.1);display:flex;flex-direction:column;gap:1.1rem}
@@ -190,6 +190,23 @@ body.butikk-innramming .search-wrap{background:#edf1f5;border-top-color:rgba(58,
 .search-wrap input{padding-left:2.7rem;padding-right:2.5rem;background:var(--white);box-shadow:0 2px 10px rgba(0,0,0,.12);border-width:2px;font-size:1rem;min-height:52px;border-radius:12px}
 .search-clear{position:absolute;right:1.6rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--muted);display:none;padding:.2rem;line-height:1}
 .search-clear.vis{display:block}
+
+/* FLYTENDE SØK ── */
+#floating-search{position:fixed;bottom:24px;right:24px;z-index:200}
+#login-screen{z-index:250}
+#floating-search #fs-toggle-btn{display:flex;align-items:center;justify-content:center;width:58px;height:58px;border-radius:29px;border:none;background:var(--accent);color:#fff;font-size:1.5rem;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25);transition:transform .15s}
+body.butikk-soli #floating-search #fs-toggle-btn{background:#3a7a52}
+body.butikk-fredrikstad #floating-search #fs-toggle-btn{background:#8B1a2e}
+body.butikk-innramming #floating-search #fs-toggle-btn{background:#3a5a7a}
+#floating-search #fs-toggle-btn:active{transform:scale(.94)}
+#floating-search.aktiv #fs-toggle-btn{background:#e07020!important}
+#floating-search #fs-input-wrap{display:none;position:fixed;bottom:24px;right:24px;left:24px;background:var(--white);border-radius:29px;padding:.4rem .5rem .4rem 1rem;box-shadow:0 4px 20px rgba(0,0,0,.25);align-items:center;gap:.4rem;max-width:600px;margin-left:auto}
+#floating-search .fs-icon{font-size:1.1rem;opacity:.55;flex-shrink:0}
+#floating-search #search-input{flex:1;border:none;background:none;font-size:1rem;font-family:'proxima-nova','Nunito',sans-serif;font-weight:600;padding:.6rem .2rem;min-height:48px;outline:none;color:#111}
+#floating-search .search-clear{position:static;transform:none;background:none;border:none;font-size:1.1rem;color:var(--muted);cursor:pointer;padding:.4rem;line-height:1}
+#floating-search #fs-close-btn{background:var(--border);border:none;width:36px;height:36px;border-radius:18px;font-size:1.3rem;color:#555;cursor:pointer;flex-shrink:0;line-height:1;font-weight:700}
+#floating-search.expanded #fs-toggle-btn{display:none}
+#floating-search.expanded #fs-input-wrap{display:flex}
 .search-info{font-size:.78rem;color:var(--muted);font-weight:600;padding:.2rem .1rem .4rem;text-align:center}
 
 .sales-top{display:flex;align-items:center;justify-content:space-between;gap:.5rem;margin-bottom:.7rem;padding-bottom:.6rem;border-bottom:1px solid var(--border)}
@@ -372,6 +389,16 @@ datalist{display:none!important}
 
 <div id="lightbox"><img id="lightbox-img" src="" alt=""></div>
 
+<div id="floating-search" class="collapsed">
+  <button id="fs-toggle-btn" title="Søk">🔍</button>
+  <div id="fs-input-wrap">
+    <span class="fs-icon">🔍</span>
+    <input type="search" id="search-input" placeholder="Søk i alle salg…">
+    <button class="search-clear" id="search-clear">✕</button>
+    <button id="fs-close-btn" title="Lukk">×</button>
+  </div>
+</div>
+
 <div id="login-screen">
   <div class="logo">Soli Brug<br>Salg</div>
   <p class="sub">Salgsoversikt</p>
@@ -491,8 +518,6 @@ datalist{display:none!important}
 
     <div class="filter-wrap"><div class="filter-tabs" id="filter-tabs"></div></div>
     <div class="arkiv-bar" id="arkiv-bar" style="display:none"><button class="arkiv-bar-btn" id="arkiver-btn">🗄 Arkiver disse salgene…</button></div>
-    <div style="height:.6rem"></div>
-    <div class="search-wrap"><span class="search-icon">🔍</span><input type="search" id="search-input" placeholder="Søk i alle salg, inkl. arkiverte…"><button class="search-clear" id="search-clear">✕</button></div>
     <div class="search-info" id="search-info" style="display:none"></div>
 
     <div class="section">
@@ -1092,7 +1117,11 @@ function byggFilterTabs(){
 }
 
 function oppdaterArkivBar(){document.getElementById('arkiv-bar').style.display=(!visArkiv&&aktivFilter!=='alle')?'flex':'none';}
-function oppdaterSokeUI(){document.getElementById('search-clear').className='search-clear'+(sokeTekst.length>0?' vis':'');}
+function oppdaterSokeUI(){
+  document.getElementById('search-clear').className='search-clear'+(sokeTekst.length>0?' vis':'');
+  var fs=document.getElementById('floating-search');
+  if(fs)fs.classList.toggle('aktiv',sokeTekst.length>0);
+}
 
 var _loadSalesPending=false;
 async function loadSales(bevarScroll){
@@ -2376,6 +2405,16 @@ function init(){
   document.getElementById('flytt-navn-input').addEventListener('keydown',function(e){if(e.key==='Enter')utforFlytting();});
   /* Vis nåværende periode i ekstraliste-label */
   document.getElementById('f-ekstraliste-periode').textContent=naavarendeEkstraliste();
+
+  /* Flytende søk */
+  document.getElementById('fs-toggle-btn').addEventListener('click',function(){
+    document.getElementById('floating-search').classList.add('expanded');
+    setTimeout(function(){document.getElementById('search-input').focus();},50);
+  });
+  document.getElementById('fs-close-btn').addEventListener('click',function(){
+    document.getElementById('floating-search').classList.remove('expanded');
+    document.getElementById('search-input').blur();
+  });
 
   /* Chat */
   document.getElementById('chat-send-btn').addEventListener('click',sendChatMelding);
