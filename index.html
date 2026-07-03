@@ -538,6 +538,10 @@ datalist{display:none!important}
         </div>
       </div>
       <div class="selger-filter-wrap">
+        <span class="selger-lbl">🎨 Type:</span>
+        <div id="type-knapper" class="selger-knapper"></div>
+      </div>
+      <div class="selger-filter-wrap">
         <span class="selger-lbl">👤 Selger:</span>
         <div id="selger-knapper" class="selger-knapper"></div>
       </div>
@@ -769,7 +773,7 @@ var SKEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6I
 var BUCKET='bilder';
 var CODE='sbs';
 var sb=null,editId=null,irEditId=null,mode='nytt';
-var alleSalg=[],alleIr=[],aktivFilter='alle',irFilter='alle',sokeTekst='',visArkiv=false,visFaktura=false,visVip=false,selgerFilter='';
+var alleSalg=[],alleIr=[],aktivFilter='alle',irFilter='alle',sokeTekst='',visArkiv=false,visFaktura=false,visVip=false,selgerFilter='',typeFilter='';
 var aktivButikk='soli'; /* 'soli' eller 'fredrikstad' */
 var arkivModus=null,arkivEnkeltId=null;
 /* Foto state */
@@ -796,10 +800,11 @@ function rammeRang(s){
   return 4;
 }
 function sorterKD(data){
-  /* Grupper etter normalisert tittel */
+  /* Grupper etter normalisert tittel + type – like titler av ulik type blir separert */
   var grupper={},rek=[];
   data.forEach(function(s){
-    var norm=normTittel(s.tittel)||'(uten tittel)';
+    var typeKey=(s.type||'ukjent').toLowerCase();
+    var norm=(normTittel(s.tittel)||'(uten tittel)')+'||'+typeKey;
     if(!grupper[norm]){grupper[norm]=[];rek.push(norm);}
     grupper[norm].push(s);
   });
@@ -938,7 +943,7 @@ function setMainTab(tab){
     document.body.className='butikk-'+tab;
     var metaColor=document.querySelector('meta[name=theme-color]');
     if(metaColor)metaColor.content=tab==='soli'?'#3a7a52':'#8B1a2e';
-    aktivFilter='alle';visArkiv=false;visFaktura=false;visVip=false;selgerFilter='';sokeTekst='';
+    aktivFilter='alle';visArkiv=false;visFaktura=false;visVip=false;selgerFilter='';typeFilter='';sokeTekst='';
     document.getElementById('search-input').value='';
     oppdaterSokeUI();oppdaterArkivBar();
     oppdaterAutocomplete();byggFilterTabs();renderSalg();
@@ -1011,6 +1016,26 @@ function oppdaterAutocomplete(){
       titlerK.forEach(function(t){var o=document.createElement('option');o.value=t;dl2.appendChild(o);});
     });
   });
+}
+
+function oppdaterTypeFilter(){
+  var wrap=document.getElementById('type-knapper');
+  if(!wrap)return;
+  wrap.innerHTML='';
+  var alleBtn=document.createElement('button');
+  alleBtn.className='selger-knapp'+(!typeFilter?' aktiv':'');
+  alleBtn.textContent='Alle';
+  alleBtn.addEventListener('click',function(){typeFilter='';oppdaterTypeFilter();renderSalg();});
+  wrap.appendChild(alleBtn);
+  ['Grafikk','Monotypi','Original'].forEach(function(t){
+    var btn=document.createElement('button');
+    btn.className='selger-knapp'+(typeFilter===t?' aktiv':'');
+    btn.textContent=t;
+    btn.addEventListener('click',function(){typeFilter=(typeFilter===t?'':t);oppdaterTypeFilter();renderSalg();});
+    wrap.appendChild(btn);
+  });
+  var typeWrap=wrap.closest('.selger-filter-wrap');
+  if(typeWrap)typeWrap.className='selger-filter-wrap'+(typeFilter?' aktiv':'');
 }
 
 function oppdaterSelgerFilter(){
@@ -1144,7 +1169,7 @@ async function loadSales(bevarScroll){
     document.getElementById('loading').style.display='none';
     if(r.error){document.getElementById('sales-list').innerHTML='<p style="color:var(--danger);font-weight:700">Feil: '+r.error.message+'</p>';return;}
     alleSalg=r.data||[];
-    oppdaterAutocomplete();byggFilterTabs();oppdaterArkivBar();oppdaterSelgerFilter();renderSalg();
+    oppdaterAutocomplete();byggFilterTabs();oppdaterArkivBar();oppdaterSelgerFilter();oppdaterTypeFilter();renderSalg();
     if(bevarScroll)requestAnimationFrame(function(){window.scrollTo(0,scrollY);});
   } finally {
     _loadSalesPending=false;
@@ -1153,9 +1178,8 @@ async function loadSales(bevarScroll){
 
 function renderSalg(){
   var list=document.getElementById('sales-list');list.innerHTML='';
-  /* Vis selger-filter som standard – skjules kun i VIP-visning */
-  var selgerWrapDef=document.querySelector('.selger-filter-wrap');
-  if(selgerWrapDef)selgerWrapDef.style.display='';
+  /* Vis filter-rader som standard – skjules kun i VIP-visning */
+  document.querySelectorAll('.selger-filter-wrap').forEach(function(w){w.style.display='';});
   document.getElementById('empty').style.display='none';
   document.getElementById('grand-totals').style.display='none';
 
@@ -1180,6 +1204,7 @@ function renderSalg(){
     document.getElementById('excel-enkel-btn').style.display='none';
     var selgerWrap=document.querySelector('.selger-filter-wrap');
     if(selgerWrap)selgerWrap.style.display='none';
+    document.querySelectorAll('.selger-filter-wrap').forEach(function(w){w.style.display='none';});
     var vipSalg=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk&&s.vip;});
     /* Sortert alfabetisk på kundenavn */
     vipSalg.sort(function(a,b){return((a.navn||'').toLowerCase()).localeCompare((b.navn||'').toLowerCase(),'nb');});
@@ -1261,6 +1286,7 @@ function renderSalg(){
   else if(erEkstraliste){raaData=aktive.filter(function(s){return s.ekstraliste===ekstralisteNavn;});}
   else{raaData=aktive.filter(function(s){return s.kunstner===aktivFilter&&!s.ekstraliste;});}
   if(selgerFilter){raaData=raaData.filter(function(s){return s.selger===selgerFilter;});}
+  if(typeFilter){raaData=raaData.filter(function(s){return (s.type||'')===typeFilter;});}
 
   var butikkNavn=aktivButikk==='soli'?'Soli':'Fredrikstad';
   document.getElementById('sales-title').textContent=erAlle?'Nylige salg – '+butikkNavn:(erEkstraliste?'📋 '+ekstralisteNavn:aktivFilter);
@@ -1275,7 +1301,16 @@ function renderSalg(){
   else{
     var data=sorterKD(raaData);
     var grupper={},displayTittel={},rekkefolge=[];
-    data.forEach(function(s){var norm=normTittel(s.tittel)||'(uten tittel)';if(!grupper[norm]){grupper[norm]=[];rekkefolge.push(norm);displayTittel[norm]=s.tittel||'(uten tittel)';}grupper[norm].push(s);});
+    data.forEach(function(s){
+      var typeKey=(s.type||'ukjent').toLowerCase();
+      var norm=(normTittel(s.tittel)||'(uten tittel)')+'||'+typeKey;
+      if(!grupper[norm]){
+        grupper[norm]=[];
+        rekkefolge.push(norm);
+        displayTittel[norm]=(s.tittel||'(uten tittel)')+(s.type?' · '+s.type:'');
+      }
+      grupper[norm].push(s);
+    });
     rekkefolge.forEach(function(norm){
       var salg=sorterG(grupper[norm]);
       if(salg.length===1){list.appendChild(makeCard(salg[0],false));}
