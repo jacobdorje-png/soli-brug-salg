@@ -480,7 +480,11 @@ datalist{display:none!important}
           <div class="checkbox-row"><input type="checkbox" id="f-hentes-soli"><label for="f-hentes-soli">📍 Hentes på Soli Brug</label></div>
           <div class="checkbox-row"><input type="checkbox" id="f-hentes-fred"><label for="f-hentes-fred">📍 Hentes i Fredrikstad</label></div>
         </div>
-        <div class="checkbox-row" style="background:#fef7e8;border:1.5px solid #d4b06e;border-radius:10px;padding:.55rem .85rem"><input type="checkbox" id="f-ekstraliste"><label for="f-ekstraliste" style="color:#7a5020;font-weight:700">📋 Legg til i ekstraliste (<span id="f-ekstraliste-periode"></span>)</label></div>
+        <div class="checkbox-row" style="background:#fef7e8;border:1.5px solid #d4b06e;border-radius:10px;padding:.55rem .85rem"><input type="checkbox" id="f-ekstraliste"><label for="f-ekstraliste" style="color:#7a5020;font-weight:700">📋 Legg til i ekstraliste</label></div>
+        <div id="f-ekstraliste-picker" style="display:none;background:#fef7e8;border:1.5px solid #d4b06e;border-radius:10px;padding:.65rem .85rem;margin-top:-.3rem">
+          <div id="f-ekstraliste-chips" style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.4rem"></div>
+          <input type="text" id="f-ekstraliste-navn" placeholder="Eller skriv nytt listenavn…">
+        </div>
         <div><span class="lbl">Kunstner</span><input type="text" id="f-kunstner" placeholder="Søk eller skriv navn…" list="kunstner-list" autocomplete="off"><datalist id="kunstner-list"></datalist></div>
         <div>
           <div class="tittel-row">
@@ -2606,8 +2610,46 @@ function init(){
   document.getElementById('flytt-modal-bg').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
   document.getElementById('flytt-lagre-btn').addEventListener('click',utforFlytting);
   document.getElementById('flytt-navn-input').addEventListener('keydown',function(e){if(e.key==='Enter')utforFlytting();});
-  /* Vis nåværende periode i ekstraliste-label */
-  document.getElementById('f-ekstraliste-periode').textContent=naavarendeEkstraliste();
+  /* Ekstraliste – vis/skjul picker og bygg chips */
+  function byggEkstralisteChips(){
+    var wrap=document.getElementById('f-ekstraliste-chips');
+    wrap.innerHTML='';
+    var eksisterende=[];
+    alleSalg.forEach(function(s){
+      if(s.ekstraliste&&eksisterende.indexOf(s.ekstraliste)===-1)eksisterende.push(s.ekstraliste);
+    });
+    var naa=naavarendeEkstraliste();
+    if(eksisterende.indexOf(naa)===-1)eksisterende.push(naa);
+    var valgt=document.getElementById('f-ekstraliste-navn').value.trim();
+    sorterEkstralisteNavn(eksisterende).forEach(function(navn){
+      var c=document.createElement('button');
+      c.type='button';
+      c.className='ramme-chip';
+      if(valgt===navn)c.classList.add('valgt');
+      c.textContent='📋 '+navn;
+      c.addEventListener('click',function(){
+        var inp=document.getElementById('f-ekstraliste-navn');
+        if(inp.value.trim()===navn){inp.value='';}
+        else{inp.value=navn;}
+        byggEkstralisteChips();
+      });
+      wrap.appendChild(c);
+    });
+  }
+  document.getElementById('f-ekstraliste').addEventListener('change',function(){
+    var picker=document.getElementById('f-ekstraliste-picker');
+    if(this.checked){
+      picker.style.display='block';
+      /* Sett nåværende periode som standardvalg */
+      if(!document.getElementById('f-ekstraliste-navn').value.trim()){
+        document.getElementById('f-ekstraliste-navn').value=naavarendeEkstraliste();
+      }
+      byggEkstralisteChips();
+    } else {
+      picker.style.display='none';
+    }
+  });
+  document.getElementById('f-ekstraliste-navn').addEventListener('input',byggEkstralisteChips);
 
   /* Flytende søk */
   document.getElementById('fs-toggle-btn').addEventListener('click',function(){
@@ -2651,7 +2693,7 @@ async function submitSale(){
     selger:document.getElementById('f-selger').value.trim(),
     notat:document.getElementById('f-notat').value.trim(),
     butikk:aktivButikk,hentet:false,faktura_sendt:false,skal_ha_faktura:false,betalt_kort:false,
-    ekstraliste:document.getElementById('f-ekstraliste').checked?naavarendeEkstraliste():null
+    ekstraliste:document.getElementById('f-ekstraliste').checked?(document.getElementById('f-ekstraliste-navn').value.trim()||naavarendeEkstraliste()):null
   };
   if(mode==='gammelt'){var dv=document.getElementById('f-dato').value;if(dv)baseRow.created_at=new Date(dv).toISOString();}
 
@@ -2725,6 +2767,8 @@ async function submitSale(){
   document.getElementById('f-gavekort-pris').value='';
   document.getElementById('f-gavekort-notat').value='';
   document.getElementById('f-ekstraliste').checked=false;
+  document.getElementById('f-ekstraliste-picker').style.display='none';
+  document.getElementById('f-ekstraliste-navn').value='';
   var tc=document.querySelector('input[name="f-type"]:checked');if(tc)tc.checked=false;
   settFotoPreview('f-foto-preview','f-foto-fjern',null);fFotoUrl=null;
   document.getElementById('ekstra-verk-container').innerHTML='';
