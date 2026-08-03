@@ -2310,7 +2310,10 @@ function fjernEkstraVerk(idx){
 function calcEkstra(idx){/* handled inline */}
 
 async function delSalgskort(s,btn){
-  /* Bygg tekst-beskrivelse av salget */
+  var origLabel=btn.innerHTML;
+  btn.disabled=true;btn.innerHTML='⏳ Forbereder…';
+
+  /* Bygg tekst-beskrivelse (brukes som fallback) */
   var lines=[];
   lines.push('🎨 '+(s.kunstner||'—')+' – '+(s.tittel||'Uten tittel'));
   if(s.edisjon)lines.push('Edisjon: '+s.edisjon);
@@ -2328,25 +2331,17 @@ async function delSalgskort(s,btn){
   lines.push('📍 '+(s.butikk==='soli'?'Soli':'Fredrikstad')+' · '+onr(s.ordrenummer));
   var tekst=lines.join('\n');
 
-  var origLabel=btn.innerHTML;
-  btn.disabled=true;btn.innerHTML='⏳ Forbereder…';
+  /* Prøv å bygge kombinert bilde + tekst */
+  try{
+    var file=await lagKombinertBilde(s);
+    if(file&&navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file]});
+      btn.disabled=false;btn.innerHTML=origLabel;
+      return;
+    }
+  }catch(e){/* Fall gjennom til tekst-fallback */}
 
-  /* Prøv Web Share API med bilde hvis bilde finnes */
-  if(s.bilde_url&&navigator.share&&navigator.canShare){
-    try{
-      var resp=await fetch(s.bilde_url);
-      var blob=await resp.blob();
-      var ext=(blob.type||'image/jpeg').split('/')[1]||'jpg';
-      var file=new File([blob],'salgskort.'+ext,{type:blob.type||'image/jpeg'});
-      if(navigator.canShare({files:[file]})){
-        await navigator.share({text:tekst,files:[file]});
-        btn.disabled=false;btn.innerHTML=origLabel;
-        return;
-      }
-    }catch(e){/* Fall gjennom */}
-  }
-
-  /* Web Share API kun tekst */
+  /* Fallback: bare tekst */
   if(navigator.share){
     try{
       await navigator.share({text:tekst});
@@ -2355,18 +2350,107 @@ async function delSalgskort(s,btn){
     }catch(e){/* Fall gjennom */}
   }
 
-  /* Fallback: kopier tekst til utklippstavle */
+  /* Siste fallback: kopier til utklippstavle */
   try{
     await navigator.clipboard.writeText(tekst);
     btn.innerHTML='✅ Kopiert!';
     setTimeout(function(){btn.innerHTML=origLabel;btn.disabled=false;},2000);
-    if(s.bilde_url&&confirm('Tekst kopiert! Vil du også åpne bildet så du kan lagre det manuelt?')){
-      window.open(s.bilde_url,'_blank');
-    }
   }catch(e){
     btn.disabled=false;btn.innerHTML=origLabel;
-    alert('Kunne ikke kopiere: '+e.message);
+    alert('Kunne ikke dele: '+e.message);
   }
+}
+
+/* Bygg ett kombinert bilde med salgsbildet på toppen og salgsinfo under */
+async function lagKombinertBilde(s){
+  /* Last bildet hvis det finnes */
+  var img=null;
+  if(s.bilde_url){
+    img=await new Promise(function(res,rej){
+      var i=new Image();
+      i.crossOrigin='anonymous';
+      i.onload=function(){res(i);};
+      i.onerror=function(){res(null);};/* Fortsett uten bilde ved CORS-feil */
+      i.src=s.bilde_url;
+    });
+  }
+
+  /* Konstanter for oppsett */
+  var W=1080;
+  var padding=48;
+  var imgH=0,imgW=0;
+  if(img){
+    var maxImgHeight=900;
+    var scale=Math.min(1,maxImgHeight/img.height,(W-padding*2)/img.width);
+    imgW=img.width*scale;
+    imgH=img.height*scale;
+  }
+
+  /* Tekstlinjer med stil */
+  var tl=[];
+  tl.push({tekst:(s.kunstner||'—')+' – '+(s.tittel||'Uten tittel'),size:44,bold:true,color:'#111'});
+  var undertekst=[];
+  if(s.edisjon)undertekst.push('Edisjon '+s.edisjon);
+  if(s.type)undertekst.push(s.type);
+  if(s.ramme_info)undertekst.push('Ramme: '+s.ramme_info);
+  if(undertekst.length)tl.push({tekst:undertekst.join(' · '),size:28,color:'#666'});
+  tl.push({tekst:'',size:20});
+  tl.push({tekst:'Pris: '+kr(s.pris),size:30,color:'#111'});
+  if(s.bkh)tl.push({tekst:'5% BKH: '+kr(s.bkh),size:26,color:'#555'});
+  if(s.ramme)tl.push({tekst:'Rammepris: '+kr(s.ramme),size:26,color:'#555'});
+  if(s.frakt)tl.push({tekst:'Frakt: '+kr(s.frakt),size:26,color:'#555'});
+  tl.push({tekst:'Totalt: '+kr(s.total),size:40,bold:true,color:s.butikk==='soli'?'#3a7a52':'#8B1a2e'});
+  tl.push({tekst:'',size:16});
+  if(s.navn)tl.push({tekst:'Kunde: '+s.navn,size:26,color:'#333'});
+  if(s.selger)tl.push({tekst:'Selger: '+s.selger,size:26,color:'#333'});
+  tl.push({tekst:(s.butikk==='soli'?'📍 Soli':'📍 Fredrikstad')+' · '+onr(s.ordrenummer),size:24,color:'#888'});
+
+  /* Beregn total høyde */
+  var linjeAvstand=12;
+  var textHeight=padding;
+  tl.forEach(function(l){textHeight+=Math.round(l.size*1.15)+linjeAvstand;});
+  textHeight+=padding;
+
+  var totalH=(imgH?imgH+padding:padding)+textHeight;
+
+  var canvas=document.createElement('canvas');
+  canvas.width=W;
+  canvas.height=totalH;
+  var ctx=canvas.getContext('2d');
+
+  /* Bakgrunn */
+  ctx.fillStyle='#faf7f2';
+  ctx.fillRect(0,0,W,totalH);
+
+  var yStart=padding;
+  /* Tegn bilde sentrert */
+  if(img){
+    var imgX=(W-imgW)/2;
+    ctx.drawImage(img,imgX,yStart,imgW,imgH);
+    yStart+=imgH+padding;
+  }
+
+  /* Tegn tekst */
+  ctx.textAlign='center';
+  ctx.textBaseline='top';
+  var y=yStart;
+  tl.forEach(function(l){
+    if(l.tekst){
+      ctx.fillStyle=l.color||'#111';
+      var vekt=l.bold?'700 ':'500 ';
+      ctx.font=vekt+l.size+'px -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif';
+      ctx.fillText(l.tekst,W/2,y);
+    }
+    y+=Math.round(l.size*1.15)+linjeAvstand;
+  });
+
+  /* Konverter til blob og fil */
+  return new Promise(function(res,rej){
+    canvas.toBlob(function(blob){
+      if(blob)res(new File([blob],'salgskort.jpg',{type:'image/jpeg'}));
+      else rej(new Error('Kunne ikke lage bilde'));
+    },'image/jpeg',0.92);
+  });
 }
 
 function skrivUtKort(s){
