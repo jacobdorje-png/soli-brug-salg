@@ -1401,6 +1401,7 @@ function makeCard(s,erGruppert){
         arkiverKnapp+
         '<button class="sc-edit-btn" data-action="slett" style="color:#c0392b">🗑 Slett</button>'+
       '</div>'+
+      '<div class="row2" style="margin-top:.4rem"><button class="sc-copy-btn" data-action="del" style="width:100%;border-color:#1a5fa8;color:#1a5fa8;font-size:.82rem">📤 Del salgskort</button></div>'+
     '</div>'+
     '<div class="sc-inline-notat"><textarea class="sc-inline-notat-inp" placeholder="Enkelt notat…" data-action="notat">'+escHtml(s.notat||'')+'</textarea></div>';
 
@@ -1412,6 +1413,7 @@ function makeCard(s,erGruppert){
   d.querySelector('[data-action=sendt_hentemeld]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'sendt_hentemeld',this);});
   d.querySelector('[data-action=edit]').addEventListener('click',function(e){e.stopPropagation();openModal(s);});
   d.querySelector('[data-action=print]').addEventListener('click',function(e){e.stopPropagation();skrivUtKort(s);});
+  d.querySelector('[data-action=del]').addEventListener('click',function(e){e.stopPropagation();delSalgskort(s,this);});
   var flyttEl=d.querySelector('[data-action=flytt-ekstra]');
   if(flyttEl)flyttEl.addEventListener('click',function(e){e.stopPropagation();visFlyttModalSalg(s);});
   var vipEl=d.querySelector('[data-action=vip-toggle]');
@@ -2296,6 +2298,66 @@ function fjernEkstraVerk(idx){
   if(el)el.remove();
 }
 function calcEkstra(idx){/* handled inline */}
+
+async function delSalgskort(s,btn){
+  /* Bygg tekst-beskrivelse av salget */
+  var lines=[];
+  lines.push('🎨 '+(s.kunstner||'—')+' – '+(s.tittel||'Uten tittel'));
+  if(s.edisjon)lines.push('Edisjon: '+s.edisjon);
+  if(s.type)lines.push('Type: '+s.type);
+  if(s.ramme_info)lines.push('Ramme: '+s.ramme_info);
+  lines.push('');
+  lines.push('Pris: '+kr(s.pris));
+  if(s.bkh)lines.push('5% BKH: '+kr(s.bkh));
+  if(s.ramme)lines.push('Rammepris: '+kr(s.ramme));
+  if(s.frakt)lines.push('Frakt: '+kr(s.frakt));
+  lines.push('Totalt: '+kr(s.total));
+  lines.push('');
+  if(s.navn)lines.push('Kunde: '+s.navn);
+  if(s.selger)lines.push('Selger: '+s.selger);
+  lines.push('📍 '+(s.butikk==='soli'?'Soli':'Fredrikstad')+' · '+onr(s.ordrenummer));
+  var tekst=lines.join('\n');
+
+  var origLabel=btn.innerHTML;
+  btn.disabled=true;btn.innerHTML='⏳ Forbereder…';
+
+  /* Prøv Web Share API med bilde hvis bilde finnes */
+  if(s.bilde_url&&navigator.share&&navigator.canShare){
+    try{
+      var resp=await fetch(s.bilde_url);
+      var blob=await resp.blob();
+      var ext=(blob.type||'image/jpeg').split('/')[1]||'jpg';
+      var file=new File([blob],'salgskort.'+ext,{type:blob.type||'image/jpeg'});
+      if(navigator.canShare({files:[file]})){
+        await navigator.share({text:tekst,files:[file]});
+        btn.disabled=false;btn.innerHTML=origLabel;
+        return;
+      }
+    }catch(e){/* Fall gjennom */}
+  }
+
+  /* Web Share API kun tekst */
+  if(navigator.share){
+    try{
+      await navigator.share({text:tekst});
+      btn.disabled=false;btn.innerHTML=origLabel;
+      return;
+    }catch(e){/* Fall gjennom */}
+  }
+
+  /* Fallback: kopier tekst til utklippstavle */
+  try{
+    await navigator.clipboard.writeText(tekst);
+    btn.innerHTML='✅ Kopiert!';
+    setTimeout(function(){btn.innerHTML=origLabel;btn.disabled=false;},2000);
+    if(s.bilde_url&&confirm('Tekst kopiert! Vil du også åpne bildet så du kan lagre det manuelt?')){
+      window.open(s.bilde_url,'_blank');
+    }
+  }catch(e){
+    btn.disabled=false;btn.innerHTML=origLabel;
+    alert('Kunne ikke kopiere: '+e.message);
+  }
+}
 
 function skrivUtKort(s){
   var henteInfo='';
