@@ -260,6 +260,10 @@ body.butikk-innramming #floating-search #fs-toggle-btn{background:#3a5a7a}
 
 .sc-amounts{display:grid;grid-template-columns:repeat(4,1fr);gap:.35rem;margin-bottom:.6rem}
 .sc-amt{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:.4rem .3rem;text-align:center}
+.sc-amt.sc-amt-ux{background:linear-gradient(135deg,#fff8d6,#ffe89a);border:1.5px solid #d4a500;box-shadow:0 2px 8px rgba(212,165,0,.25)}
+.sc-amt.sc-amt-ux .al{color:#8a6000}
+.sc-amt.sc-amt-ux .av{color:#5a3f00}
+.sc-amt.sc-amt-ux .ai{background:linear-gradient(135deg,#e6b800,#c19100);color:#fff;padding:.2rem .55rem;border-radius:6px;display:inline-block;font-size:.75rem;font-weight:800;margin-top:.25rem;letter-spacing:.1em;box-shadow:0 1px 3px rgba(0,0,0,.15)}
 .sc-amt .al{font-size:.58rem;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;font-weight:700}
 .sc-amt .av{font-size:.88rem;font-weight:700;color:#111}
 .sc-amt .ai{font-size:.65rem;color:var(--accent);font-weight:700;margin-top:.15rem;word-break:break-word;line-height:1.2}
@@ -1445,7 +1449,13 @@ function makeCard(s,erGruppert){
   return d;
 }
 
-function amt(l,v,info){return'<div class="sc-amt"><div class="al">'+l+'</div><div class="av">'+kr(v)+'</div>'+(info?'<div class="ai">'+info+'</div>':'')+'</div>';}
+function amt(l,v,info){
+  var infoUpper=(info||'').trim().toUpperCase();
+  var erUX=infoUpper==='UX';
+  var boxClass='sc-amt'+(erUX?' sc-amt-ux':'');
+  var infoHtml=info?'<div class="ai">'+info+'</div>':'';
+  return'<div class="'+boxClass+'"><div class="al">'+l+'</div><div class="av">'+kr(v)+'</div>'+infoHtml+'</div>';
+}
 
 async function toggle(s,field,btn){
   var nv=!s[field];var up={};up[field]=nv;
