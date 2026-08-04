@@ -545,6 +545,7 @@ datalist{display:none!important}
         <div class="stitle" id="sales-title">Nylige salg</div>
         <div style="display:flex;gap:.5rem;align-items:center">
           <button class="excel-btn" id="epost-btn" style="display:none;border-color:#1a5fa8;color:#1a5fa8" onclick="exportEpost()">✉️ E-poster</button>
+          <button class="excel-btn" id="levering-btn" style="display:none;border-color:#5a3a7a;color:#5a3a7a" onclick="exportLeveringsliste()">📦 Leveringsliste</button>
           <button class="excel-btn" id="excel-enkel-btn" style="display:none;border-color:#9a7040;color:#9a7040" onclick="exportExcelEnkel()">📋 Oppstilling</button>
           <button class="excel-btn" id="excel-btn" style="display:none" onclick="exportExcel()">📊 Excel</button>
         </div>
@@ -1198,7 +1199,7 @@ function renderSalg(){
   /* SØKEMODUS */
   if(sokeTekst){
     document.getElementById('sales-title').textContent='Søkeresultat';
-    document.getElementById('excel-btn').style.display='none';document.getElementById('epost-btn').style.display='none';document.getElementById('excel-enkel-btn').style.display='none';
+    document.getElementById('excel-btn').style.display='none';document.getElementById('epost-btn').style.display='none';document.getElementById('excel-enkel-btn').style.display='none';document.getElementById('levering-btn').style.display='none';
     var treff=alleSalg.filter(function(s){return sokFilter(s,sokeTekst);});
     var ie=document.getElementById('search-info');
     ie.style.display='block';ie.textContent='Fant '+treff.length+' treff på «'+sokeTekst+'» (alle butikker, inkl. arkiverte)';
@@ -1232,7 +1233,7 @@ function renderSalg(){
   /* FAKTURA-VISNING */
   if(visFaktura){
     document.getElementById('sales-title').textContent='📄 Faktura – alle butikker';
-    document.getElementById('excel-btn').style.display='none';document.getElementById('epost-btn').style.display='none';document.getElementById('excel-enkel-btn').style.display='none';
+    document.getElementById('excel-btn').style.display='none';document.getElementById('epost-btn').style.display='none';document.getElementById('excel-enkel-btn').style.display='none';document.getElementById('levering-btn').style.display='none';
     /* Salg med skal_ha_faktura fra alle butikker (ikke arkiverte) */
     var fakturaSalg=alleSalg.filter(function(s){return!s.arkiv&&s.skal_ha_faktura;});
     /* Innrammingsjobber med skal_ha_faktura */
@@ -1252,7 +1253,7 @@ function renderSalg(){
   /* ARKIVVISNING */
   if(visArkiv){
     document.getElementById('sales-title').textContent='Arkiv';
-    document.getElementById('excel-btn').style.display='none';document.getElementById('epost-btn').style.display='none';document.getElementById('excel-enkel-btn').style.display='none';
+    document.getElementById('excel-btn').style.display='none';document.getElementById('epost-btn').style.display='none';document.getElementById('excel-enkel-btn').style.display='none';document.getElementById('levering-btn').style.display='none';
     var ark=alleSalg.filter(function(s){return!!s.arkiv&&s.butikk===aktivButikk;});
     if(!ark.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Arkivet er tomt.';return;}
     var grp={},rek=[];
@@ -1302,7 +1303,7 @@ function renderSalg(){
 
   var butikkNavn=aktivButikk==='soli'?'Soli':'Fredrikstad';
   document.getElementById('sales-title').textContent=erAlle?'Nylige salg – '+butikkNavn:(erEkstraliste?'📋 '+ekstralisteNavn:aktivFilter);
-  document.getElementById('excel-btn').style.display=raaData.length?'inline-flex':'none';document.getElementById('epost-btn').style.display=raaData.length?'inline-flex':'none';document.getElementById('excel-enkel-btn').style.display=raaData.length?'inline-flex':'none';
+  document.getElementById('excel-btn').style.display=raaData.length?'inline-flex':'none';document.getElementById('epost-btn').style.display=raaData.length?'inline-flex':'none';document.getElementById('excel-enkel-btn').style.display=raaData.length?'inline-flex':'none';document.getElementById('levering-btn').style.display=raaData.length?'inline-flex':'none';
 
   if(!raaData.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Ingen salg ennå.';return;}
   if(erAlle){raaData.forEach(function(s){list.appendChild(makeCard(s,false));});}
@@ -1884,6 +1885,45 @@ function exportEnkelListe(salg,filnavn){
     s2.onload=function(){window.XLSX.__hasStyle=true;lagXlsx();};
     document.head.appendChild(s2);
   }
+}
+
+function exportLeveringsliste(){
+  var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
+  var visning;
+  if(aktivFilter==='alle')visning=aktive;
+  else if(aktivFilter.indexOf&&aktivFilter.indexOf('__ekstra:')===0){var n=aktivFilter.substring(9);visning=aktive.filter(function(s){return s.ekstraliste===n;});}
+  else visning=aktive.filter(function(s){return s.kunstner===aktivFilter&&!s.ekstraliste;});
+  /* Kun de som skal leveres og ikke er levert/hentet enda */
+  var salg=visning.filter(function(s){return s.levering&&!s.hentet;});
+  if(!salg.length){alert('Ingen salg som skal leveres i denne visningen.');return;}
+  /* Sorter etter ordrenummer */
+  salg.sort(function(a,b){return(a.ordrenummer||0)-(b.ordrenummer||0);});
+  var kunstner=aktivFilter==='alle'?'alle kunstnere':aktivFilter;
+  var lines=[];
+  lines.push('📦 Leveringsliste – '+kunstner);
+  lines.push('Butikk: '+(aktivButikk==='soli'?'Soli':'Fredrikstad'));
+  lines.push('Dato: '+new Date().toLocaleDateString('nb-NO'));
+  lines.push('');
+  lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  lines.push('');
+  salg.forEach(function(s){
+    lines.push('Ordre: '+onr(s.ordrenummer));
+    lines.push('Verk: '+(s.tittel||'(uten tittel)')+(s.kunstner&&aktivFilter==='alle'?' – '+s.kunstner:''));
+    lines.push('Kunde: '+(s.navn||'—'));
+    if(s.telefon)lines.push('Telefon: '+s.telefon);
+    if(s.adresse)lines.push('Adresse: '+s.adresse);
+    if(s.montering)lines.push('🔧 Montering');
+    lines.push('');
+    lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    lines.push('');
+  });
+  lines.push('Totalt: '+salg.length+' levering'+(salg.length===1?'':'er'));
+  var tekst=lines.join('\n');
+  var blob=new Blob([tekst],{type:'text/plain;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');a.href=url;
+  a.download='Leveringsliste_'+kunstner.replace(/\s/g,'_')+'.txt';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
 }
 
 function exportEpost(){
