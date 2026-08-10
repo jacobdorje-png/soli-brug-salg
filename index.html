@@ -989,12 +989,12 @@ function sjekkUxAdvarsel(){
 
 function oppdaterAutocomplete(){
   var kunstnere=[],titler=[],selgere=[];
-  var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
-  aktive.forEach(function(s){
+  /* Hent kunstnere og titler på tvers av begge butikker (både aktive og arkiverte) */
+  alleSalg.forEach(function(s){
     if(s.kunstner&&kunstnere.indexOf(s.kunstner)===-1)kunstnere.push(s.kunstner);
     if(s.tittel&&titler.indexOf(s.tittel)===-1)titler.push(s.tittel);
+    if(s.selger&&selgere.indexOf(s.selger)===-1)selgere.push(s.selger);
   });
-  alleSalg.forEach(function(s){if(s.selger&&selgere.indexOf(s.selger)===-1)selgere.push(s.selger);});
   kunstnere.sort();titler.sort();selgere.sort();
   ['kunstner-list','kunstner-list-m'].forEach(function(id){var dl=document.getElementById(id);if(!dl)return;dl.innerHTML='';kunstnere.forEach(function(k){var o=document.createElement('option');o.value=k;dl.appendChild(o);});});
   ['tittel-list','tittel-list-m'].forEach(function(id){var dl=document.getElementById(id);if(!dl)return;dl.innerHTML='';titler.forEach(function(t){var o=document.createElement('option');o.value=t;dl.appendChild(o);});});
