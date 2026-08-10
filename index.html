@@ -97,13 +97,9 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 /* Fredrikstad – brun */
 #tab-fredrikstad{color:#8B1a2e}
 #tab-fredrikstad.active{color:#fff;background:#8B1a2e;border-bottom-color:#6b1222;border-radius:6px 6px 0 0}
-/* Chat – varm grønn-grå */
-#tab-chat{color:#4a7a5a}
-#tab-chat.active{color:#fff;background:#4a7a5a;border-bottom-color:#3a6048;border-radius:6px 6px 0 0}
-.chat-melding-boks{background:var(--white);border:1px solid var(--border);border-radius:10px;padding:.65rem .85rem}
-.chat-melding-boks .chat-avsender{font-size:.72rem;font-weight:700;color:var(--accent);margin-bottom:.2rem}
-.chat-melding-boks .chat-tid{font-size:.65rem;color:var(--muted);float:right;margin-top:.1rem}
-.chat-melding-boks .chat-tekst{font-size:.88rem;color:#111;line-height:1.5;white-space:pre-wrap}
+/* Faktura – oransje */
+#tab-faktura{color:#e07020}
+#tab-faktura.active{color:#fff;background:#e07020;border-bottom-color:#a04010;border-radius:6px 6px 0 0}
 #tab-innramming.active{color:#fff;background:#3a5a7a;border-bottom-color:#2d4860;border-radius:6px 6px 0 0}
 
 /* PAGES */
@@ -440,7 +436,7 @@ datalist{display:none!important}
     <button class="main-tab active" id="tab-soli" onclick="setMainTab('soli')">🛒 Salg Soli</button>
     <button class="main-tab" id="tab-fredrikstad" onclick="setMainTab('fredrikstad')">🛒 Salg Fredrikstad</button>
     <button class="main-tab" id="tab-innramming" onclick="setMainTab('innramming')">🖼 Innramming</button>
-    <button class="main-tab" id="tab-chat" onclick="setMainTab('chat')">💬 Chat</button>
+    <button class="main-tab" id="tab-faktura" onclick="setMainTab('faktura')">📄 Faktura</button>
   </div>
 
   <!-- ══════════════════════ SALG-SIDE ══════════════════════ -->
@@ -619,24 +615,14 @@ datalist{display:none!important}
 </div>
 
 <!-- ══════ CHAT-SIDE ══════ -->
-<div class="page" id="page-chat">
-  <div class="section" style="margin-bottom:0;border-radius:var(--r) var(--r) 0 0">
+<div class="page" id="page-faktura">
+  <div class="section">
     <div class="section-head">
-      <div class="stitle" id="chat-tittel">💬 Intern chat</div>
-      <div id="chat-antall" style="font-size:.75rem;color:var(--muted);font-weight:600"></div>
+      <div class="stitle">📄 Faktura</div>
     </div>
-    <div id="chat-list" style="display:flex;flex-direction:column;gap:.6rem;max-height:55vh;overflow-y:auto;padding-right:.2rem"></div>
-  </div>
-  <div style="position:sticky;bottom:0;background:var(--bg);padding:.6rem .85rem;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:.5rem">
-    <div style="display:flex;gap:.5rem;align-items:center">
-      <span style="font-size:.75rem;font-weight:700;color:var(--muted)">Navn:</span>
-      <input type="text" id="chat-navn" placeholder="Ditt navn" style="flex:1;min-height:40px;font-size:.9rem">
-    </div>
-    <div style="display:flex;gap:.5rem">
-      <textarea id="chat-melding" class="notat-inp" placeholder="Skriv en melding til teamet…" style="flex:1;min-height:60px;resize:none"></textarea>
-      <button id="chat-send-btn" class="btn-primary" style="width:auto;padding:.5rem 1rem;min-height:60px;font-size:.9rem">Send</button>
-    </div>
-    <div id="chat-msg" style="font-size:.82rem;text-align:center;min-height:1em;font-weight:600"></div>
+    <div class="filter-wrap"><div class="filter-tabs" id="faktura-subtabs"></div></div>
+    <div id="faktura-list" style="padding:0 .85rem"></div>
+    <div id="faktura-empty" style="text-align:center;color:var(--muted);padding:2rem;font-size:.9rem;font-weight:600;display:none">Ingen fakturaer her.</div>
   </div>
 </div>
 <div class="modal-bg" id="arkiv-modal-bg">
@@ -943,13 +929,13 @@ if(sessionStorage.getItem('sbauth')==='1'){document.getElementById('login-screen
 
 /* ── MAIN TAB ── */
 function setMainTab(tab){
-  ['soli','fredrikstad','innramming','chat'].forEach(function(t){
+  ['soli','fredrikstad','innramming','faktura'].forEach(function(t){
     var el=document.getElementById('tab-'+t);if(el)el.className='main-tab'+(tab===t?' active':'');
   });
   document.getElementById('page-salg').className='page'+(tab==='soli'||tab==='fredrikstad'?' active':'');
   document.getElementById('page-innramming').className='page'+(tab==='innramming'?' active':'');
-  document.getElementById('page-chat').className='page'+(tab==='chat'?' active':'');
-  if(tab==='chat')loadChat();
+  document.getElementById('page-faktura').className='page'+(tab==='faktura'?' active':'');
+  if(tab==='faktura')loadFaktura();
   if(tab==='soli'||tab==='fredrikstad'){
     aktivButikk=tab;
     /* Bakgrunnsfarge og header-farge */
@@ -1473,6 +1459,8 @@ async function toggle(s,field,btn){
     else if(field==='faktura_sendt'){btn.className='status-btn'+(nv?' ok-green':'');btn.innerHTML=(nv?'✅ Faktura sendt':'✉️ Faktura sendt');}
     else if(field==='sendt_innramming'){btn.className='status-btn'+(nv?' ok-blue':'');btn.innerHTML=(nv?'✅':'☐')+' Sendt til innramming';}
     else if(field==='sendt_hentemeld'){btn.className='status-btn'+(nv?' ok-green':'');btn.innerHTML=(nv?'✅':'☐')+' Sendt hentemeld';}
+    /* Oppdater fakturaoversikten hvis den er åpen */
+    if((field==='skal_ha_faktura'||field==='faktura_sendt')&&document.getElementById('page-faktura').classList.contains('active'))renderFaktura();
   }
 }
 
@@ -2039,7 +2027,8 @@ function makeIrCard(x){
       '<button class="ir-btn ferdig-btn'+(x.status==='ferdig'?' ok':'')+'" data-action="ferdig">'+(x.status==='ferdig'?'✅ Ferdig':'Marker ferdig')+'</button>'+
       '<button class="ir-btn hentet-btn'+(x.status==='hentet'?' ok':'')+'" data-action="hentet">'+(x.status==='hentet'?'📦 Hentet':'Marker hentet')+'</button>'+
       '<button class="ir-btn'+(x.sendt_hentemeld?' ok':'')+'" data-action="sendt_hentemeld" style="border-color:var(--green);color:'+(x.sendt_hentemeld?'#fff':'var(--green)')+';'+(x.sendt_hentemeld?'background:var(--green);':'')+'">'+(x.sendt_hentemeld?'✅ ':'☐ ')+'Sendt hentemeld</button>'+
-      '<button class="ir-btn'+(x.skal_ha_faktura?' ok':'')+'" data-action="ir_faktura" style="border-color:#e07020;color:'+(x.skal_ha_faktura?'#fff':'#e07020')+';'+(x.skal_ha_faktura?'background:#e07020;':'')+'">📄 Faktura</button>'+
+      '<button class="ir-btn'+(x.skal_ha_faktura?' ok':'')+'" data-action="ir_faktura" style="border-color:#e07020;color:'+(x.skal_ha_faktura?'#fff':'#e07020')+';'+(x.skal_ha_faktura?'background:#e07020;':'')+'">📄 Skal ha faktura</button>'+
+      '<button class="ir-btn'+(x.faktura_sendt?' ok':'')+'" data-action="ir_faktura_sendt" style="border-color:var(--green);color:'+(x.faktura_sendt?'#fff':'var(--green)')+';'+(x.faktura_sendt?'background:var(--green);':'')+'">✉️ Faktura sendt</button>'+
       '<button class="ir-btn" data-action="mottatt" style="border-color:var(--blue);color:var(--blue)">📋 Kvittering for mottatt</button>'+
       '<button class="ir-btn" data-action="edit" style="margin-left:auto">✏️ Rediger</button>'+
     '</div>';
@@ -2055,7 +2044,12 @@ function makeIrCard(x){
   d.querySelector('[data-action=ir_faktura]').addEventListener('click',async function(){
     var nv=!x.skal_ha_faktura;
     var r=await sb.from('innramming').update({skal_ha_faktura:nv}).eq('id',x.id);
-    if(!r.error){x.skal_ha_faktura=nv;loadIr();}
+    if(!r.error){x.skal_ha_faktura=nv;loadIr();if(document.getElementById('page-faktura').classList.contains('active'))renderFaktura();}
+  });
+  d.querySelector('[data-action=ir_faktura_sendt]').addEventListener('click',async function(){
+    var nv=!x.faktura_sendt;
+    var r=await sb.from('innramming').update({faktura_sendt:nv}).eq('id',x.id);
+    if(!r.error){x.faktura_sendt=nv;loadIr();if(document.getElementById('page-faktura').classList.contains('active'))renderFaktura();}
   });
   d.querySelector('[data-action=mottatt]').addEventListener('click',function(e){visMottattKvittering(e,x);});
   d.querySelector('[data-action=edit]').addEventListener('click',function(){openIrModal(x);});
@@ -2206,42 +2200,47 @@ async function saveIr(){
   closeIrModal();loadIr();
 }
 
-/* ══════════════ CHAT ══════════════ */
-var alleChat=[];
-async function loadChat(){
-  var r=await sb.from('chat').select('*').order('created_at',{ascending:true});
-  if(r.error)return;
-  alleChat=r.data||[];
-  renderChat();
+/* ══════════════ FAKTURA-OVERSIKT ══════════════ */
+var fakturaSubTab='utestaaende';
+async function loadFaktura(){
+  /* Sørg for at innramming også er lastet */
+  if(alleIr.length===0)await loadIr();
+  renderFaktura();
 }
-function renderChat(){
-  var list=document.getElementById('chat-list');list.innerHTML='';
-  document.getElementById('chat-antall').textContent=alleChat.length+' meldinger';
-  if(!alleChat.length){list.innerHTML='<p style="color:var(--muted);text-align:center;font-size:.88rem;padding:1rem">Ingen meldinger ennå.</p>';return;}
-  alleChat.forEach(function(m){
-    var d=document.createElement('div');d.className='chat-melding-boks';
-    d.innerHTML='<div><span class="chat-avsender">'+escHtml(m.avsender)+'</span><span class="chat-tid">'+fmt(m.created_at)+'</span></div><div class="chat-tekst">'+escHtml(m.melding)+'</div>';
-    list.appendChild(d);
-  });
-  /* Scroll til bunnen */
-  list.scrollTop=list.scrollHeight;
-}
-async function sendChatMelding(){
-  var navn=document.getElementById('chat-navn').value.trim();
-  var melding=document.getElementById('chat-melding').value.trim();
-  var msg=document.getElementById('chat-msg');
-  if(!navn){msg.style.color='var(--danger)';msg.textContent='Skriv inn ditt navn.';return;}
-  if(!melding){msg.style.color='var(--danger)';msg.textContent='Skriv en melding.';return;}
-  document.getElementById('chat-send-btn').disabled=true;
-  var r=await sb.from('chat').insert([{avsender:navn,melding:melding}]);
-  document.getElementById('chat-send-btn').disabled=false;
-  if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
-  document.getElementById('chat-melding').value='';
-  msg.style.color='var(--green)';msg.textContent='✓ Sendt!';
-  setTimeout(function(){msg.textContent='';},2000);
-  /* Lagre navn i localStorage for neste gang */
-  try{localStorage.setItem('chat-navn',navn);}catch(e){}
-  loadChat();
+function renderFaktura(){
+  var list=document.getElementById('faktura-list');
+  var empty=document.getElementById('faktura-empty');
+  var subWrap=document.getElementById('faktura-subtabs');
+  list.innerHTML='';subWrap.innerHTML='';empty.style.display='none';
+
+  /* Filtrer relevante salg og innramminger */
+  var utestSalg=alleSalg.filter(function(s){return!s.arkiv&&s.skal_ha_faktura&&!s.faktura_sendt;});
+  var sendtSalg=alleSalg.filter(function(s){return!s.arkiv&&s.faktura_sendt;});
+  var utestIr=alleIr.filter(function(x){return x.skal_ha_faktura&&!x.faktura_sendt;});
+  var sendtIr=alleIr.filter(function(x){return x.faktura_sendt;});
+
+  /* Bygg sub-tabs */
+  function lagSubTab(navn,verdi,antall){
+    var b=document.createElement('button');
+    b.className='ftab'+(fakturaSubTab===verdi?' active':'');
+    b.style.borderColor='#e07020';
+    b.style.color=fakturaSubTab===verdi?'#fff':'#e07020';
+    if(fakturaSubTab===verdi)b.style.background='#e07020';
+    b.textContent=navn+' ('+antall+')';
+    b.addEventListener('click',function(){fakturaSubTab=verdi;renderFaktura();});
+    return b;
+  }
+  subWrap.appendChild(lagSubTab('📄 Skal ha faktura','utestaaende',utestSalg.length+utestIr.length));
+  subWrap.appendChild(lagSubTab('✅ Faktura sendt','sendt',sendtSalg.length+sendtIr.length));
+
+  var salgVis=fakturaSubTab==='utestaaende'?utestSalg:sendtSalg;
+  var irVis=fakturaSubTab==='utestaaende'?utestIr:sendtIr;
+  if(!salgVis.length&&!irVis.length){empty.style.display='block';empty.textContent=fakturaSubTab==='utestaaende'?'Ingen utestående fakturaer.':'Ingen sendte fakturaer.';return;}
+  /* Sorter etter ordrenummer, nyeste øverst */
+  salgVis.sort(function(a,b){return(b.ordrenummer||0)-(a.ordrenummer||0);});
+  irVis.sort(function(a,b){return(b.ordrenummer||0)-(a.ordrenummer||0);});
+  salgVis.forEach(function(s){list.appendChild(makeCard(s,false));});
+  irVis.forEach(function(x){list.appendChild(makeIrCard(x));});
 }
 
 /* ══════════════ INIT ══════════════ */
@@ -2708,10 +2707,6 @@ function init(){
   });
 
   /* Chat */
-  document.getElementById('chat-send-btn').addEventListener('click',sendChatMelding);
-  document.getElementById('chat-melding').addEventListener('keydown',function(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChatMelding();}});
-  try{var lagretNavn=localStorage.getItem('chat-navn');if(lagretNavn)document.getElementById('chat-navn').value=lagretNavn;}catch(e){}
-
   loadSales();
 }
 
