@@ -791,7 +791,7 @@ function irOnr(n){return'3026-'+String(n).padStart(3,'0');}
 function salgOnr(s){
   var erGavekort=(s.type==='Gavekort'||s.kunstner==='Gavekort');
   if(erGavekort)return gkOnr(s.gavekort_ordrenummer||s.ordrenummer);
-  return salgOnr(s);
+  return onr(s.ordrenummer);
 }
 function fmt(iso){var d=new Date(iso);return d.toLocaleDateString('nb-NO',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('nb-NO',{hour:'2-digit',minute:'2-digit'});}
 function toLocalInput(iso){var d=new Date(iso);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16);}
