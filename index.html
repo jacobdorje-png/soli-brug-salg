@@ -786,6 +786,13 @@ function erUX(i){return(i||'').toUpperCase().trim()==='UX';}
 function normTittel(t){return(t||'').trim().toLowerCase().replace(/\s+/g,' ');}
 function kr(v){return(v||0).toLocaleString('nb-NO')+' kr';}
 function onr(n){return'2026-'+String(n).padStart(3,'0');}
+function gkOnr(n){return'4026-'+String(n).padStart(3,'0');}
+function irOnr(n){return'3026-'+String(n).padStart(3,'0');}
+function salgOnr(s){
+  var erGavekort=(s.type==='Gavekort'||s.kunstner==='Gavekort');
+  if(erGavekort)return gkOnr(s.gavekort_ordrenummer||s.ordrenummer);
+  return salgOnr(s);
+}
 function fmt(iso){var d=new Date(iso);return d.toLocaleDateString('nb-NO',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('nb-NO',{hour:'2-digit',minute:'2-digit'});}
 function toLocalInput(iso){var d=new Date(iso);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,16);}
 function nv(id){return parseFloat(document.getElementById(id).value)||0;}
@@ -1370,7 +1377,7 @@ function makeCard(s,erGruppert){
   if(!henteHtml)henteHtml='<span class="badge-no">Hentes</span>';
 
   d.innerHTML=
-    '<div class="sc-top"><span class="sc-nr">'+onr(s.ordrenummer)+'</span>'+butikkChip+arkivChip+gaveChip+ekstraChip+vipChip+'<span class="sc-time">'+fmt(s.created_at)+'</span></div>'+
+    '<div class="sc-top"><span class="sc-nr">'+salgOnr(s)+'</span>'+butikkChip+arkivChip+gaveChip+ekstraChip+vipChip+'<span class="sc-time">'+fmt(s.created_at)+'</span></div>'+
     /* 1. KUNDEINFO ØVERST */
     '<div class="sc-customer"><div class="sc-customer-name">'+(s.navn||'—')+'</div><div class="sc-customer-detail">'+(k||'')+(k&&s.adresse?'<br>':'')+(s.adresse||'')+'</div></div>'+
     /* 2. KUNSTVERKINFO */
@@ -1510,7 +1517,7 @@ function åpneArkivModal(modus,enkeltId){
   /* Tekst */
   if(modus==='enkelt'){
     var s=alleSalg.find(function(x){return x.id===enkeltId;});
-    document.getElementById('arkiv-modal-tekst').textContent='Arkiver salg '+onr(s.ordrenummer)+(s.kunstner?' – '+s.kunstner:'')+(s.tittel?' / '+s.tittel:'')+':';
+    document.getElementById('arkiv-modal-tekst').textContent='Arkiver salg '+salgOnr(s)+(s.kunstner?' – '+s.kunstner:'')+(s.tittel?' / '+s.tittel:'')+':';
   } else {
     var n=alleSalg.filter(function(x){return!x.arkiv&&x.kunstner===aktivFilter;}).length;
     document.getElementById('arkiv-modal-tekst').textContent='Arkiver '+n+' salg fra «'+aktivFilter+'»:';
@@ -1756,7 +1763,7 @@ function kvitteringBase(s){
   var tl=(s.tittel||'—')+(s.edisjon?' ('+s.edisjon+')':'');
   return[
     'Soli Brug Galleri',
-    'Ordrenummer: '+onr(s.ordrenummer),
+    'Ordrenummer: '+salgOnr(s),
     '',
     'Kunstner: '+(s.kunstner||'—'),
     'Kunstverk: '+tl,
@@ -1935,7 +1942,7 @@ function exportLeveringsliste(){
   lines.push('━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   lines.push('');
   salg.forEach(function(s){
-    lines.push('Ordre: '+onr(s.ordrenummer));
+    lines.push('Ordre: '+salgOnr(s));
     lines.push('Verk: '+(s.tittel||'(uten tittel)')+(s.kunstner&&aktivFilter==='alle'?' – '+s.kunstner:''));
     lines.push('Kunde: '+(s.navn||'—'));
     if(s.telefon)lines.push('Telefon: '+s.telefon);
@@ -1985,7 +1992,7 @@ function exportExcel(){
   function lagXlsx(){
     var XLSX=window.XLSX;
     var wsData=[['Ordrenr','Dato','Navn','Telefon','E-post','Adresse','Levering','Kunstner','Tittel','Edisjon','Pris','BKH','Ramme','Rammeinfo','Frakt','Total','Hentet','Faktura sendt','Selger','Info om salget']];
-    data.forEach(function(s){wsData.push([onr(s.ordrenummer),fmt(s.created_at),s.navn||'',s.telefon||'',s.epost||'',s.adresse||'',s.levering?'Ja':'Nei',s.kunstner||'',s.tittel||'',s.edisjon||'',s.pris||0,s.bkh||0,s.ramme||0,s.ramme_info||'',s.frakt||0,s.total||0,s.hentet?'Ja':'Nei',s.faktura_sendt?'Ja':'Nei',s.selger||'',s.notat||'']);});
+    data.forEach(function(s){wsData.push([salgOnr(s),fmt(s.created_at),s.navn||'',s.telefon||'',s.epost||'',s.adresse||'',s.levering?'Ja':'Nei',s.kunstner||'',s.tittel||'',s.edisjon||'',s.pris||0,s.bkh||0,s.ramme||0,s.ramme_info||'',s.frakt||0,s.total||0,s.hentet?'Ja':'Nei',s.faktura_sendt?'Ja':'Nei',s.selger||'',s.notat||'']);});
     var ws=XLSX.utils.aoa_to_sheet(wsData);
     ws['!cols']=[{wch:10},{wch:14},{wch:22},{wch:14},{wch:22},{wch:28},{wch:9},{wch:18},{wch:22},{wch:9},{wch:10},{wch:8},{wch:8},{wch:14},{wch:8},{wch:10},{wch:8},{wch:14},{wch:14},{wch:30}];
     var wb=XLSX.utils.book_new();
@@ -2055,7 +2062,7 @@ function makeIrCard(x){
   var statusLabels={aktiv:'Pågående',ferdig:'✅ Ferdig',hentet:'📦 Hentet'};
   var fotoHtml=x.bilde_url?'<img class="ir-foto" src="'+x.bilde_url+'" data-action="foto">':'';
   var notatHtml=x.notat?'<div class="ir-notat">'+x.notat+'</div>':'';
-  var ordreChip=x.ordrenummer?'<span class="sc-nr" style="background:#3a5a7a;margin-right:.5rem">'+x.ordrenummer+'</span>':'';
+  var ordreChip=x.ordrenummer?'<span class="sc-nr" style="background:#3a5a7a;margin-right:.5rem">'+irOnr(x.ordrenummer)+'</span>':'';
   var tlfHtml=x.telefon?'<div class="ir-tlf"><button class="contact-link" data-tlf="'+x.telefon+'" style="font-size:.85rem;color:#3a5a7a">📞 '+x.telefon+'</button></div>':'';
   d.innerHTML=
     '<div class="ir-top"><div>'+ordreChip+'<div class="ir-name" style="display:inline-block">'+(x.navn||'—')+'</div>'+tlfHtml+'</div><span class="ir-status-chip '+x.status+'">'+(statusLabels[x.status]||x.status)+'</span></div>'+
@@ -2136,7 +2143,7 @@ function visMottattKvittering(e,x){
   var navn=(x.navn||'').trim()||'kunde';
   var idag=new Date();
   var dato=idag.getDate()+'.'+(idag.getMonth()+1)+'.'+idag.getFullYear();
-  var ordreLinje=x.ordrenummer?'Ordrenummer: '+x.ordrenummer+'\n\n':'';
+  var ordreLinje=x.ordrenummer?'Ordrenummer: '+irOnr(x.ordrenummer)+'\n\n':'';
   var tekst='Hei '+navn+' har i dag '+dato+' levert inn et verk til innramming.\n\n'+
             ordreLinje+
             'Jeg gir beskjed så snart bildet er klart til henting.\n\n'+
@@ -2162,7 +2169,7 @@ async function setIrStatus(x,status,btn){
 /* ══════════════ MODAL: REDIGER SALG ══════════════ */
 function openModal(s){
   editId=s.id;mFotoUrl=s.bilde_url||null;
-  document.getElementById('modal-title').textContent='Rediger – '+onr(s.ordrenummer);
+  document.getElementById('modal-title').textContent='Rediger – '+salgOnr(s);
   document.getElementById('m-dato').value=toLocalInput(s.created_at);
   var mButikk=document.querySelector('input[name="m-butikk"][value="'+(s.butikk||'fredrikstad')+'"]');
   if(mButikk)mButikk.checked=true;
@@ -2321,7 +2328,7 @@ function renderFaktura(){
 
 /* ══════════════ INIT ══════════════ */
 async function slettSalg(s){
-  if(!confirm('Slette salg '+onr(s.ordrenummer)+' – '+(s.kunstner||s.navn||'')+'?\nDette kan ikke angres.'))return;
+  if(!confirm('Slette salg '+salgOnr(s)+' – '+(s.kunstner||s.navn||'')+'?\nDette kan ikke angres.'))return;
   var r=await sb.from('salg').delete().eq('id',s.id);
   if(!r.error)loadSales(true);
   else alert('Feil: '+r.error.message);
@@ -2447,7 +2454,7 @@ async function delSalgskort(s,btn){
   lines.push('');
   if(s.navn)lines.push('Kunde: '+s.navn);
   if(s.selger)lines.push('Selger: '+s.selger);
-  lines.push('📍 '+(s.butikk==='soli'?'Soli':'Fredrikstad')+' · '+onr(s.ordrenummer));
+  lines.push('📍 '+(s.butikk==='soli'?'Soli':'Fredrikstad')+' · '+salgOnr(s));
   var tekst=lines.join('\n');
 
   /* Prøv å bygge kombinert bilde + tekst */
@@ -2522,7 +2529,7 @@ async function lagKombinertBilde(s){
   tl.push({tekst:'',size:16});
   if(s.navn)tl.push({tekst:'Kunde: '+s.navn,size:26,color:'#333'});
   if(s.selger)tl.push({tekst:'Selger: '+s.selger,size:26,color:'#333'});
-  tl.push({tekst:(s.butikk==='soli'?'📍 Soli':'📍 Fredrikstad')+' · '+onr(s.ordrenummer),size:24,color:'#888'});
+  tl.push({tekst:(s.butikk==='soli'?'📍 Soli':'📍 Fredrikstad')+' · '+salgOnr(s),size:24,color:'#888'});
 
   /* Beregn total høyde */
   var linjeAvstand=12;
@@ -2581,7 +2588,7 @@ function skrivUtKort(s){
   else henteInfo='Hentes';
 
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8">'+
-    '<title>Salg '+onr(s.ordrenummer)+'</title>'+
+    '<title>Salg '+salgOnr(s)+'</title>'+
     '<style>'+
       'body{font-family:sans-serif;margin:2rem;color:#111;background:#fff;font-size:14px}'+
       'h2{font-size:1.1rem;margin-bottom:.25rem}'+
@@ -2605,7 +2612,7 @@ function skrivUtKort(s){
     '<h2>'+(s.kunstner||'—')+(s.tittel?' – <em>'+s.tittel+'</em>':'')+
       (s.edisjon?' <span style="font-size:.8rem;color:#555">('+s.edisjon+')</span>':'')+
       (s.type?' <span style="font-size:.8rem;color:#555">'+s.type+'</span>':'')+'</h2>'+
-    '<div class="sub">'+onr(s.ordrenummer)+' · '+fmt(s.created_at)+(s.selger?' · Selger: '+s.selger:'')+'</div>'+
+    '<div class="sub">'+salgOnr(s)+' · '+fmt(s.created_at)+(s.selger?' · Selger: '+s.selger:'')+'</div>'+
     '<div class="grid">'+
       '<div class="box"><div class="lbl">Pris</div><div class="val">'+kr(s.pris)+'</div></div>'+
       '<div class="box"><div class="lbl">BKH 5%</div><div class="val">'+kr(s.bkh)+'</div></div>'+
@@ -2824,10 +2831,16 @@ async function submitSale(){
   if(gavekortFelt&&gavekortFelt.style.display!=='none'){
     var gkPris=parseFloat(document.getElementById('f-gavekort-pris').value)||0;
     var gkNotat=document.getElementById('f-gavekort-notat').value.trim();
+    /* Beregn neste gavekort-ordrenummer */
+    var maxGk=alleSalg.reduce(function(m,s){
+      if((s.type==='Gavekort'||s.kunstner==='Gavekort')&&s.gavekort_ordrenummer)return Math.max(m,s.gavekort_ordrenummer);
+      return m;
+    },0);
     rows.push(Object.assign({},baseRow,{
       kunstner:'Gavekort',tittel:'Gavekort',type:'Gavekort',
       pris:gkPris,bkh:0,ramme:0,frakt:0,total:gkPris,
-      notat:gkNotat,bilde_url:null
+      notat:gkNotat,bilde_url:null,
+      gavekort_ordrenummer:maxGk+1
     }));
   }
 
