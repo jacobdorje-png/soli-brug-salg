@@ -665,6 +665,21 @@ datalist{display:none!important}
   </div>
 </div>
 
+<!-- ══════ MAIL-VALG MODAL ══════ -->
+<div class="modal-bg" id="mail-valg-modal-bg">
+  <div class="modal-box sm">
+    <div class="modal-head"><h2 style="color:#3a7a52">📧 Velg e-postklient</h2><button class="modal-close-btn" onclick="lukkMailValg()">×</button></div>
+    <p style="margin:.4rem 0 .5rem;font-weight:600;color:var(--muted);font-size:.88rem" id="mail-valg-info"></p>
+    <p style="margin:0 0 1rem;font-weight:700;font-size:.9rem;color:#111" id="mail-valg-adr"></p>
+    <div style="display:flex;flex-direction:column;gap:.6rem">
+      <button id="mv-standard" class="btn-save" style="background:#3a7a52;border-color:#3a7a52">✉️ Standard e-post (Apple Mail / Outlook)</button>
+      <button id="mv-outlook" class="btn-save" style="background:#0078d4;border-color:#0078d4">📧 Outlook Web</button>
+      <button id="mv-gmail" class="btn-save" style="background:#d93025;border-color:#d93025">📧 Gmail Web</button>
+      <button class="btn-cancel" onclick="lukkMailValg()">Avbryt</button>
+    </div>
+  </div>
+</div>
+
 <!-- ══════ DATO MODAL (Hentet / Faktura sendt) ══════ -->
 <div class="modal-bg" id="dato-modal-bg">
   <div class="modal-box sm">
@@ -2662,28 +2677,36 @@ async function lagKvitteringPDF(s,btn){
       var jsPDF=window.jspdf.jsPDF;
       var doc=new jsPDF({unit:'mm',format:'a4'});
 
-      /* === HEADER: Bedriftsinfo === */
-      doc.setFontSize(22);doc.setFont('helvetica','bold');
-      doc.text('Soli Brug AS',20,22);
-      doc.setFontSize(9);doc.setFont('helvetica','normal');
-      doc.setTextColor(90);
-      doc.text('Galleri  ·  Kunstformidling  ·  Rammeverksted  ·  Kafé',20,28);
-      doc.text('1719 Greåker  ·  Tlf: 69 14 72 87  ·  www.soli-brug.no',20,33);
-      doc.text('Org.nr: 996 808 750 MVA',20,38);
+      /* === HEADER: Logo + Bedriftsinfo === */
+      /* Stilisert tekst-logo */
+      doc.setFont('helvetica','bold');
+      doc.setFontSize(28);doc.setTextColor(58,122,82);
+      doc.text('SOLI BRUG',20,24);
+      doc.setFontSize(10);doc.setFont('helvetica','italic');doc.setTextColor(120);
+      doc.text('siden 1978',20,30);
       doc.setTextColor(0);
-      doc.setDrawColor(180);doc.setLineWidth(.3);
-      doc.line(20,43,190,43);
+
+      /* Bedriftskontakt til høyre */
+      doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(90);
+      doc.text('Soli Brug AS',190,15,{align:'right'});
+      doc.text('1719 Greåker',190,20,{align:'right'});
+      doc.text('Tlf: 69 14 72 87',190,25,{align:'right'});
+      doc.text('www.soli-brug.no',190,30,{align:'right'});
+      doc.text('Org.nr: 996 808 750 MVA',190,35,{align:'right'});
+      doc.setTextColor(0);
+
+      doc.setDrawColor(58,122,82);doc.setLineWidth(.8);
+      doc.line(20,42,190,42);
 
       /* === Kvitteringstittel + ordreinfo === */
       doc.setFontSize(18);doc.setFont('helvetica','bold');
       doc.text('KVITTERING',20,54);
       doc.setFontSize(10);doc.setFont('helvetica','normal');
-      doc.text('Ordrenummer: '+salgOnr(s),130,50);
-      doc.text('Dato: '+fmt(s.created_at),130,55);
-      doc.text('Butikk: '+(s.butikk==='soli'?'Soli':'Fredrikstad'),130,60);
+      doc.text('Ordrenummer: '+salgOnr(s),140,50);
+      doc.text('Dato: '+fmt(s.created_at),140,55);
 
       /* === Kundeinfo === */
-      var y=72;
+      var y=68;
       doc.setFontSize(10);doc.setFont('helvetica','bold');
       doc.text('KUNDE',20,y);y+=5;
       doc.setFont('helvetica','normal');
@@ -2711,7 +2734,6 @@ async function lagKvitteringPDF(s,btn){
       var detaljer=[];
       if(s.edisjon)detaljer.push('Edisjon: '+s.edisjon);
       if(s.type)detaljer.push('Type: '+s.type);
-      if(s.ramme_info)detaljer.push('Ramme: '+s.ramme_info);
       if(detaljer.length){doc.text(detaljer.join('   ·   '),22,y);y+=6;}
       doc.setTextColor(0);doc.setFontSize(10);
       y+=2;
@@ -2721,7 +2743,7 @@ async function lagKvitteringPDF(s,btn){
         doc.text(kr(s.bkh),188,y,{align:'right'});y+=5;
       }
       if(s.ramme){
-        doc.text('Rammepris'+(s.ramme_info?' ('+s.ramme_info+')':''),22,y);
+        doc.text('Rammepris',22,y);
         doc.text(kr(s.ramme),188,y,{align:'right'});y+=5;
       }
       if(s.frakt){
@@ -2739,36 +2761,42 @@ async function lagKvitteringPDF(s,btn){
       doc.text(kr(s.total||0),188,y+2,{align:'right'});
       y+=15;
 
-      /* === Betalingsinfo === */
+      /* === Betalingsinfo (tydelig boks når betalt) === */
       if(s.betalt_kort){
-        doc.setFont('helvetica','bold');doc.setFontSize(11);
-        doc.text('Betaling',20,y);y+=6;
-        doc.setFont('helvetica','normal');doc.setFontSize(10);
-        var betLinje='Betalt';
-        if(s.betalings_metode)betLinje+=' med '+s.betalings_metode;
-        if(s.betalt_dato)betLinje+=' den '+s.betalt_dato;
-        if(s.betalt_initialer)betLinje+='  ·  Kvittert av '+s.betalt_initialer;
-        doc.text(betLinje,20,y);y+=5;
+        doc.setFillColor(232,245,233);
+        doc.setDrawColor(58,122,82);doc.setLineWidth(.5);
+        var boksH=(s.delsum_betalt&&s.delsum_betalt>0&&s.delsum_betalt<(s.total||0))?24:14;
+        doc.roundedRect(20,y-4,170,boksH,2,2,'FD');
+        doc.setTextColor(58,122,82);doc.setFont('helvetica','bold');doc.setFontSize(11);
+        doc.text('BETALT',24,y+2);
+        doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor(0);
+        var betLinje='Metode: '+(s.betalings_metode||'—');
+        if(s.betalt_dato)betLinje+='     Dato: '+s.betalt_dato;
+        doc.text(betLinje,60,y+2);
+        if(s.betalt_initialer){doc.text('Kvittert av: '+s.betalt_initialer,60,y+7);}
         if(s.delsum_betalt&&s.delsum_betalt>0&&s.delsum_betalt<(s.total||0)){
-          doc.text('Delsum betalt: '+kr(s.delsum_betalt),20,y);y+=5;
+          doc.text('Delsum betalt: '+kr(s.delsum_betalt),60,y+13);
           doc.setFont('helvetica','bold');doc.setTextColor(224,112,32);
-          doc.text('Gjenstående: '+kr((s.total||0)-s.delsum_betalt),20,y);y+=6;
+          doc.text('Gjenstående: '+kr((s.total||0)-s.delsum_betalt),120,y+13);
           doc.setTextColor(0);doc.setFont('helvetica','normal');
+          y+=boksH+3;
+        } else {
+          y+=boksH+3;
         }
       }
 
       /* === Leveringsinfo === */
       var levInfo=[];
-      if(s.levering)levInfo.push('🚚 Sendes til kundens adresse');
-      if(s.montering)levInfo.push('🔧 Inkl. montering');
-      if(s.hentested==='soli')levInfo.push('📍 Hentes på Soli Brug, Greåker');
-      if(s.hentested==='fredrikstad')levInfo.push('📍 Hentes i Fredrikstad, Stortorvet 6');
+      if(s.levering)levInfo.push('Sendes til kundens adresse');
+      if(s.montering)levInfo.push('Inkl. montering');
+      if(s.hentested==='soli')levInfo.push('Hentes på Soli Brug, Greåker');
+      if(s.hentested==='fredrikstad')levInfo.push('Hentes i Fredrikstad, Stortorvet 6');
       if(levInfo.length){
         y+=3;
         doc.setFont('helvetica','bold');doc.setFontSize(11);
         doc.text('Levering',20,y);y+=6;
         doc.setFont('helvetica','normal');doc.setFontSize(10);
-        levInfo.forEach(function(l){doc.text(l.replace(/[🚚🔧📍]/g,'').trim(),20,y);y+=5;});
+        levInfo.forEach(function(l){doc.text(l,20,y);y+=5;});
       }
 
       /* === Notat === */
@@ -2783,9 +2811,9 @@ async function lagKvitteringPDF(s,btn){
 
       /* === Footer === */
       var footerY=278;
-      doc.setDrawColor(180);doc.setLineWidth(.3);
+      doc.setDrawColor(58,122,82);doc.setLineWidth(.5);
       doc.line(20,footerY-6,190,footerY-6);
-      doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(80);
+      doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(58,122,82);
       doc.text('Tusen takk for handelen!',105,footerY,{align:'center'});
       doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(120);
       doc.text('Soli Brug AS  ·  1719 Greåker  ·  post@soli-brug.no  ·  www.soli-brug.no',105,footerY+5,{align:'center'});
@@ -2814,24 +2842,34 @@ async function sendKvitteringPDF(file,s,btn,origLabel){
       if(e.name==='AbortError'){btn.disabled=false;btn.innerHTML=origLabel;return;}
     }
   }
-  /* Fallback: last ned PDF og åpne mail */
+  /* Fallback: last ned PDF og la bruker velge mail-klient */
   var url=URL.createObjectURL(file);
   var a=document.createElement('a');a.href=url;a.download=file.name;
   document.body.appendChild(a);a.click();document.body.removeChild(a);
-  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  setTimeout(function(){URL.revokeObjectURL(url);},2000);
+
   /* Spør etter e-post hvis ikke oppgitt */
   var epost=s.epost;
   if(!epost){
     epost=prompt('PDF lastet ned!\n\nHvilken e-postadresse skal kvitteringen sendes til?');
     if(!epost){btn.disabled=false;btn.innerHTML=origLabel;return;}
-  } else {
-    if(!confirm('PDF lastet ned!\n\nÅpne e-post til '+epost+'?\n(PDF-en må festes manuelt)')){btn.disabled=false;btn.innerHTML=origLabel;return;}
   }
-  var subject=encodeURIComponent('Kvittering fra Soli Brug – '+salgOnr(s));
-  var body=encodeURIComponent('Hei'+(s.navn?' '+s.navn.split(' ')[0]:'')+',\n\nVennligst finn vedlagt kvittering for ditt kjøp (ordre '+salgOnr(s)+').\n\nTusen takk for handelen!\n\nMed vennlig hilsen,\nSoli Brug Galleri\nwww.soli-brug.no');
-  window.location.href='mailto:'+epost+'?subject='+subject+'&body='+body;
   btn.disabled=false;btn.innerHTML=origLabel;
+  visMailValgModal(epost,s);
 }
+
+function visMailValgModal(epost,s){
+  var subject=encodeURIComponent('Kvittering fra Soli Brug – '+salgOnr(s));
+  var body='Hei'+(s.navn?' '+s.navn.split(' ')[0]:'')+',\n\nVennligst finn vedlagt kvittering for ditt kjøp (ordre '+salgOnr(s)+').\n\nTusen takk for handelen!\n\nMed vennlig hilsen,\nSoli Brug Galleri\nwww.soli-brug.no';
+  var bodyEnc=encodeURIComponent(body);
+  document.getElementById('mail-valg-info').textContent='PDF er lastet ned. Velg e-postklient (fest PDF-en manuelt etterpå):';
+  document.getElementById('mail-valg-adr').textContent='Til: '+epost;
+  document.getElementById('mv-standard').onclick=function(){window.location.href='mailto:'+epost+'?subject='+subject+'&body='+bodyEnc;lukkMailValg();};
+  document.getElementById('mv-outlook').onclick=function(){window.open('https://outlook.office.com/mail/deeplink/compose?to='+encodeURIComponent(epost)+'&subject='+subject+'&body='+bodyEnc,'_blank');lukkMailValg();};
+  document.getElementById('mv-gmail').onclick=function(){window.open('https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(epost)+'&su='+subject+'&body='+bodyEnc,'_blank');lukkMailValg();};
+  document.getElementById('mail-valg-modal-bg').classList.add('open');
+}
+function lukkMailValg(){document.getElementById('mail-valg-modal-bg').classList.remove('open');}
 
 async function delSalgskort(s,btn){
   var origLabel=btn.innerHTML;
@@ -3143,6 +3181,8 @@ function init(){
   document.getElementById('dato-modal-bg').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
   document.getElementById('dato-lagre').addEventListener('click',lagreDato);
   document.getElementById('dato-modal-input').addEventListener('keydown',function(e){if(e.key==='Enter')lagreDato();});
+  /* Mail-valg modal */
+  document.getElementById('mail-valg-modal-bg').addEventListener('click',function(e){if(e.target===this)lukkMailValg();});
   /* Ekstraliste – vis/skjul picker og bygg chips */
   function byggEkstralisteChips(){
     var wrap=document.getElementById('f-ekstraliste-chips');
