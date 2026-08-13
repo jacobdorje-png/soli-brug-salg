@@ -665,6 +665,20 @@ datalist{display:none!important}
   </div>
 </div>
 
+<!-- ══════ DATO MODAL (Hentet / Faktura sendt) ══════ -->
+<div class="modal-bg" id="dato-modal-bg">
+  <div class="modal-box sm">
+    <div class="modal-head"><h2 id="dato-modal-tittel" style="color:var(--accent)"></h2><button class="modal-close-btn" id="dato-modal-close">×</button></div>
+    <p style="margin:.4rem 0 1rem;font-weight:600;color:var(--muted);font-size:.88rem" id="dato-modal-info"></p>
+    <div style="margin-bottom:.85rem">
+      <span class="lbl" id="dato-modal-lbl">Dato</span>
+      <input type="date" id="dato-modal-input">
+    </div>
+    <div class="modal-actions"><button class="btn-cancel" id="dato-avbryt">Avbryt</button><button class="btn-save" id="dato-lagre" style="background:var(--green);border-color:var(--green)">Lagre</button></div>
+    <div class="modal-msg" id="dato-msg"></div>
+  </div>
+</div>
+
 <!-- ══════ BETALT MODAL ══════ -->
 <div class="modal-bg" id="betalt-modal-bg">
   <div class="modal-box sm">
@@ -1425,10 +1439,10 @@ function makeCard(s,erGruppert){
     /* 3. HENTING NEDERST */
     '<div class="sc-foot"><div class="badge-wrap">'+henteHtml+'</div><span class="sc-total">'+kr(s.total)+'</span></div>'+
     '<div class="sc-actions">'+
-      '<button class="status-btn'+(s.hentet?' ok-green':'')+'" data-action="hentet">'+(s.hentet?'✅':'☐')+' Hentet</button>'+
+      '<button class="status-btn'+(s.hentet?' ok-green':'')+'" data-action="hentet">'+(s.hentet?('✅ Hentet'+(s.hentet_dato?': '+formatKortDato(s.hentet_dato):'')):'☐ Hentet')+'</button>'+
       '<button class="status-btn'+(s.betalt_kort?(s.delsum_betalt&&s.delsum_betalt>0&&s.delsum_betalt<(s.total||0)?' ok-orange':' ok-green'):'')+'" data-action="betalt_kort">'+(s.betalt_kort?(s.delsum_betalt&&s.delsum_betalt>0&&s.delsum_betalt<(s.total||0)?'🟡 Delvis: '+(s.betalings_metode||''):'✅ Betalt'+(s.betalings_metode?': '+s.betalings_metode:'')):'☐ Betalt')+'</button>'+
       '<button class="status-btn'+(s.skal_ha_faktura?' ok-orange':'')+'" data-action="skal_faktura">📄 Skal ha faktura</button>'+
-      '<button class="status-btn'+(s.faktura_sendt?' ok-green':'')+'" data-action="faktura">'+(s.faktura_sendt?'✅ Faktura sendt':'✉️ Faktura sendt')+'</button>'+
+      '<button class="status-btn'+(s.faktura_sendt?' ok-green':'')+'" data-action="faktura">'+(s.faktura_sendt?('✅ Sendt'+(s.faktura_sendt_dato?': '+formatKortDato(s.faktura_sendt_dato):'')):'✉️ Faktura sendt')+'</button>'+
       '<button class="status-btn'+(s.sendt_innramming?' ok-blue':'')+' sm" data-action="sendt_innramming">'+(s.sendt_innramming?'✅':'☐')+' Sendt til innramming</button>'+
       '<button class="status-btn'+(s.sendt_hentemeld?' ok-green':'')+' sm" data-action="sendt_hentemeld">'+(s.sendt_hentemeld?'✅':'☐')+' Sendt hentemeld</button>'+
     '</div>'+
@@ -1447,10 +1461,10 @@ function makeCard(s,erGruppert){
     '</div>'+
     '<div class="sc-inline-notat"><textarea class="sc-inline-notat-inp" placeholder="Enkelt notat…" data-action="notat">'+escHtml(s.notat||'')+'</textarea></div>';
 
-  d.querySelector('[data-action=hentet]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'hentet',this);});
+  d.querySelector('[data-action=hentet]').addEventListener('click',function(e){e.stopPropagation();apneDatoModal(s,this,'hentet');});
   d.querySelector('[data-action=betalt_kort]').addEventListener('click',function(e){e.stopPropagation();apneBetaltModal(s,this);});
   d.querySelector('[data-action=skal_faktura]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'skal_ha_faktura',this);});
-  d.querySelector('[data-action=faktura]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'faktura_sendt',this);});
+  d.querySelector('[data-action=faktura]').addEventListener('click',function(e){e.stopPropagation();apneDatoModal(s,this,'faktura_sendt');});
   d.querySelector('[data-action=sendt_innramming]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'sendt_innramming',this);});
   d.querySelector('[data-action=sendt_hentemeld]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'sendt_hentemeld',this);});
   d.querySelector('[data-action=edit]').addEventListener('click',function(e){e.stopPropagation();openModal(s);});
@@ -1608,6 +1622,72 @@ async function utforArkivering(){
 function velgKvartal(n){
   var aar=new Date().getFullYear();
   document.getElementById('arkiv-navn-input').value='Kvartal '+n+' '+aar;
+}
+
+/* ── DATO MODAL (Hentet / Faktura sendt) ── */
+var datoSalgId=null,datoBtn=null,datoField=null;
+function apneDatoModal(s,btn,field){
+  var datoField_=field+'_dato';
+  if(s[field]){
+    /* Allerede satt – vis info og tilbud å fjerne */
+    var etikett=field==='hentet'?'Hentet':'Faktura sendt';
+    var linjer=[etikett+' den '+(s[datoField_]||'ukjent dato')];
+    if(confirm(linjer.join('\n')+'\n\nFjerne status?')){
+      var oldDato=s[datoField_];
+      s[field]=false;s[datoField_]=null;
+      settDatoBtn(btn,field,false);
+      var up={};up[field]=false;up[datoField_]=null;
+      sb.from('salg').update(up).eq('id',s.id).then(function(r){
+        if(r.error){s[field]=true;s[datoField_]=oldDato;settDatoBtn(btn,field,true,oldDato);}
+        if((field==='skal_ha_faktura'||field==='faktura_sendt')&&document.getElementById('page-faktura').classList.contains('active'))renderFaktura();
+      });
+    }
+    return;
+  }
+  datoSalgId=s.id;datoBtn=btn;datoField=field;
+  var tittel=field==='hentet'?'📦 Marker som hentet':'✉️ Marker faktura sendt';
+  var lbl=field==='hentet'?'Dato for henting':'Dato for utsendt faktura';
+  document.getElementById('dato-modal-tittel').textContent=tittel;
+  document.getElementById('dato-modal-lbl').textContent=lbl;
+  document.getElementById('dato-modal-info').textContent=salgOnr(s)+' · '+(s.kunstner||'—')+(s.tittel?' – '+s.tittel:'');
+  var idag=new Date();
+  var iso=idag.getFullYear()+'-'+String(idag.getMonth()+1).padStart(2,'0')+'-'+String(idag.getDate()).padStart(2,'0');
+  document.getElementById('dato-modal-input').value=iso;
+  document.getElementById('dato-msg').textContent='';
+  document.getElementById('dato-modal-bg').classList.add('open');
+}
+function settDatoBtn(btn,field,nv,dato){
+  if(field==='hentet'){
+    btn.className='status-btn'+(nv?' ok-green':'');
+    btn.innerHTML=nv?('✅ Hentet'+(dato?': '+formatKortDato(dato):'')):'☐ Hentet';
+  } else if(field==='faktura_sendt'){
+    btn.className='status-btn'+(nv?' ok-green':'');
+    btn.innerHTML=nv?('✅ Sendt'+(dato?': '+formatKortDato(dato):'')):'✉️ Faktura sendt';
+  }
+}
+function formatKortDato(iso){
+  if(!iso)return '';
+  var parts=iso.split('-');
+  if(parts.length!==3)return iso;
+  return parts[2].replace(/^0/,'')+'.'+parts[1].replace(/^0/,'');
+}
+async function lagreDato(){
+  if(!datoSalgId||!datoField)return;
+  var dato=document.getElementById('dato-modal-input').value;
+  var msg=document.getElementById('dato-msg');
+  if(!dato){msg.style.color='var(--danger)';msg.textContent='Velg dato.';return;}
+  var lagreBtn=document.getElementById('dato-lagre');
+  lagreBtn.disabled=true;lagreBtn.textContent='Lagrer…';
+  var up={};up[datoField]=true;up[datoField+'_dato']=dato;
+  var r=await sb.from('salg').update(up).eq('id',datoSalgId);
+  lagreBtn.disabled=false;lagreBtn.textContent='Lagre';
+  if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
+  var s=alleSalg.find(function(x){return x.id===datoSalgId;});
+  if(s){s[datoField]=true;s[datoField+'_dato']=dato;}
+  if(datoBtn)settDatoBtn(datoBtn,datoField,true,dato);
+  document.getElementById('dato-modal-bg').classList.remove('open');
+  if((datoField==='skal_ha_faktura'||datoField==='faktura_sendt')&&document.getElementById('page-faktura').classList.contains('active'))renderFaktura();
+  datoSalgId=null;datoBtn=null;datoField=null;
 }
 
 /* ── BETALT MODAL ── */
@@ -2866,6 +2946,12 @@ function init(){
   document.getElementById('betalt-lagre').addEventListener('click',lagreBetalt);
   document.getElementById('betalt-initialer').addEventListener('keydown',function(e){if(e.key==='Enter')lagreBetalt();});
   document.getElementById('betalt-delsum').addEventListener('input',oppdaterGjenstaende);
+  /* Dato modal */
+  document.getElementById('dato-modal-close').addEventListener('click',function(){document.getElementById('dato-modal-bg').classList.remove('open');});
+  document.getElementById('dato-avbryt').addEventListener('click',function(){document.getElementById('dato-modal-bg').classList.remove('open');});
+  document.getElementById('dato-modal-bg').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+  document.getElementById('dato-lagre').addEventListener('click',lagreDato);
+  document.getElementById('dato-modal-input').addEventListener('keydown',function(e){if(e.key==='Enter')lagreDato();});
   /* Ekstraliste – vis/skjul picker og bygg chips */
   function byggEkstralisteChips(){
     var wrap=document.getElementById('f-ekstraliste-chips');
