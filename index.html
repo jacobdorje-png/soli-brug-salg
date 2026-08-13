@@ -2679,6 +2679,10 @@ async function lagKvitteringPDF(s,btn){
       var jsPDF=window.jspdf.jsPDF;
       var doc=new jsPDF({unit:'mm',format:'a4'});
 
+      /* === Bakgrunn: lys grå (litt lysere enn logoens grå) === */
+      doc.setFillColor(245,245,245);
+      doc.rect(0,0,210,297,'F');
+
       /* === HEADER: Logo + Bedriftsinfo === */
       /* Ekte Soli Brug-logo */
       try{
