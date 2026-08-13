@@ -1457,7 +1457,10 @@ function makeCard(s,erGruppert){
         arkiverKnapp+
         '<button class="sc-edit-btn" data-action="slett" style="color:#c0392b">🗑 Slett</button>'+
       '</div>'+
-      '<div class="row2" style="margin-top:.4rem"><button class="sc-copy-btn" data-action="del" style="width:100%;border-color:#1a5fa8;color:#1a5fa8;font-size:.82rem">📤 Del salgskort</button></div>'+
+      '<div class="row2" style="margin-top:.4rem">'+
+        '<button class="sc-copy-btn" data-action="del" style="border-color:#1a5fa8;color:#1a5fa8;font-size:.78rem">📤 Del salgskort</button>'+
+        '<button class="sc-copy-btn" data-action="pdf" style="border-color:#5a3a7a;color:#5a3a7a;font-size:.78rem">📄 Kvittering PDF</button>'+
+      '</div>'+
     '</div>'+
     '<div class="sc-inline-notat"><textarea class="sc-inline-notat-inp" placeholder="Enkelt notat…" data-action="notat">'+escHtml(s.notat||'')+'</textarea></div>';
 
@@ -1470,6 +1473,7 @@ function makeCard(s,erGruppert){
   d.querySelector('[data-action=edit]').addEventListener('click',function(e){e.stopPropagation();openModal(s);});
   d.querySelector('[data-action=print]').addEventListener('click',function(e){e.stopPropagation();skrivUtKort(s);});
   d.querySelector('[data-action=del]').addEventListener('click',function(e){e.stopPropagation();delSalgskort(s,this);});
+  d.querySelector('[data-action=pdf]').addEventListener('click',function(e){e.stopPropagation();lagKvitteringPDF(s,this);});
   var flyttEl=d.querySelector('[data-action=flytt-ekstra]');
   if(flyttEl)flyttEl.addEventListener('click',function(e){e.stopPropagation();visFlyttModalSalg(s);});
   var vipEl=d.querySelector('[data-action=vip-toggle]');
@@ -2641,6 +2645,193 @@ function fjernEkstraVerk(idx){
   if(el)el.remove();
 }
 function calcEkstra(idx){/* handled inline */}
+
+/* ── KVITTERING PDF ── */
+function _loadJsPDF(cb){
+  if(window.jspdf&&window.jspdf.jsPDF){cb();return;}
+  var s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+  s.onload=cb;s.onerror=function(){alert('Kunne ikke laste PDF-bibliotek. Sjekk internett-tilkoblingen.');};
+  document.head.appendChild(s);
+}
+async function lagKvitteringPDF(s,btn){
+  var origLabel=btn.innerHTML;
+  btn.disabled=true;btn.innerHTML='⏳ Lager PDF…';
+  _loadJsPDF(function(){
+    try{
+      var jsPDF=window.jspdf.jsPDF;
+      var doc=new jsPDF({unit:'mm',format:'a4'});
+
+      /* === HEADER: Bedriftsinfo === */
+      doc.setFontSize(22);doc.setFont('helvetica','bold');
+      doc.text('Soli Brug AS',20,22);
+      doc.setFontSize(9);doc.setFont('helvetica','normal');
+      doc.setTextColor(90);
+      doc.text('Galleri  ·  Kunstformidling  ·  Rammeverksted  ·  Kafé',20,28);
+      doc.text('1719 Greåker  ·  Tlf: 69 14 72 87  ·  www.soli-brug.no',20,33);
+      doc.text('Org.nr: 996 808 750 MVA',20,38);
+      doc.setTextColor(0);
+      doc.setDrawColor(180);doc.setLineWidth(.3);
+      doc.line(20,43,190,43);
+
+      /* === Kvitteringstittel + ordreinfo === */
+      doc.setFontSize(18);doc.setFont('helvetica','bold');
+      doc.text('KVITTERING',20,54);
+      doc.setFontSize(10);doc.setFont('helvetica','normal');
+      doc.text('Ordrenummer: '+salgOnr(s),130,50);
+      doc.text('Dato: '+fmt(s.created_at),130,55);
+      doc.text('Butikk: '+(s.butikk==='soli'?'Soli':'Fredrikstad'),130,60);
+
+      /* === Kundeinfo === */
+      var y=72;
+      doc.setFontSize(10);doc.setFont('helvetica','bold');
+      doc.text('KUNDE',20,y);y+=5;
+      doc.setFont('helvetica','normal');
+      doc.text(s.navn||'—',20,y);y+=5;
+      if(s.adresse){doc.text(s.adresse,20,y);y+=5;}
+      if(s.telefon){doc.text('Tlf: '+s.telefon,20,y);y+=5;}
+      if(s.epost){doc.text('E-post: '+s.epost,20,y);y+=5;}
+      y+=4;
+
+      /* === Produkttabell === */
+      doc.setFillColor(248,244,236);
+      doc.rect(20,y,170,7,'F');
+      doc.setFont('helvetica','bold');
+      doc.text('Beskrivelse',22,y+5);
+      doc.text('Beløp',188,y+5,{align:'right'});
+      y+=10;
+
+      doc.setFont('helvetica','normal');
+      doc.setFontSize(11);
+      doc.text((s.kunstner||'—')+'  –  '+(s.tittel||'Uten tittel'),22,y);
+      doc.text(kr(s.pris||0),188,y,{align:'right'});
+      y+=5;
+
+      doc.setFontSize(9);doc.setTextColor(90);
+      var detaljer=[];
+      if(s.edisjon)detaljer.push('Edisjon: '+s.edisjon);
+      if(s.type)detaljer.push('Type: '+s.type);
+      if(s.ramme_info)detaljer.push('Ramme: '+s.ramme_info);
+      if(detaljer.length){doc.text(detaljer.join('   ·   '),22,y);y+=6;}
+      doc.setTextColor(0);doc.setFontSize(10);
+      y+=2;
+
+      if(s.bkh){
+        doc.text('5% Bildende Kunstneres Hjelpefond (BKH)',22,y);
+        doc.text(kr(s.bkh),188,y,{align:'right'});y+=5;
+      }
+      if(s.ramme){
+        doc.text('Rammepris'+(s.ramme_info?' ('+s.ramme_info+')':''),22,y);
+        doc.text(kr(s.ramme),188,y,{align:'right'});y+=5;
+      }
+      if(s.frakt){
+        doc.text('Frakt',22,y);
+        doc.text(kr(s.frakt),188,y,{align:'right'});y+=5;
+      }
+      y+=3;
+      doc.setLineWidth(.5);doc.line(20,y,190,y);y+=7;
+
+      /* === Total === */
+      doc.setFillColor(238,232,220);
+      doc.rect(20,y-5,170,10,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(13);
+      doc.text('TOTAL',22,y+2);
+      doc.text(kr(s.total||0),188,y+2,{align:'right'});
+      y+=15;
+
+      /* === Betalingsinfo === */
+      if(s.betalt_kort){
+        doc.setFont('helvetica','bold');doc.setFontSize(11);
+        doc.text('Betaling',20,y);y+=6;
+        doc.setFont('helvetica','normal');doc.setFontSize(10);
+        var betLinje='Betalt';
+        if(s.betalings_metode)betLinje+=' med '+s.betalings_metode;
+        if(s.betalt_dato)betLinje+=' den '+s.betalt_dato;
+        if(s.betalt_initialer)betLinje+='  ·  Kvittert av '+s.betalt_initialer;
+        doc.text(betLinje,20,y);y+=5;
+        if(s.delsum_betalt&&s.delsum_betalt>0&&s.delsum_betalt<(s.total||0)){
+          doc.text('Delsum betalt: '+kr(s.delsum_betalt),20,y);y+=5;
+          doc.setFont('helvetica','bold');doc.setTextColor(224,112,32);
+          doc.text('Gjenstående: '+kr((s.total||0)-s.delsum_betalt),20,y);y+=6;
+          doc.setTextColor(0);doc.setFont('helvetica','normal');
+        }
+      }
+
+      /* === Leveringsinfo === */
+      var levInfo=[];
+      if(s.levering)levInfo.push('🚚 Sendes til kundens adresse');
+      if(s.montering)levInfo.push('🔧 Inkl. montering');
+      if(s.hentested==='soli')levInfo.push('📍 Hentes på Soli Brug, Greåker');
+      if(s.hentested==='fredrikstad')levInfo.push('📍 Hentes i Fredrikstad, Stortorvet 6');
+      if(levInfo.length){
+        y+=3;
+        doc.setFont('helvetica','bold');doc.setFontSize(11);
+        doc.text('Levering',20,y);y+=6;
+        doc.setFont('helvetica','normal');doc.setFontSize(10);
+        levInfo.forEach(function(l){doc.text(l.replace(/[🚚🔧📍]/g,'').trim(),20,y);y+=5;});
+      }
+
+      /* === Notat === */
+      if(s.notat){
+        y+=3;
+        doc.setFont('helvetica','bold');doc.setFontSize(11);
+        doc.text('Notat',20,y);y+=6;
+        doc.setFont('helvetica','normal');doc.setFontSize(10);
+        var linjer=doc.splitTextToSize(s.notat,170);
+        linjer.forEach(function(l){doc.text(l,20,y);y+=5;});
+      }
+
+      /* === Footer === */
+      var footerY=278;
+      doc.setDrawColor(180);doc.setLineWidth(.3);
+      doc.line(20,footerY-6,190,footerY-6);
+      doc.setFontSize(10);doc.setFont('helvetica','bold');doc.setTextColor(80);
+      doc.text('Tusen takk for handelen!',105,footerY,{align:'center'});
+      doc.setFontSize(8);doc.setFont('helvetica','normal');doc.setTextColor(120);
+      doc.text('Soli Brug AS  ·  1719 Greåker  ·  post@soli-brug.no  ·  www.soli-brug.no',105,footerY+5,{align:'center'});
+      doc.text('Org.nr 996 808 750 MVA  ·  Tlf: 69 14 72 87',105,footerY+9,{align:'center'});
+
+      /* === Del/last ned === */
+      var pdfBlob=doc.output('blob');
+      var filnavn='Kvittering_'+salgOnr(s).replace(/[\s\-]/g,'_')+'.pdf';
+      var file=new File([pdfBlob],filnavn,{type:'application/pdf'});
+      sendKvitteringPDF(file,s,btn,origLabel);
+    }catch(err){
+      btn.disabled=false;btn.innerHTML=origLabel;
+      alert('Feil ved PDF-generering: '+err.message);
+    }
+  });
+}
+
+async function sendKvitteringPDF(file,s,btn,origLabel){
+  /* Prøv Web Share API for iOS/Android – lar bruker velge Mail */
+  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+    try{
+      await navigator.share({files:[file],title:'Kvittering '+salgOnr(s),text:'Kvittering fra Soli Brug'});
+      btn.disabled=false;btn.innerHTML=origLabel;
+      return;
+    }catch(e){
+      if(e.name==='AbortError'){btn.disabled=false;btn.innerHTML=origLabel;return;}
+    }
+  }
+  /* Fallback: last ned PDF og åpne mail */
+  var url=URL.createObjectURL(file);
+  var a=document.createElement('a');a.href=url;a.download=file.name;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(url);},1000);
+  /* Spør etter e-post hvis ikke oppgitt */
+  var epost=s.epost;
+  if(!epost){
+    epost=prompt('PDF lastet ned!\n\nHvilken e-postadresse skal kvitteringen sendes til?');
+    if(!epost){btn.disabled=false;btn.innerHTML=origLabel;return;}
+  } else {
+    if(!confirm('PDF lastet ned!\n\nÅpne e-post til '+epost+'?\n(PDF-en må festes manuelt)')){btn.disabled=false;btn.innerHTML=origLabel;return;}
+  }
+  var subject=encodeURIComponent('Kvittering fra Soli Brug – '+salgOnr(s));
+  var body=encodeURIComponent('Hei'+(s.navn?' '+s.navn.split(' ')[0]:'')+',\n\nVennligst finn vedlagt kvittering for ditt kjøp (ordre '+salgOnr(s)+').\n\nTusen takk for handelen!\n\nMed vennlig hilsen,\nSoli Brug Galleri\nwww.soli-brug.no');
+  window.location.href='mailto:'+epost+'?subject='+subject+'&body='+body;
+  btn.disabled=false;btn.innerHTML=origLabel;
+}
 
 async function delSalgskort(s,btn){
   var origLabel=btn.innerHTML;
