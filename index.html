@@ -687,6 +687,11 @@ datalist{display:none!important}
       <span class="lbl">Dine initialer</span>
       <input type="text" id="betalt-initialer" placeholder="F.eks. OB" autocomplete="off" data-lpignore="true" data-form-type="other" maxlength="10" style="text-transform:uppercase">
     </div>
+    <div style="margin-bottom:.85rem">
+      <span class="lbl">Delsum betalt (valgfritt – la stå tom hvis alt er betalt)</span>
+      <input type="number" id="betalt-delsum" placeholder="0" min="0" inputmode="numeric">
+      <div id="betalt-gjenstaende" style="font-size:.9rem;color:#e07020;margin-top:.4rem;font-weight:700;display:none;padding:.5rem .75rem;background:#fff3e0;border:1.5px solid #e07020;border-radius:8px"></div>
+    </div>
     <div class="modal-actions"><button class="btn-cancel" id="betalt-avbryt">Avbryt</button><button class="btn-save" id="betalt-lagre" style="background:var(--green);border-color:var(--green)">Kvitter ut betalt</button></div>
     <div class="modal-msg" id="betalt-msg"></div>
   </div>
@@ -1421,7 +1426,7 @@ function makeCard(s,erGruppert){
     '<div class="sc-foot"><div class="badge-wrap">'+henteHtml+'</div><span class="sc-total">'+kr(s.total)+'</span></div>'+
     '<div class="sc-actions">'+
       '<button class="status-btn'+(s.hentet?' ok-green':'')+'" data-action="hentet">'+(s.hentet?'✅':'☐')+' Hentet</button>'+
-      '<button class="status-btn'+(s.betalt_kort?' ok-green':'')+'" data-action="betalt_kort">'+(s.betalt_kort?'✅ Betalt'+(s.betalings_metode?': '+s.betalings_metode:''):'☐ Betalt')+'</button>'+
+      '<button class="status-btn'+(s.betalt_kort?(s.delsum_betalt&&s.delsum_betalt>0&&s.delsum_betalt<(s.total||0)?' ok-orange':' ok-green'):'')+'" data-action="betalt_kort">'+(s.betalt_kort?(s.delsum_betalt&&s.delsum_betalt>0&&s.delsum_betalt<(s.total||0)?'🟡 Delvis: '+(s.betalings_metode||''):'✅ Betalt'+(s.betalings_metode?': '+s.betalings_metode:'')):'☐ Betalt')+'</button>'+
       '<button class="status-btn'+(s.skal_ha_faktura?' ok-orange':'')+'" data-action="skal_faktura">📄 Skal ha faktura</button>'+
       '<button class="status-btn'+(s.faktura_sendt?' ok-green':'')+'" data-action="faktura">'+(s.faktura_sendt?'✅ Faktura sendt':'✉️ Faktura sendt')+'</button>'+
       '<button class="status-btn'+(s.sendt_innramming?' ok-blue':'')+' sm" data-action="sendt_innramming">'+(s.sendt_innramming?'✅':'☐')+' Sendt til innramming</button>'+
@@ -1519,7 +1524,11 @@ function amt(l,v,info){
 
 function settStatusBtn(btn,field,nv,extra){
   if(field==='hentet'){btn.className='status-btn'+(nv?' ok-green':'');btn.innerHTML=(nv?'✅':'☐')+' Hentet';}
-  else if(field==='betalt_kort'){btn.className='status-btn'+(nv?' ok-green':'');btn.innerHTML=nv?('✅ Betalt'+(extra?': '+extra:'')):('☐ Betalt');}
+  else if(field==='betalt_kort'){
+    var erDelvis=extra&&extra.indexOf('Delvis')===0;
+    btn.className='status-btn'+(nv?(erDelvis?' ok-orange':' ok-green'):'');
+    btn.innerHTML=nv?(erDelvis?'🟡 '+extra:'✅ Betalt'+(extra?': '+extra:'')):('☐ Betalt');
+  }
   else if(field==='skal_ha_faktura'){btn.className='status-btn'+(nv?' ok-orange':'');btn.innerHTML='📄 Skal ha faktura';}
   else if(field==='faktura_sendt'){btn.className='status-btn'+(nv?' ok-green':'');btn.innerHTML=(nv?'✅ Faktura sendt':'✉️ Faktura sendt');}
   else if(field==='sendt_innramming'){btn.className='status-btn'+(nv?' ok-blue':'')+' sm';btn.innerHTML=(nv?'✅':'☐')+' Sendt til innramming';}
@@ -1602,51 +1611,86 @@ function velgKvartal(n){
 }
 
 /* ── BETALT MODAL ── */
-var betaltSalgId=null,betaltBtn=null;
+var betaltSalgId=null,betaltBtn=null,betaltTotal=0;
+function oppdaterGjenstaende(){
+  var delsum=parseFloat(document.getElementById('betalt-delsum').value)||0;
+  var el=document.getElementById('betalt-gjenstaende');
+  if(delsum>0&&delsum<betaltTotal){
+    el.textContent='Gjenstående: '+kr(betaltTotal-delsum);
+    el.style.display='block';
+  } else if(delsum>=betaltTotal){
+    el.textContent='✅ Fullt betalt';
+    el.style.color='var(--green)';
+    el.style.background='#d4edda';
+    el.style.borderColor='var(--green)';
+    el.style.display='block';
+  } else {
+    el.style.display='none';
+    el.style.color='#e07020';
+    el.style.background='#fff3e0';
+    el.style.borderColor='#e07020';
+  }
+}
 function apneBetaltModal(s,btn){
   if(s.betalt_kort){
     /* Allerede betalt – vis info og tilbud å fjerne */
-    var infoStr='Betalt: '+(s.betalings_metode||'—')+(s.betalt_dato?' · '+s.betalt_dato:'')+(s.betalt_initialer?' · '+s.betalt_initialer:'');
-    if(confirm(infoStr+'\n\nFjerne betalt-status?')){
-      /* Optimistisk fjerning */
-      var oldMetode=s.betalings_metode,oldDato=s.betalt_dato,oldIni=s.betalt_initialer;
-      s.betalt_kort=false;s.betalings_metode=null;s.betalt_dato=null;s.betalt_initialer=null;
+    var linjer=['Betalt: '+(s.betalings_metode||'—')];
+    if(s.betalt_dato)linjer.push('Dato: '+s.betalt_dato);
+    if(s.betalt_initialer)linjer.push('Kvittert av: '+s.betalt_initialer);
+    if(s.delsum_betalt&&s.delsum_betalt>0&&s.delsum_betalt<(s.total||0)){
+      linjer.push('');linjer.push('Delsum betalt: '+kr(s.delsum_betalt));
+      linjer.push('Gjenstående: '+kr((s.total||0)-s.delsum_betalt));
+    }
+    if(confirm(linjer.join('\n')+'\n\nFjerne betalt-status?')){
+      var old={metode:s.betalings_metode,dato:s.betalt_dato,ini:s.betalt_initialer,delsum:s.delsum_betalt};
+      s.betalt_kort=false;s.betalings_metode=null;s.betalt_dato=null;s.betalt_initialer=null;s.delsum_betalt=null;
       settStatusBtn(btn,'betalt_kort',false);
-      sb.from('salg').update({betalt_kort:false,betalings_metode:null,betalt_dato:null,betalt_initialer:null}).eq('id',s.id).then(function(r){
-        if(r.error){s.betalt_kort=true;s.betalings_metode=oldMetode;s.betalt_dato=oldDato;s.betalt_initialer=oldIni;settStatusBtn(btn,'betalt_kort',true,oldMetode);}
+      sb.from('salg').update({betalt_kort:false,betalings_metode:null,betalt_dato:null,betalt_initialer:null,delsum_betalt:null}).eq('id',s.id).then(function(r){
+        if(r.error){s.betalt_kort=true;s.betalings_metode=old.metode;s.betalt_dato=old.dato;s.betalt_initialer=old.ini;s.delsum_betalt=old.delsum;settStatusBtn(btn,'betalt_kort',true,visBetaltEtikett(s));}
       });
     }
     return;
   }
-  betaltSalgId=s.id;betaltBtn=btn;
-  document.getElementById('betalt-modal-info').textContent=salgOnr(s)+' · '+(s.kunstner||'—')+(s.tittel?' – '+s.tittel:'')+' · '+kr(s.total);
-  /* Nullstill felt */
+  betaltSalgId=s.id;betaltBtn=btn;betaltTotal=s.total||0;
+  document.getElementById('betalt-modal-info').textContent=salgOnr(s)+' · '+(s.kunstner||'—')+(s.tittel?' – '+s.tittel:'')+' · '+kr(betaltTotal);
   document.querySelectorAll('input[name="betalt-metode"]').forEach(function(r){r.checked=false;});
   var idag=new Date();
   var iso=idag.getFullYear()+'-'+String(idag.getMonth()+1).padStart(2,'0')+'-'+String(idag.getDate()).padStart(2,'0');
   document.getElementById('betalt-dato').value=iso;
   document.getElementById('betalt-initialer').value='';
+  document.getElementById('betalt-delsum').value='';
+  document.getElementById('betalt-gjenstaende').style.display='none';
   document.getElementById('betalt-msg').textContent='';
   document.getElementById('betalt-modal-bg').classList.add('open');
+}
+function visBetaltEtikett(s){
+  if(!s.betalt_kort)return '';
+  if(s.delsum_betalt&&s.delsum_betalt>0&&s.delsum_betalt<(s.total||0)){
+    return 'Delvis '+(s.betalings_metode||'');
+  }
+  return s.betalings_metode||'';
 }
 async function lagreBetalt(){
   var metodeInp=document.querySelector('input[name="betalt-metode"]:checked');
   var dato=document.getElementById('betalt-dato').value;
   var ini=document.getElementById('betalt-initialer').value.trim().toUpperCase();
+  var delsumRaw=document.getElementById('betalt-delsum').value.trim();
+  var delsum=delsumRaw?parseFloat(delsumRaw):null;
   var msg=document.getElementById('betalt-msg');
   if(!metodeInp){msg.style.color='var(--danger)';msg.textContent='Velg betalingsmetode.';return;}
   if(!dato){msg.style.color='var(--danger)';msg.textContent='Velg dato.';return;}
   if(!ini){msg.style.color='var(--danger)';msg.textContent='Skriv dine initialer.';return;}
+  /* Hvis delsum er lik/større enn total, behandle som fullt betalt (delsum=null) */
+  if(delsum!==null&&delsum>=betaltTotal)delsum=null;
   var lagreBtn=document.getElementById('betalt-lagre');
   lagreBtn.disabled=true;lagreBtn.textContent='Lagrer…';
   var metode=metodeInp.value;
-  var r=await sb.from('salg').update({betalt_kort:true,betalings_metode:metode,betalt_dato:dato,betalt_initialer:ini}).eq('id',betaltSalgId);
+  var r=await sb.from('salg').update({betalt_kort:true,betalings_metode:metode,betalt_dato:dato,betalt_initialer:ini,delsum_betalt:delsum}).eq('id',betaltSalgId);
   lagreBtn.disabled=false;lagreBtn.textContent='Kvitter ut betalt';
   if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
-  /* Oppdater lokal state */
   var s=alleSalg.find(function(x){return x.id===betaltSalgId;});
-  if(s){s.betalt_kort=true;s.betalings_metode=metode;s.betalt_dato=dato;s.betalt_initialer=ini;}
-  if(betaltBtn)settStatusBtn(betaltBtn,'betalt_kort',true,metode);
+  if(s){s.betalt_kort=true;s.betalings_metode=metode;s.betalt_dato=dato;s.betalt_initialer=ini;s.delsum_betalt=delsum;}
+  if(betaltBtn)settStatusBtn(betaltBtn,'betalt_kort',true,visBetaltEtikett(s));
   document.getElementById('betalt-modal-bg').classList.remove('open');
   betaltSalgId=null;betaltBtn=null;
 }
@@ -2821,6 +2865,7 @@ function init(){
   document.getElementById('betalt-modal-bg').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
   document.getElementById('betalt-lagre').addEventListener('click',lagreBetalt);
   document.getElementById('betalt-initialer').addEventListener('keydown',function(e){if(e.key==='Enter')lagreBetalt();});
+  document.getElementById('betalt-delsum').addEventListener('input',oppdaterGjenstaende);
   /* Ekstraliste – vis/skjul picker og bygg chips */
   function byggEkstralisteChips(){
     var wrap=document.getElementById('f-ekstraliste-chips');
