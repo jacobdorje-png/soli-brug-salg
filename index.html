@@ -665,6 +665,33 @@ datalist{display:none!important}
   </div>
 </div>
 
+<!-- ══════ BETALT MODAL ══════ -->
+<div class="modal-bg" id="betalt-modal-bg">
+  <div class="modal-box sm">
+    <div class="modal-head"><h2 style="color:#3a7a52">💰 Marker som betalt</h2><button class="modal-close-btn" id="betalt-modal-close">×</button></div>
+    <p style="margin:.4rem 0 1rem;font-weight:600;color:var(--muted);font-size:.88rem" id="betalt-modal-info"></p>
+    <div>
+      <span class="lbl">Betalingsmetode</span>
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:.85rem">
+        <label class="type-chip" style="flex:1;justify-content:center;min-width:100px"><input type="radio" name="betalt-metode" value="Kort"> 💳 Kort</label>
+        <label class="type-chip" style="flex:1;justify-content:center;min-width:100px"><input type="radio" name="betalt-metode" value="Cash"> 💵 Cash</label>
+        <label class="type-chip" style="flex:1;justify-content:center;min-width:100px"><input type="radio" name="betalt-metode" value="Gavekort"> 🎁 Gavekort</label>
+        <label class="type-chip" style="flex:1;justify-content:center;min-width:100px"><input type="radio" name="betalt-metode" value="Faktura"> 📄 Faktura</label>
+      </div>
+    </div>
+    <div style="margin-bottom:.85rem">
+      <span class="lbl">Dato</span>
+      <input type="date" id="betalt-dato">
+    </div>
+    <div style="margin-bottom:.85rem">
+      <span class="lbl">Dine initialer</span>
+      <input type="text" id="betalt-initialer" placeholder="F.eks. OB" autocomplete="off" data-lpignore="true" data-form-type="other" maxlength="10" style="text-transform:uppercase">
+    </div>
+    <div class="modal-actions"><button class="btn-cancel" id="betalt-avbryt">Avbryt</button><button class="btn-save" id="betalt-lagre" style="background:var(--green);border-color:var(--green)">Kvitter ut betalt</button></div>
+    <div class="modal-msg" id="betalt-msg"></div>
+  </div>
+</div>
+
 <!-- ══════ REDIGER SALG MODAL ══════ -->
 <div class="modal-bg" id="modal-bg">
   <div class="modal-box">
@@ -1394,7 +1421,7 @@ function makeCard(s,erGruppert){
     '<div class="sc-foot"><div class="badge-wrap">'+henteHtml+'</div><span class="sc-total">'+kr(s.total)+'</span></div>'+
     '<div class="sc-actions">'+
       '<button class="status-btn'+(s.hentet?' ok-green':'')+'" data-action="hentet">'+(s.hentet?'✅':'☐')+' Hentet</button>'+
-      '<button class="status-btn'+(s.betalt_kort?' ok-green':'')+'" data-action="betalt_kort">'+(s.betalt_kort?'✅':'☐')+' Betalt kort</button>'+
+      '<button class="status-btn'+(s.betalt_kort?' ok-green':'')+'" data-action="betalt_kort">'+(s.betalt_kort?'✅ Betalt'+(s.betalings_metode?': '+s.betalings_metode:''):'☐ Betalt')+'</button>'+
       '<button class="status-btn'+(s.skal_ha_faktura?' ok-orange':'')+'" data-action="skal_faktura">📄 Skal ha faktura</button>'+
       '<button class="status-btn'+(s.faktura_sendt?' ok-green':'')+'" data-action="faktura">'+(s.faktura_sendt?'✅ Faktura sendt':'✉️ Faktura sendt')+'</button>'+
       '<button class="status-btn'+(s.sendt_innramming?' ok-blue':'')+' sm" data-action="sendt_innramming">'+(s.sendt_innramming?'✅':'☐')+' Sendt til innramming</button>'+
@@ -1416,7 +1443,7 @@ function makeCard(s,erGruppert){
     '<div class="sc-inline-notat"><textarea class="sc-inline-notat-inp" placeholder="Enkelt notat…" data-action="notat">'+escHtml(s.notat||'')+'</textarea></div>';
 
   d.querySelector('[data-action=hentet]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'hentet',this);});
-  d.querySelector('[data-action=betalt_kort]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'betalt_kort',this);});
+  d.querySelector('[data-action=betalt_kort]').addEventListener('click',function(e){e.stopPropagation();apneBetaltModal(s,this);});
   d.querySelector('[data-action=skal_faktura]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'skal_ha_faktura',this);});
   d.querySelector('[data-action=faktura]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'faktura_sendt',this);});
   d.querySelector('[data-action=sendt_innramming]').addEventListener('click',function(e){e.stopPropagation();toggle(s,'sendt_innramming',this);});
@@ -1490,9 +1517,9 @@ function amt(l,v,info){
   return'<div class="'+boxClass+'"><div class="al">'+l+'</div><div class="av">'+kr(v)+'</div>'+infoHtml+'</div>';
 }
 
-function settStatusBtn(btn,field,nv){
+function settStatusBtn(btn,field,nv,extra){
   if(field==='hentet'){btn.className='status-btn'+(nv?' ok-green':'');btn.innerHTML=(nv?'✅':'☐')+' Hentet';}
-  else if(field==='betalt_kort'){btn.className='status-btn'+(nv?' ok-green':'');btn.innerHTML=(nv?'✅':'☐')+' Betalt kort';}
+  else if(field==='betalt_kort'){btn.className='status-btn'+(nv?' ok-green':'');btn.innerHTML=nv?('✅ Betalt'+(extra?': '+extra:'')):('☐ Betalt');}
   else if(field==='skal_ha_faktura'){btn.className='status-btn'+(nv?' ok-orange':'');btn.innerHTML='📄 Skal ha faktura';}
   else if(field==='faktura_sendt'){btn.className='status-btn'+(nv?' ok-green':'');btn.innerHTML=(nv?'✅ Faktura sendt':'✉️ Faktura sendt');}
   else if(field==='sendt_innramming'){btn.className='status-btn'+(nv?' ok-blue':'')+' sm';btn.innerHTML=(nv?'✅':'☐')+' Sendt til innramming';}
@@ -1572,6 +1599,56 @@ async function utforArkivering(){
 function velgKvartal(n){
   var aar=new Date().getFullYear();
   document.getElementById('arkiv-navn-input').value='Kvartal '+n+' '+aar;
+}
+
+/* ── BETALT MODAL ── */
+var betaltSalgId=null,betaltBtn=null;
+function apneBetaltModal(s,btn){
+  if(s.betalt_kort){
+    /* Allerede betalt – vis info og tilbud å fjerne */
+    var infoStr='Betalt: '+(s.betalings_metode||'—')+(s.betalt_dato?' · '+s.betalt_dato:'')+(s.betalt_initialer?' · '+s.betalt_initialer:'');
+    if(confirm(infoStr+'\n\nFjerne betalt-status?')){
+      /* Optimistisk fjerning */
+      var oldMetode=s.betalings_metode,oldDato=s.betalt_dato,oldIni=s.betalt_initialer;
+      s.betalt_kort=false;s.betalings_metode=null;s.betalt_dato=null;s.betalt_initialer=null;
+      settStatusBtn(btn,'betalt_kort',false);
+      sb.from('salg').update({betalt_kort:false,betalings_metode:null,betalt_dato:null,betalt_initialer:null}).eq('id',s.id).then(function(r){
+        if(r.error){s.betalt_kort=true;s.betalings_metode=oldMetode;s.betalt_dato=oldDato;s.betalt_initialer=oldIni;settStatusBtn(btn,'betalt_kort',true,oldMetode);}
+      });
+    }
+    return;
+  }
+  betaltSalgId=s.id;betaltBtn=btn;
+  document.getElementById('betalt-modal-info').textContent=salgOnr(s)+' · '+(s.kunstner||'—')+(s.tittel?' – '+s.tittel:'')+' · '+kr(s.total);
+  /* Nullstill felt */
+  document.querySelectorAll('input[name="betalt-metode"]').forEach(function(r){r.checked=false;});
+  var idag=new Date();
+  var iso=idag.getFullYear()+'-'+String(idag.getMonth()+1).padStart(2,'0')+'-'+String(idag.getDate()).padStart(2,'0');
+  document.getElementById('betalt-dato').value=iso;
+  document.getElementById('betalt-initialer').value='';
+  document.getElementById('betalt-msg').textContent='';
+  document.getElementById('betalt-modal-bg').classList.add('open');
+}
+async function lagreBetalt(){
+  var metodeInp=document.querySelector('input[name="betalt-metode"]:checked');
+  var dato=document.getElementById('betalt-dato').value;
+  var ini=document.getElementById('betalt-initialer').value.trim().toUpperCase();
+  var msg=document.getElementById('betalt-msg');
+  if(!metodeInp){msg.style.color='var(--danger)';msg.textContent='Velg betalingsmetode.';return;}
+  if(!dato){msg.style.color='var(--danger)';msg.textContent='Velg dato.';return;}
+  if(!ini){msg.style.color='var(--danger)';msg.textContent='Skriv dine initialer.';return;}
+  var lagreBtn=document.getElementById('betalt-lagre');
+  lagreBtn.disabled=true;lagreBtn.textContent='Lagrer…';
+  var metode=metodeInp.value;
+  var r=await sb.from('salg').update({betalt_kort:true,betalings_metode:metode,betalt_dato:dato,betalt_initialer:ini}).eq('id',betaltSalgId);
+  lagreBtn.disabled=false;lagreBtn.textContent='Kvitter ut betalt';
+  if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
+  /* Oppdater lokal state */
+  var s=alleSalg.find(function(x){return x.id===betaltSalgId;});
+  if(s){s.betalt_kort=true;s.betalings_metode=metode;s.betalt_dato=dato;s.betalt_initialer=ini;}
+  if(betaltBtn)settStatusBtn(betaltBtn,'betalt_kort',true,metode);
+  document.getElementById('betalt-modal-bg').classList.remove('open');
+  betaltSalgId=null;betaltBtn=null;
 }
 
 /* ── FLYTT EKSTRALISTE (per salg) ── */
@@ -2738,6 +2815,12 @@ function init(){
   document.getElementById('flytt-modal-bg').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
   document.getElementById('flytt-lagre-btn').addEventListener('click',utforFlytting);
   document.getElementById('flytt-navn-input').addEventListener('keydown',function(e){if(e.key==='Enter')utforFlytting();});
+  /* Betalt modal */
+  document.getElementById('betalt-modal-close').addEventListener('click',function(){document.getElementById('betalt-modal-bg').classList.remove('open');});
+  document.getElementById('betalt-avbryt').addEventListener('click',function(){document.getElementById('betalt-modal-bg').classList.remove('open');});
+  document.getElementById('betalt-modal-bg').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+  document.getElementById('betalt-lagre').addEventListener('click',lagreBetalt);
+  document.getElementById('betalt-initialer').addEventListener('keydown',function(e){if(e.key==='Enter')lagreBetalt();});
   /* Ekstraliste – vis/skjul picker og bygg chips */
   function byggEkstralisteChips(){
     var wrap=document.getElementById('f-ekstraliste-chips');
