@@ -1427,6 +1427,31 @@ function renderSalg(){
   if(!raaData.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Ingen salg ennå.';return;}
   if(erAlle){raaData.forEach(function(s){list.appendChild(makeCard(s,false));});}
   else if(erEkstraliste){
+    /* KUNSTNER-OVERSIKT: viser hvilke kunstnere som er representert i mappen + antall */
+    var kunstnerTeller={};
+    raaData.forEach(function(s){
+      var k=s.kunstner||'(ukjent)';
+      kunstnerTeller[k]=(kunstnerTeller[k]||0)+1;
+    });
+    var kunstnerListe=Object.keys(kunstnerTeller).map(function(k){return{navn:k,antall:kunstnerTeller[k]};});
+    /* Sortert etter antall (flest først), deretter alfabetisk */
+    kunstnerListe.sort(function(a,b){if(b.antall!==a.antall)return b.antall-a.antall;return a.navn.localeCompare(b.navn,'nb');});
+    var oversikt=document.createElement('div');
+    oversikt.style.cssText='margin:0 0 .8rem;padding:.7rem .85rem;background:#fef7e8;border:1.5px solid #d4b06e;border-radius:10px';
+    var tittel=document.createElement('div');
+    tittel.style.cssText='font-size:.72rem;font-weight:800;color:#7a5020;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.5px';
+    tittel.textContent='🎨 Kunstnere i mappen ('+kunstnerListe.length+' stk · '+raaData.length+' salg totalt)';
+    oversikt.appendChild(tittel);
+    var chips=document.createElement('div');
+    chips.style.cssText='display:flex;flex-wrap:wrap;gap:.35rem';
+    kunstnerListe.forEach(function(k){
+      var chip=document.createElement('span');
+      chip.style.cssText='background:#fff;border:1.5px solid #d4b06e;color:#7a5020;padding:.3rem .35rem .3rem .7rem;border-radius:20px;font-size:.85rem;font-weight:700;display:inline-flex;align-items:center;gap:.4rem;line-height:1.2';
+      chip.innerHTML=k.navn+'<span style="background:#7a5020;color:#fff;padding:.1rem .5rem;border-radius:20px;font-size:.75rem;font-weight:800;min-width:1.4rem;text-align:center">'+k.antall+'</span>';
+      chips.appendChild(chip);
+    });
+    oversikt.appendChild(chips);
+    list.appendChild(oversikt);
     /* Sortert alfabetisk på kunstner, så Maleri/Original → Monotypi → Grafikk */
     sorterEkstraliste(raaData).forEach(function(s){list.appendChild(makeCard(s,false));});
   }
