@@ -1478,8 +1478,37 @@ function renderSalg(){
     });
     oversikt.appendChild(chips);
     list.appendChild(oversikt);
-    /* Sortert alfabetisk på kunstner, så Maleri/Original → Monotypi → Grafikk */
-    sorterEkstraliste(raaData).forEach(function(s){list.appendChild(makeCard(s,false));});
+    /* GRUPPER SALG ETTER KUNSTNER (A-Å) med mellomrom mellom hver kunstner */
+    var sortert=sorterEkstraliste(raaData);
+    /* Re-sorter alfabetisk på kunstner (A-Å), så type/tittel innad */
+    sortert.sort(function(a,b){
+      var ka=(a.kunstner||'~').toLowerCase();
+      var kb=(b.kunstner||'~').toLowerCase();
+      if(ka!==kb)return ka.localeCompare(kb,'nb');
+      /* Innad: Original → Monotypi → Grafikk, deretter tittel */
+      function tR(s){var t=(s.type||'').toLowerCase();if(t==='grafikk')return 2;if(t==='monotypi')return 1;return 0;}
+      var ra=tR(a),rb=tR(b);
+      if(ra!==rb)return ra-rb;
+      return (a.tittel||'').localeCompare(b.tittel||'','nb');
+    });
+    var forrigeKunstner=null;
+    sortert.forEach(function(s){
+      var kunstner=s.kunstner||'(ukjent)';
+      if(kunstner!==forrigeKunstner){
+        if(forrigeKunstner!==null){
+          /* 2-3 rader mellomrom mellom kunstner-grupper */
+          var spacer=document.createElement('div');
+          spacer.style.cssText='height:2.2rem';
+          list.appendChild(spacer);
+        }
+        var kHeader=document.createElement('div');
+        kHeader.style.cssText='font-size:1.15rem;font-weight:800;color:#7a5020;margin:.3rem 0 .8rem;padding:.6rem .85rem;background:linear-gradient(135deg,#fef7e8 0%,#faedc9 100%);border-left:5px solid #d4b06e;border-radius:8px';
+        kHeader.innerHTML='🎨 '+kunstner+' <span style="font-size:.75rem;font-weight:700;color:#a07040;margin-left:.4rem">('+kunstnerTeller[kunstner]+')</span>';
+        list.appendChild(kHeader);
+        forrigeKunstner=kunstner;
+      }
+      list.appendChild(makeCard(s,false));
+    });
   }
   else{
     var data=sorterKD(raaData);
@@ -2887,7 +2916,7 @@ function renderLevering(){
 
 /* ══════════════ BETALING-OVERSIKT ══════════════ */
 var betalingSubTab='ikke_betalt';
-/* Kategoriser et salg: 'ikke_betalt' | 'delvis' | 'betalt' | 'faktura' */
+/* Kategoriser et salg: 'ikke_betalt' | 'delvis' | 'faktura_venter' | 'faktura_sendt' | 'betalt' */
 function betalingKategori(s){
   var tot=s.total||0;
   if(s.betalt_kort){
@@ -2895,8 +2924,9 @@ function betalingKategori(s){
     if(ds>0&&ds<tot)return 'delvis';
     return 'betalt';
   }
-  /* Ikke betalt kontant/kort. Hvis skal ha faktura ELLER faktura sendt → egen kategori */
-  if(s.skal_ha_faktura||s.faktura_sendt)return 'faktura';
+  /* Ikke betalt kontant/kort */
+  if(s.faktura_sendt)return 'faktura_sendt';
+  if(s.skal_ha_faktura)return 'faktura_venter';
   return 'ikke_betalt';
 }
 async function loadBetaling(){
@@ -2911,13 +2941,14 @@ function renderBetaling(){
 
   /* Kun ikke-arkiverte salg */
   var aktive=alleSalg.filter(function(s){return!s.arkiv;});
-  var ikkeBetalt=[],delvis=[],betalt=[],faktura=[];
+  var ikkeBetalt=[],delvis=[],fakturaVenter=[],fakturaSendt=[],betalt=[];
   aktive.forEach(function(s){
     var k=betalingKategori(s);
     if(k==='ikke_betalt')ikkeBetalt.push(s);
     else if(k==='delvis')delvis.push(s);
+    else if(k==='faktura_venter')fakturaVenter.push(s);
+    else if(k==='faktura_sendt')fakturaSendt.push(s);
     else if(k==='betalt')betalt.push(s);
-    else if(k==='faktura')faktura.push(s);
   });
 
   /* Beregn beløp for sammendrag */
@@ -2925,8 +2956,9 @@ function renderBetaling(){
   function sumGjenstar(arr){return arr.reduce(function(a,s){return a+((s.total||0)-(s.delsum_betalt||0));},0);}
   var ikkeBetSum=sum(ikkeBetalt,'total');
   var delvisGjenstar=sumGjenstar(delvis);
-  var fakturaSum=sum(faktura,'total');
-  var totUtestaende=ikkeBetSum+delvisGjenstar+fakturaSum;
+  var fakturaVenterSum=sum(fakturaVenter,'total');
+  var fakturaSendtSum=sum(fakturaSendt,'total');
+  var totUtestaende=ikkeBetSum+delvisGjenstar+fakturaVenterSum;
 
   function lagSubTab(navn,verdi,antall,farge){
     var b=document.createElement('button');
@@ -2940,29 +2972,51 @@ function renderBetaling(){
   }
   subWrap.appendChild(lagSubTab('❌ Ikke betalt','ikke_betalt',ikkeBetalt.length,'#c02040'));
   subWrap.appendChild(lagSubTab('🟡 Delvis','delvis',delvis.length,'#e07020'));
-  subWrap.appendChild(lagSubTab('📄 Faktura','faktura',faktura.length,'#a05a20'));
+  subWrap.appendChild(lagSubTab('📄 Faktura','faktura_venter',fakturaVenter.length,'#a05a20'));
+  subWrap.appendChild(lagSubTab('✉️ Sendt','faktura_sendt',fakturaSendt.length,'#3a8060'));
   subWrap.appendChild(lagSubTab('✅ Betalt','betalt',betalt.length,'#3a7a52'));
 
-  /* Sammendrag øverst – hva vi venter penger på totalt */
-  summaryEl.innerHTML='<div style="background:#fef7e8;border:2px solid #d4b06e;color:#7a5020;padding:.6rem .8rem;border-radius:10px;margin-bottom:.5rem"><strong>💰 Totalt utestående:</strong> '+kr(totUtestaende)+' kr <span style="opacity:.75;font-weight:600">(ikke betalt: '+kr(ikkeBetSum)+' · delvis: '+kr(delvisGjenstar)+' · faktura: '+kr(fakturaSum)+')</span></div>';
+  /* Sammendrag øverst – to bokser: Utestående + Faktura sendt (venter på betaling) */
+  summaryEl.innerHTML=
+    '<div style="background:#fef7e8;border:2px solid #d4b06e;color:#7a5020;padding:.6rem .8rem;border-radius:10px;margin-bottom:.5rem">'+
+      '<strong>💰 Totalt utestående:</strong> '+kr(totUtestaende)+' kr '+
+      '<span style="opacity:.75;font-weight:600;font-size:.85rem">(ikke betalt: '+kr(ikkeBetSum)+' · delvis: '+kr(delvisGjenstar)+' · faktura venter: '+kr(fakturaVenterSum)+')</span>'+
+    '</div>'+
+    '<div style="background:#e8f5ec;border:2px solid #3a8060;color:#2a5a40;padding:.6rem .8rem;border-radius:10px;margin-bottom:.5rem">'+
+      '<strong>📤 Sendte fakturaer:</strong> '+kr(fakturaSendtSum)+' kr '+
+      '<span style="opacity:.75;font-weight:600;font-size:.85rem">('+fakturaSendt.length+' salg venter på betaling)</span>'+
+    '</div>';
 
   var vis;
   if(betalingSubTab==='ikke_betalt')vis=ikkeBetalt;
   else if(betalingSubTab==='delvis')vis=delvis;
-  else if(betalingSubTab==='faktura')vis=faktura;
+  else if(betalingSubTab==='faktura_venter')vis=fakturaVenter;
+  else if(betalingSubTab==='faktura_sendt')vis=fakturaSendt;
   else vis=betalt;
 
   if(!vis.length){
     empty.style.display='block';
-    var tekster={ikke_betalt:'Ingen ubetalte salg – alle har gjort opp for seg! 🎉',delvis:'Ingen delvis betalte salg.',faktura:'Ingen salg som skal faktureres.',betalt:'Ingen fullt betalte salg enda.'};
+    var tekster={
+      ikke_betalt:'Ingen ubetalte salg – alle har gjort opp for seg! 🎉',
+      delvis:'Ingen delvis betalte salg.',
+      faktura_venter:'Ingen salg som venter på å bli fakturert.',
+      faktura_sendt:'Ingen sendte fakturaer.',
+      betalt:'Ingen fullt betalte salg enda.'
+    };
     empty.textContent=tekster[betalingSubTab];
     return;
   }
-  /* Sorter: eldste øverst for utestående (så du ser hva som har ligget lengst), nyeste øverst for betalt */
+  /* Sorter: eldste øverst for utestående + sendt (så du ser hva som har ligget lengst), nyeste øverst for betalt */
   if(betalingSubTab==='betalt'){
     vis.sort(function(a,b){
       if(a.betalt_dato&&b.betalt_dato)return b.betalt_dato.localeCompare(a.betalt_dato);
       return(b.ordrenummer||0)-(a.ordrenummer||0);
+    });
+  } else if(betalingSubTab==='faktura_sendt'){
+    /* Eldste sendt-dato øverst (mest ventet), fallback ordrenummer */
+    vis.sort(function(a,b){
+      if(a.faktura_sendt_dato&&b.faktura_sendt_dato)return a.faktura_sendt_dato.localeCompare(b.faktura_sendt_dato);
+      return(a.ordrenummer||0)-(b.ordrenummer||0);
     });
   } else {
     vis.sort(function(a,b){return(a.ordrenummer||0)-(b.ordrenummer||0);});
