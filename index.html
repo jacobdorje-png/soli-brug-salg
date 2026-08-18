@@ -1686,8 +1686,8 @@ function åpneArkivModal(modus,enkeltId){
     var s=alleSalg.find(function(x){return x.id===enkeltId;});
     document.getElementById('arkiv-modal-tekst').textContent='Arkiver salg '+salgOnr(s)+(s.kunstner?' – '+s.kunstner:'')+(s.tittel?' / '+s.tittel:'')+':';
   } else {
-    var n=alleSalg.filter(function(x){return!x.arkiv&&x.kunstner===aktivFilter;}).length;
-    document.getElementById('arkiv-modal-tekst').textContent='Arkiver '+n+' salg fra «'+aktivFilter+'»:';
+    var n=salgIAktivVisning().length;
+    document.getElementById('arkiv-modal-tekst').textContent='Arkiver '+n+' salg fra «'+aktivFilter.replace(/^__ekstra:/,'')+'»:';
   }
   /* Eksisterende arkiver som chips */
   var eksChips=document.getElementById('arkiv-chips');eksChips.innerHTML='';
@@ -1719,7 +1719,10 @@ async function utforArkivering(){
   if(!navn){msg.style.color='var(--danger)';msg.textContent='Gi arkivet et navn.';return;}
   var ids;
   if(arkivModus==='enkelt'){ids=[arkivEnkeltId];}
-  else{ids=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk&&s.kunstner===aktivFilter;}).map(function(s){return s.id;});}
+  else{
+    /* Match NØYAKTIG det som er synlig i visningen – inkl. ekstraliste-, selger- og type-filter */
+    ids=salgIAktivVisning().map(function(s){return s.id;});
+  }
   if(!ids.length){msg.style.color='var(--danger)';msg.textContent='Ingen salg å arkivere.';return;}
   document.getElementById('arkiv-lagre-btn').disabled=true;document.getElementById('arkiv-lagre-btn').textContent='Arkiverer…';
   var r=await sb.from('salg').update({arkiv:navn}).in('id',ids);
@@ -1728,6 +1731,29 @@ async function utforArkivering(){
   document.getElementById('arkiv-modal-bg').classList.remove('open');
   if(arkivModus==='gruppe'){aktivFilter='alle';visArkiv=false;loadSales();}
   else{loadSales(true);}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FELLES: Alle salg som er synlige i den nåværende visningen.
+   Brukes ved arkivering, eksport (Excel, oppstilling, e-poster, leveringsliste)
+   – sørger for at "bulk-operasjoner" alltid matcher hva brukeren ser.
+   ═══════════════════════════════════════════════════════════════ */
+function salgIAktivVisning(){
+  var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
+  var erEkstra=aktivFilter.indexOf&&aktivFilter.indexOf('__ekstra:')===0;
+  var data;
+  if(erEkstra){
+    var ekstraNavn=aktivFilter.substring(9);
+    data=aktive.filter(function(s){return s.ekstraliste===ekstraNavn;});
+  } else if(aktivFilter==='alle'){
+    data=aktive;
+  } else {
+    /* Kunstner-fane: KUN salg som IKKE er i noen ekstraliste */
+    data=aktive.filter(function(s){return s.kunstner===aktivFilter&&!s.ekstraliste;});
+  }
+  if(selgerFilter)data=data.filter(function(s){return s.selger===selgerFilter;});
+  if(typeFilter)data=data.filter(function(s){return (s.type||'')===typeFilter;});
+  return data;
 }
 
 function velgKvartal(n){
@@ -2147,9 +2173,8 @@ function lagKvitteringEX(s){
 }
 
 function exportExcelEnkel(){
-  var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
-  var data=aktivFilter==='alle'?aktive:aktive.filter(function(s){return s.kunstner===aktivFilter;});
-  exportEnkelListe(data,(aktivFilter==='alle'?'Nylige_salg':aktivFilter));
+  var data=salgIAktivVisning();
+  exportEnkelListe(data,(aktivFilter==='alle'?'Nylige_salg':aktivFilter.replace(/^__ekstra:/,'')));
 }
 
 function exportEnkelListe(salg,filnavn){
@@ -2307,9 +2332,8 @@ function exportLeveringsliste(){
 }
 
 function exportEpost(){
-  var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
-  var data=aktivFilter==='alle'?aktive:aktive.filter(function(s){return s.kunstner===aktivFilter;});
-  exportEpostListe(data,(aktivFilter==='alle'?'Nylige_salg':aktivFilter));
+  var data=salgIAktivVisning();
+  exportEpostListe(data,(aktivFilter==='alle'?'Nylige_salg':aktivFilter.replace(/^__ekstra:/,'')));
 }
 
 function exportEpostListe(salg,filnavn){
@@ -2329,10 +2353,9 @@ function exportEpostListe(salg,filnavn){
 }
 
 function exportExcel(){
-  var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
-  var data=(aktivFilter==='alle')?aktive:aktive.filter(function(s){return s.kunstner===aktivFilter;});
+  var data=salgIAktivVisning();
   if(!data.length)return;
-  var filnavn=(aktivFilter==='alle'?'Nylige_salg':aktivFilter.replace(/\s/g,'_'))+'.xlsx';
+  var filnavn=(aktivFilter==='alle'?'Nylige_salg':aktivFilter.replace(/^__ekstra:/,'').replace(/\s/g,'_'))+'.xlsx';
 
   function lagXlsx(){
     var XLSX=window.XLSX;
