@@ -88,8 +88,9 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 #logout-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;padding:.5rem .85rem;border-radius:8px;font-size:.82rem;font-family:'proxima-nova','Nunito',sans-serif;font-weight:700;cursor:pointer;min-height:var(--touch);display:flex;align-items:center}
 
 /* MAIN NAV */
-.main-nav{display:flex;background:var(--white);border-bottom:2px solid var(--border);position:sticky;top:64px;z-index:190;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.main-tab{flex:1;padding:.75rem .5rem;border:none;background:transparent;font-family:'proxima-nova','Nunito',sans-serif;font-size:.85rem;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:4px solid transparent;margin-bottom:-2px;transition:all .2s}
+.main-nav{display:flex;background:var(--white);border-bottom:2px solid var(--border);position:sticky;top:64px;z-index:190;box-shadow:0 2px 8px rgba(0,0,0,.06);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.main-nav::-webkit-scrollbar{display:none}
+.main-tab{flex:1 0 auto;min-width:90px;padding:.75rem .5rem;border:none;background:transparent;font-family:'proxima-nova','Nunito',sans-serif;font-size:.85rem;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:4px solid transparent;margin-bottom:-2px;transition:all .2s;white-space:nowrap}
 .main-tab:active{opacity:.75}
 /* Soli – grønn */
 #tab-soli{color:#3a7a52}
@@ -103,6 +104,9 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 /* Levering – lilla */
 #tab-levering{color:#5a3a7a}
 #tab-levering.active{color:#fff;background:#5a3a7a;border-bottom-color:#3a2560;border-radius:6px 6px 0 0}
+/* Betaling – turkis */
+#tab-betaling{color:#1a6a6a}
+#tab-betaling.active{color:#fff;background:#1a6a6a;border-bottom-color:#0a5050;border-radius:6px 6px 0 0}
 #tab-innramming.active{color:#fff;background:#3a5a7a;border-bottom-color:#2d4860;border-radius:6px 6px 0 0}
 
 /* PAGES */
@@ -455,6 +459,7 @@ datalist{display:none!important}
     <button class="main-tab" id="tab-innramming" onclick="setMainTab('innramming')">🖼 Innramming</button>
     <button class="main-tab" id="tab-faktura" onclick="setMainTab('faktura')">📄 Faktura</button>
     <button class="main-tab" id="tab-levering" onclick="setMainTab('levering')">🚚 Levering</button>
+    <button class="main-tab" id="tab-betaling" onclick="setMainTab('betaling')">💰 Betaling</button>
   </div>
 
   <!-- ══════════════════════ SALG-SIDE ══════════════════════ -->
@@ -653,6 +658,19 @@ datalist{display:none!important}
     <div class="filter-wrap"><div class="filter-tabs" id="levering-subtabs"></div></div>
     <div id="levering-list" style="padding:0 .85rem"></div>
     <div id="levering-empty" style="text-align:center;color:var(--muted);padding:2rem;font-size:.9rem;font-weight:600;display:none">Ingen leveringer her.</div>
+  </div>
+</div>
+
+<!-- ══════ BETALING-SIDE ══════ -->
+<div class="page" id="page-betaling">
+  <div class="section">
+    <div class="section-head">
+      <div class="stitle">💰 Betaling</div>
+    </div>
+    <div class="filter-wrap"><div class="filter-tabs" id="betaling-subtabs"></div></div>
+    <div id="betaling-summary" style="padding:0 .85rem .6rem;font-size:.85rem;color:var(--muted);font-weight:600"></div>
+    <div id="betaling-list" style="padding:0 .85rem"></div>
+    <div id="betaling-empty" style="text-align:center;color:var(--muted);padding:2rem;font-size:.9rem;font-weight:600;display:none">Ingen salg her.</div>
   </div>
 </div>
 <div class="modal-bg" id="arkiv-modal-bg">
@@ -1027,15 +1045,17 @@ if(sessionStorage.getItem('sbauth')==='1'){document.getElementById('login-screen
 
 /* ── MAIN TAB ── */
 function setMainTab(tab){
-  ['soli','fredrikstad','innramming','faktura','levering'].forEach(function(t){
+  ['soli','fredrikstad','innramming','faktura','levering','betaling'].forEach(function(t){
     var el=document.getElementById('tab-'+t);if(el)el.className='main-tab'+(tab===t?' active':'');
   });
   document.getElementById('page-salg').className='page'+(tab==='soli'||tab==='fredrikstad'?' active':'');
   document.getElementById('page-innramming').className='page'+(tab==='innramming'?' active':'');
   document.getElementById('page-faktura').className='page'+(tab==='faktura'?' active':'');
   document.getElementById('page-levering').className='page'+(tab==='levering'?' active':'');
+  document.getElementById('page-betaling').className='page'+(tab==='betaling'?' active':'');
   if(tab==='faktura')loadFaktura();
   if(tab==='levering')loadLevering();
+  if(tab==='betaling')loadBetaling();
   if(tab==='soli'||tab==='fredrikstad'){
     aktivButikk=tab;
     /* Bakgrunnsfarge og header-farge */
@@ -1641,6 +1661,8 @@ async function toggle(s,field,btn){
   if((field==='skal_ha_faktura'||field==='faktura_sendt')&&document.getElementById('page-faktura').classList.contains('active'))renderFaktura();
   /* Oppdater leveringoversikten hvis den er åpen */
   if(field==='hentet'&&document.getElementById('page-levering').classList.contains('active'))renderLevering();
+  /* Oppdater betalingoversikten hvis den er åpen */
+  if((field==='skal_ha_faktura'||field==='faktura_sendt'||field==='betalt_kort')&&document.getElementById('page-betaling').classList.contains('active'))renderBetaling();
 }
 
 /* ── ARKIV ── */
@@ -1806,6 +1828,7 @@ function apneBetaltModal(s,btn){
       rerenderCard(s,btn);
       sb.from('salg').update({betalt_kort:false,betalings_metode:null,betalt_dato:null,betalt_initialer:null,delsum_betalt:null}).eq('id',s.id).then(function(r){
         if(r.error){s.betalt_kort=true;s.betalings_metode=old.metode;s.betalt_dato=old.dato;s.betalt_initialer=old.ini;s.delsum_betalt=old.delsum;settStatusBtn(btn,'betalt_kort',true,visBetaltEtikett(s));rerenderCard(s,btn);}
+        if(document.getElementById('page-betaling').classList.contains('active'))renderBetaling();
       });
     }
     return;
@@ -1851,6 +1874,7 @@ async function lagreBetalt(){
   if(s){s.betalt_kort=true;s.betalings_metode=metode;s.betalt_dato=dato;s.betalt_initialer=ini;s.delsum_betalt=delsum;}
   if(betaltBtn)settStatusBtn(betaltBtn,'betalt_kort',true,visBetaltEtikett(s));
   if(s)rerenderCard(s,betaltBtn);
+  if(document.getElementById('page-betaling').classList.contains('active'))renderBetaling();
   document.getElementById('betalt-modal-bg').classList.remove('open');
   betaltSalgId=null;betaltBtn=null;
 }
@@ -2664,6 +2688,91 @@ function renderLevering(){
     });
   }
   salgVis.forEach(function(s){list.appendChild(makeCard(s,false));});
+}
+
+/* ══════════════ BETALING-OVERSIKT ══════════════ */
+var betalingSubTab='ikke_betalt';
+/* Kategoriser et salg: 'ikke_betalt' | 'delvis' | 'betalt' | 'faktura' */
+function betalingKategori(s){
+  var tot=s.total||0;
+  if(s.betalt_kort){
+    var ds=s.delsum_betalt||0;
+    if(ds>0&&ds<tot)return 'delvis';
+    return 'betalt';
+  }
+  /* Ikke betalt kontant/kort. Hvis skal ha faktura ELLER faktura sendt → egen kategori */
+  if(s.skal_ha_faktura||s.faktura_sendt)return 'faktura';
+  return 'ikke_betalt';
+}
+async function loadBetaling(){
+  renderBetaling();
+}
+function renderBetaling(){
+  var list=document.getElementById('betaling-list');
+  var empty=document.getElementById('betaling-empty');
+  var subWrap=document.getElementById('betaling-subtabs');
+  var summaryEl=document.getElementById('betaling-summary');
+  list.innerHTML='';subWrap.innerHTML='';empty.style.display='none';summaryEl.innerHTML='';
+
+  /* Kun ikke-arkiverte salg */
+  var aktive=alleSalg.filter(function(s){return!s.arkiv;});
+  var ikkeBetalt=[],delvis=[],betalt=[],faktura=[];
+  aktive.forEach(function(s){
+    var k=betalingKategori(s);
+    if(k==='ikke_betalt')ikkeBetalt.push(s);
+    else if(k==='delvis')delvis.push(s);
+    else if(k==='betalt')betalt.push(s);
+    else if(k==='faktura')faktura.push(s);
+  });
+
+  /* Beregn beløp for sammendrag */
+  function sum(arr,felt){return arr.reduce(function(a,s){return a+(s[felt]||0);},0);}
+  function sumGjenstar(arr){return arr.reduce(function(a,s){return a+((s.total||0)-(s.delsum_betalt||0));},0);}
+  var ikkeBetSum=sum(ikkeBetalt,'total');
+  var delvisGjenstar=sumGjenstar(delvis);
+  var fakturaSum=sum(faktura,'total');
+  var totUtestaende=ikkeBetSum+delvisGjenstar+fakturaSum;
+
+  function lagSubTab(navn,verdi,antall,farge){
+    var b=document.createElement('button');
+    b.className='ftab'+(betalingSubTab===verdi?' active':'');
+    b.style.borderColor=farge;
+    b.style.color=betalingSubTab===verdi?'#fff':farge;
+    if(betalingSubTab===verdi)b.style.background=farge;
+    b.textContent=navn+' ('+antall+')';
+    b.addEventListener('click',function(){betalingSubTab=verdi;renderBetaling();});
+    return b;
+  }
+  subWrap.appendChild(lagSubTab('❌ Ikke betalt','ikke_betalt',ikkeBetalt.length,'#c02040'));
+  subWrap.appendChild(lagSubTab('🟡 Delvis','delvis',delvis.length,'#e07020'));
+  subWrap.appendChild(lagSubTab('📄 Faktura','faktura',faktura.length,'#a05a20'));
+  subWrap.appendChild(lagSubTab('✅ Betalt','betalt',betalt.length,'#3a7a52'));
+
+  /* Sammendrag øverst – hva vi venter penger på totalt */
+  summaryEl.innerHTML='<div style="background:#fef7e8;border:2px solid #d4b06e;color:#7a5020;padding:.6rem .8rem;border-radius:10px;margin-bottom:.5rem"><strong>💰 Totalt utestående:</strong> '+kr(totUtestaende)+' kr <span style="opacity:.75;font-weight:600">(ikke betalt: '+kr(ikkeBetSum)+' · delvis: '+kr(delvisGjenstar)+' · faktura: '+kr(fakturaSum)+')</span></div>';
+
+  var vis;
+  if(betalingSubTab==='ikke_betalt')vis=ikkeBetalt;
+  else if(betalingSubTab==='delvis')vis=delvis;
+  else if(betalingSubTab==='faktura')vis=faktura;
+  else vis=betalt;
+
+  if(!vis.length){
+    empty.style.display='block';
+    var tekster={ikke_betalt:'Ingen ubetalte salg – alle har gjort opp for seg! 🎉',delvis:'Ingen delvis betalte salg.',faktura:'Ingen salg som skal faktureres.',betalt:'Ingen fullt betalte salg enda.'};
+    empty.textContent=tekster[betalingSubTab];
+    return;
+  }
+  /* Sorter: eldste øverst for utestående (så du ser hva som har ligget lengst), nyeste øverst for betalt */
+  if(betalingSubTab==='betalt'){
+    vis.sort(function(a,b){
+      if(a.betalt_dato&&b.betalt_dato)return b.betalt_dato.localeCompare(a.betalt_dato);
+      return(b.ordrenummer||0)-(a.ordrenummer||0);
+    });
+  } else {
+    vis.sort(function(a,b){return(a.ordrenummer||0)-(b.ordrenummer||0);});
+  }
+  vis.forEach(function(s){list.appendChild(makeCard(s,false));});
 }
 
 /* ══════════════ INIT ══════════════ */
