@@ -766,6 +766,24 @@ datalist{display:none!important}
   </div>
 </div>
 
+<!-- ══════ KUNSTNER BETALT MODAL ══════ -->
+<div class="modal-bg" id="kb-modal-bg">
+  <div class="modal-box sm">
+    <div class="modal-head"><h2 style="color:#5a3a7a">🎨 Marker kunstner betalt</h2><button class="modal-close-btn" id="kb-modal-close">×</button></div>
+    <p style="margin:.4rem 0 1rem;font-weight:600;color:var(--muted);font-size:.88rem" id="kb-modal-info"></p>
+    <div style="margin-bottom:.85rem">
+      <span class="lbl">Dato utbetalt</span>
+      <input type="date" id="kb-dato">
+    </div>
+    <div style="margin-bottom:.85rem">
+      <span class="lbl">Dine initialer</span>
+      <input type="text" id="kb-initialer" placeholder="F.eks. OB" autocomplete="off" data-lpignore="true" data-form-type="other" maxlength="10" style="text-transform:uppercase">
+    </div>
+    <div class="modal-actions"><button class="btn-cancel" id="kb-avbryt">Avbryt</button><button class="btn-save" id="kb-lagre" style="background:#5a3a7a;border-color:#5a3a7a">Kvitter ut kunstner betalt</button></div>
+    <div class="modal-msg" id="kb-msg"></div>
+  </div>
+</div>
+
 <!-- ══════ REDIGER SALG MODAL ══════ -->
 <div class="modal-bg" id="modal-bg">
   <div class="modal-box">
@@ -1387,17 +1405,25 @@ function renderSalg(){
       var noenBetalt=salg.some(function(s){return s.bkh_betalt;});
       var betaltStatus=alleBetalt?'<span style="background:#d4edda;color:#198754;border:1.5px solid #198754;padding:.15rem .55rem;border-radius:20px;font-size:.7rem;font-weight:700;margin-left:.5rem">💰 BKH betalt</span>':
                        (noenBetalt?'<span style="background:#fff3e0;color:#e07020;border:1.5px solid #e07020;padding:.15rem .55rem;border-radius:20px;font-size:.7rem;font-weight:700;margin-left:.5rem">⚠️ Delvis BKH betalt</span>':'');
+      /* Kunstner-betalt-status (alle i mappen må være markert) */
+      var alleKB=salg.length>0&&salg.every(function(s){return s.kunstner_betalt;});
+      var kbDato=alleKB?(salg.find(function(s){return s.kunstner_betalt_dato;})||{}).kunstner_betalt_dato:null;
+      var kbIni=alleKB?(salg.find(function(s){return s.kunstner_betalt_initialer;})||{}).kunstner_betalt_initialer:null;
+      var kunstnerStatus=alleKB?'<span style="background:#e8ddf5;color:#5a3a7a;border:1.5px solid #5a3a7a;padding:.15rem .55rem;border-radius:20px;font-size:.7rem;font-weight:700;margin-left:.5rem">🎨 Kunstner betalt'+(kbDato?': '+formatKortDato(kbDato):'')+(kbIni?' ('+kbIni+')':'')+'</span>':'';
       var g=document.createElement('div');g.className='arkiv-gruppe';
       var h=document.createElement('div');h.className='arkiv-gruppe-header';
       var bkhBtnTekst=alleBetalt?'💰 BKH betalt ✓':'💰 Marker BKH betalt';
       var bkhBtnStyle=alleBetalt?'border-color:#198754;color:#198754;background:#e8f5e9':'border-color:#198754;color:#198754';
-      h.innerHTML='<div><div class="arkiv-gruppe-navn">🗄 '+an+betaltStatus+'</div><div class="arkiv-gruppe-meta">'+gt2.antall+' salg · '+kr(gt2.total)+' eks. BKH · BKH: '+kr(gt2.bkh)+'</div></div><div style="display:flex;gap:.4rem;flex-wrap:wrap"><button class="hent-ut-btn" data-action="endre-navn" style="border-color:#7a5020;color:#7a5020">✏️ Endre navn</button><button class="hent-ut-btn" data-action="bkh" style="'+bkhBtnStyle+'">'+bkhBtnTekst+'</button><button class="hent-ut-btn" data-action="epost" style="border-color:#1a5fa8;color:#1a5fa8">✉️ E-poster</button><button class="hent-ut-btn" data-action="enkel">📋 Oppstilling</button><button class="hent-ut-btn" data-action="excel">📊 Excel</button><button class="hent-ut-btn" data-action="hentut">Hent ut</button></div>';
+      var kbBtnTekst=alleKB?'🎨 Kunstner betalt ✓':'🎨 Kunstner betalt';
+      var kbBtnStyle=alleKB?'border-color:#5a3a7a;color:#5a3a7a;background:#e8ddf5':'border-color:#5a3a7a;color:#5a3a7a';
+      h.innerHTML='<div><div class="arkiv-gruppe-navn">🗄 '+an+betaltStatus+kunstnerStatus+'</div><div class="arkiv-gruppe-meta">'+gt2.antall+' salg · '+kr(gt2.total)+' eks. BKH · BKH: '+kr(gt2.bkh)+'</div></div><div style="display:flex;gap:.4rem;flex-wrap:wrap"><button class="hent-ut-btn" data-action="endre-navn" style="border-color:#7a5020;color:#7a5020">✏️ Endre navn</button><button class="hent-ut-btn" data-action="bkh" style="'+bkhBtnStyle+'">'+bkhBtnTekst+'</button><button class="hent-ut-btn" data-action="kunstner-betalt" style="'+kbBtnStyle+'">'+kbBtnTekst+'</button><button class="hent-ut-btn" data-action="epost" style="border-color:#1a5fa8;color:#1a5fa8">✉️ E-poster</button><button class="hent-ut-btn" data-action="enkel">📋 Oppstilling</button><button class="hent-ut-btn" data-action="excel">📊 Excel</button><button class="hent-ut-btn" data-action="hentut">Hent ut</button></div>';
       h.querySelector('[data-action=hentut]').addEventListener('click',function(e){e.stopPropagation();if(confirm('Hente ut alle salg fra «'+an+'» tilbake?'))hentUtArkiv(an);});
       h.querySelector('[data-action=excel]').addEventListener('click',function(e){e.stopPropagation();exportArkivExcel(an,grp[an]);});
       h.querySelector('[data-action=enkel]').addEventListener('click',function(e){e.stopPropagation();exportEnkelListe(grp[an],an);});
       h.querySelector('[data-action=epost]').addEventListener('click',function(e){e.stopPropagation();exportEpostListe(grp[an],an);});
       h.querySelector('[data-action=bkh]').addEventListener('click',function(e){e.stopPropagation();markerBkhBetalt(an,grp[an],alleBetalt);});
       h.querySelector('[data-action=endre-navn]').addEventListener('click',function(e){e.stopPropagation();endreArkivNavn(an);});
+      h.querySelector('[data-action=kunstner-betalt]').addEventListener('click',function(e){e.stopPropagation();apneKunstnerBetaltModal(an,grp[an],alleKB);});
       var sd=document.createElement('div');sd.className='arkiv-gruppe-salg skjult';
       salg.forEach(function(s){sd.appendChild(makeCard(s,false));});
       g.appendChild(h);g.appendChild(sd);
@@ -2039,6 +2065,50 @@ async function markerBkhBetalt(arkivNavn,salg,erBetalt){
     if(!r2.error)loadSales();
     else alert('Feil: '+r2.error.message);
   }
+}
+
+/* ══════════════ KUNSTNER BETALT (arkivmapper) ══════════════ */
+var kbArkivNavn=null,kbSalgIds=[];
+function apneKunstnerBetaltModal(arkivNavn,salg,erBetalt){
+  if(erBetalt){
+    /* Fjern-modus: bekreft med eksisterende info + spør om fjerning */
+    var eks=salg.find(function(s){return s.kunstner_betalt_dato;});
+    var linjer=['Kunstner betalt for alle '+salg.length+' salg i «'+arkivNavn+'»'];
+    if(eks&&eks.kunstner_betalt_dato)linjer.push('Dato: '+formatKortDato(eks.kunstner_betalt_dato));
+    if(eks&&eks.kunstner_betalt_initialer)linjer.push('Kvittert av: '+eks.kunstner_betalt_initialer);
+    if(confirm(linjer.join('\n')+'\n\nFjerne kunstner-betalt-status?')){
+      var ids=salg.map(function(s){return s.id;});
+      sb.from('salg').update({kunstner_betalt:false,kunstner_betalt_dato:null,kunstner_betalt_initialer:null}).in('id',ids).then(function(r){
+        if(r.error)alert('Feil: '+r.error.message);
+        else loadSales();
+      });
+    }
+    return;
+  }
+  /* Ny-modus: åpne modal for dato + initialer */
+  kbArkivNavn=arkivNavn;
+  kbSalgIds=salg.map(function(s){return s.id;});
+  document.getElementById('kb-modal-info').textContent='«'+arkivNavn+'» · '+salg.length+' salg';
+  document.getElementById('kb-dato').value=new Date().toISOString().slice(0,10);
+  document.getElementById('kb-initialer').value='';
+  document.getElementById('kb-msg').textContent='';
+  document.getElementById('kb-modal-bg').classList.add('open');
+  setTimeout(function(){document.getElementById('kb-initialer').focus();},100);
+}
+async function lagreKunstnerBetalt(){
+  var dato=document.getElementById('kb-dato').value;
+  var ini=document.getElementById('kb-initialer').value.trim().toUpperCase();
+  var msg=document.getElementById('kb-msg');
+  if(!dato){msg.style.color='var(--danger)';msg.textContent='Velg dato.';return;}
+  if(!ini){msg.style.color='var(--danger)';msg.textContent='Skriv dine initialer.';return;}
+  var lagreBtn=document.getElementById('kb-lagre');
+  lagreBtn.disabled=true;lagreBtn.textContent='Lagrer…';
+  var r=await sb.from('salg').update({kunstner_betalt:true,kunstner_betalt_dato:dato,kunstner_betalt_initialer:ini}).in('id',kbSalgIds);
+  lagreBtn.disabled=false;lagreBtn.textContent='Kvitter ut kunstner betalt';
+  if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
+  document.getElementById('kb-modal-bg').classList.remove('open');
+  kbArkivNavn=null;kbSalgIds=[];
+  loadSales();
 }
 
 async function hentUtArkiv(an){
@@ -3481,6 +3551,12 @@ function init(){
   document.getElementById('betalt-lagre').addEventListener('click',lagreBetalt);
   document.getElementById('betalt-initialer').addEventListener('keydown',function(e){if(e.key==='Enter')lagreBetalt();});
   document.getElementById('betalt-delsum').addEventListener('input',oppdaterGjenstaende);
+  /* Kunstner betalt modal (arkivmapper) */
+  document.getElementById('kb-modal-close').addEventListener('click',function(){document.getElementById('kb-modal-bg').classList.remove('open');});
+  document.getElementById('kb-avbryt').addEventListener('click',function(){document.getElementById('kb-modal-bg').classList.remove('open');});
+  document.getElementById('kb-modal-bg').addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});
+  document.getElementById('kb-lagre').addEventListener('click',lagreKunstnerBetalt);
+  document.getElementById('kb-initialer').addEventListener('keydown',function(e){if(e.key==='Enter')lagreKunstnerBetalt();});
   /* Dato modal */
   document.getElementById('dato-modal-close').addEventListener('click',function(){document.getElementById('dato-modal-bg').classList.remove('open');});
   document.getElementById('dato-avbryt').addEventListener('click',function(){document.getElementById('dato-modal-bg').classList.remove('open');});
