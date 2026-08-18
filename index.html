@@ -1028,18 +1028,30 @@ document.getElementById('refresh-btn').addEventListener('click',async function()
   btn.innerHTML='↻';
   btn.style.transition='transform .8s ease-in-out';
   btn.style.transform='rotate(720deg)';
-  /* Last alt – salg, innramming og chat */
-  var promises=[loadSales(true),loadIr()];
-  if(document.getElementById('page-chat').classList.contains('active'))promises.push(loadChat());
-  try{await Promise.all(promises);}catch(e){}
-  /* Vis "✓" et øyeblikk for tilbakemelding */
+  var suksess=false;
+  try{
+    /* Last all data fra Supabase – med 15 sek timeout så knappen ikke henger */
+    var timeout=new Promise(function(_,rej){setTimeout(function(){rej(new Error('Timeout etter 15 sek'));},15000);});
+    var lasting=Promise.all([loadSales(true),loadIr()]);
+    await Promise.race([lasting,timeout]);
+    /* Re-render den aktive siden (loadSales kaller allerede renderSalg() selv) */
+    var aktivSide=document.querySelector('.page.active');
+    var pid=aktivSide?aktivSide.id:'';
+    if(pid==='page-innramming')renderIr();
+    else if(pid==='page-faktura')renderFaktura();
+    else if(pid==='page-levering')renderLevering();
+    else if(pid==='page-betaling')renderBetaling();
+    suksess=true;
+  }catch(e){
+    console.warn('Refresh feilet:',e&&e.message);
+  }
   btn.style.transition='';
   btn.style.transform='';
-  btn.innerHTML='✓';
+  btn.innerHTML=suksess?'✓':'⚠';
   setTimeout(function(){
     btn.innerHTML=orig;
     btn.disabled=false;
-  },800);
+  },900);
 });
 if(sessionStorage.getItem('sbauth')==='1'){document.getElementById('login-screen').style.display='none';loadSB(function(){document.getElementById('app').style.display='block';init();});}
 
