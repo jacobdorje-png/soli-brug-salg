@@ -2519,24 +2519,81 @@ function exportEpostListe(salg,filnavn){
 function exportExcel(){
   var data=salgIAktivVisning();
   if(!data.length)return;
+  var erEkstra=aktivFilter.indexOf&&aktivFilter.indexOf('__ekstra:')===0;
   var filnavn=(aktivFilter==='alle'?'Nylige_salg':aktivFilter.replace(/^__ekstra:/,'').replace(/\s/g,'_'))+'.xlsx';
+
+  function radForSalg(s){return[salgOnr(s),fmt(s.created_at),s.navn||'',s.telefon||'',s.epost||'',s.adresse||'',s.levering?'Ja':'Nei',s.kunstner||'',s.tittel||'',s.edisjon||'',s.pris||0,s.bkh||0,s.ramme||0,s.ramme_info||'',s.frakt||0,s.total||0,s.hentet?'Ja':'Nei',s.faktura_sendt?'Ja':'Nei',s.selger||'',s.notat||''];}
 
   function lagXlsx(){
     var XLSX=window.XLSX;
     var wsData=[['Ordrenr','Dato','Navn','Telefon','E-post','Adresse','Levering','Kunstner','Tittel','Edisjon','Pris','BKH','Ramme','Rammeinfo','Frakt','Total','Hentet','Faktura sendt','Selger','Info om salget']];
-    data.forEach(function(s){wsData.push([salgOnr(s),fmt(s.created_at),s.navn||'',s.telefon||'',s.epost||'',s.adresse||'',s.levering?'Ja':'Nei',s.kunstner||'',s.tittel||'',s.edisjon||'',s.pris||0,s.bkh||0,s.ramme||0,s.ramme_info||'',s.frakt||0,s.total||0,s.hentet?'Ja':'Nei',s.faktura_sendt?'Ja':'Nei',s.selger||'',s.notat||'']);});
+    var boldRows=[0]; /* Header-raden er alltid fet */
+    var kunstnerHeaderRows=[]; /* Rader med kunstner-navn */
+
+    if(erEkstra){
+      /* Grupper etter kunstner, alfabetisk A-Å */
+      var grupper={};
+      data.forEach(function(s){
+        var k=s.kunstner||'(ukjent)';
+        if(!grupper[k])grupper[k]=[];
+        grupper[k].push(s);
+      });
+      var kunstnere=Object.keys(grupper).sort(function(a,b){return a.localeCompare(b,'nb');});
+      /* Sorter innad hver kunstner: Original → Monotypi → Grafikk, deretter tittel */
+      function typeRang(s){var t=(s.type||'').toLowerCase();if(t==='grafikk')return 2;if(t==='monotypi')return 1;return 0;}
+      kunstnere.forEach(function(kunstner,idx){
+        if(idx>0){
+          /* 2 tomme rader mellom hver kunstner-gruppe */
+          wsData.push([]);wsData.push([]);
+        }
+        /* Kunstner-header (én rad med navn + antall) */
+        kunstnerHeaderRows.push(wsData.length);
+        wsData.push(['🎨 '+kunstner+' ('+grupper[kunstner].length+' salg)']);
+        /* Salgene */
+        grupper[kunstner].slice().sort(function(a,b){
+          var ra=typeRang(a),rb=typeRang(b);
+          if(ra!==rb)return ra-rb;
+          return (a.tittel||'').localeCompare(b.tittel||'','nb');
+        }).forEach(function(s){wsData.push(radForSalg(s));});
+      });
+    } else {
+      /* Normal flat visning */
+      data.forEach(function(s){wsData.push(radForSalg(s));});
+    }
+
     var ws=XLSX.utils.aoa_to_sheet(wsData);
     ws['!cols']=[{wch:10},{wch:14},{wch:22},{wch:14},{wch:22},{wch:28},{wch:9},{wch:18},{wch:22},{wch:9},{wch:10},{wch:8},{wch:8},{wch:14},{wch:8},{wch:10},{wch:8},{wch:14},{wch:14},{wch:30}];
+
+    /* Styling (fet skrift på header + kunstner-rader) hvis xlsx-js-style er lastet */
+    if(XLSX.__hasStyle){
+      boldRows.concat(kunstnerHeaderRows).forEach(function(r){
+        for(var c=0;c<20;c++){
+          var addr=XLSX.utils.encode_cell({r:r,c:c});
+          if(!ws[addr])ws[addr]={t:'s',v:''};
+          ws[addr].s={font:{bold:true,sz:kunstnerHeaderRows.indexOf(r)>-1?13:11}};
+          if(kunstnerHeaderRows.indexOf(r)>-1){
+            ws[addr].s.fill={fgColor:{rgb:'FEF7E8'}};
+            ws[addr].s.font.color={rgb:'7A5020'};
+          }
+        }
+      });
+    }
+
     var wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,'Salg');
-    /* Skriv til blob i stedet for direkte fil, så vi kan bruke share/download */
     var wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
     var blob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     delEllerLastNed(blob,filnavn,'📊 «'+filnavn+'» er klar');
   }
 
-  if(window.XLSX){lagXlsx();}
-  else{var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js';s.onload=lagXlsx;document.head.appendChild(s);}
+  /* For ekstralister trenger vi xlsx-js-style for fet formatering; ellers holder vanlig xlsx */
+  if(erEkstra){
+    if(window.XLSX&&window.XLSX.__hasStyle){lagXlsx();}
+    else{var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js';s.onload=function(){window.XLSX.__hasStyle=true;lagXlsx();};document.head.appendChild(s);}
+  } else {
+    if(window.XLSX){lagXlsx();}
+    else{var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js';s.onload=lagXlsx;document.head.appendChild(s);}
+  }
 }
 
 /* ══════════════ INNRAMMING ══════════════ */
