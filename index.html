@@ -1391,12 +1391,13 @@ function renderSalg(){
       var h=document.createElement('div');h.className='arkiv-gruppe-header';
       var bkhBtnTekst=alleBetalt?'💰 BKH betalt ✓':'💰 Marker BKH betalt';
       var bkhBtnStyle=alleBetalt?'border-color:#198754;color:#198754;background:#e8f5e9':'border-color:#198754;color:#198754';
-      h.innerHTML='<div><div class="arkiv-gruppe-navn">🗄 '+an+betaltStatus+'</div><div class="arkiv-gruppe-meta">'+gt2.antall+' salg · '+kr(gt2.total)+' eks. BKH · BKH: '+kr(gt2.bkh)+'</div></div><div style="display:flex;gap:.4rem;flex-wrap:wrap"><button class="hent-ut-btn" data-action="bkh" style="'+bkhBtnStyle+'">'+bkhBtnTekst+'</button><button class="hent-ut-btn" data-action="epost" style="border-color:#1a5fa8;color:#1a5fa8">✉️ E-poster</button><button class="hent-ut-btn" data-action="enkel">📋 Oppstilling</button><button class="hent-ut-btn" data-action="excel">📊 Excel</button><button class="hent-ut-btn" data-action="hentut">Hent ut</button></div>';
+      h.innerHTML='<div><div class="arkiv-gruppe-navn">🗄 '+an+betaltStatus+'</div><div class="arkiv-gruppe-meta">'+gt2.antall+' salg · '+kr(gt2.total)+' eks. BKH · BKH: '+kr(gt2.bkh)+'</div></div><div style="display:flex;gap:.4rem;flex-wrap:wrap"><button class="hent-ut-btn" data-action="endre-navn" style="border-color:#7a5020;color:#7a5020">✏️ Endre navn</button><button class="hent-ut-btn" data-action="bkh" style="'+bkhBtnStyle+'">'+bkhBtnTekst+'</button><button class="hent-ut-btn" data-action="epost" style="border-color:#1a5fa8;color:#1a5fa8">✉️ E-poster</button><button class="hent-ut-btn" data-action="enkel">📋 Oppstilling</button><button class="hent-ut-btn" data-action="excel">📊 Excel</button><button class="hent-ut-btn" data-action="hentut">Hent ut</button></div>';
       h.querySelector('[data-action=hentut]').addEventListener('click',function(e){e.stopPropagation();if(confirm('Hente ut alle salg fra «'+an+'» tilbake?'))hentUtArkiv(an);});
       h.querySelector('[data-action=excel]').addEventListener('click',function(e){e.stopPropagation();exportArkivExcel(an,grp[an]);});
       h.querySelector('[data-action=enkel]').addEventListener('click',function(e){e.stopPropagation();exportEnkelListe(grp[an],an);});
       h.querySelector('[data-action=epost]').addEventListener('click',function(e){e.stopPropagation();exportEpostListe(grp[an],an);});
       h.querySelector('[data-action=bkh]').addEventListener('click',function(e){e.stopPropagation();markerBkhBetalt(an,grp[an],alleBetalt);});
+      h.querySelector('[data-action=endre-navn]').addEventListener('click',function(e){e.stopPropagation();endreArkivNavn(an);});
       var sd=document.createElement('div');sd.className='arkiv-gruppe-salg skjult';
       salg.forEach(function(s){sd.appendChild(makeCard(s,false));});
       g.appendChild(h);g.appendChild(sd);
@@ -1993,6 +1994,27 @@ async function hentUtArkiv(an){
   var ids=alleSalg.filter(function(s){return s.arkiv===an;}).map(function(s){return s.id;});
   var r=await sb.from('salg').update({arkiv:null}).in('id',ids);
   if(!r.error)loadSales(true);
+}
+
+async function endreArkivNavn(gammeltNavn){
+  var salg=alleSalg.filter(function(s){return s.arkiv===gammeltNavn;});
+  if(!salg.length){alert('Fant ingen salg i denne arkivmappen.');return;}
+  var nyttNavn=prompt('Endre navn på arkivmappe «'+gammeltNavn+'»:\n\n'+salg.length+' salg vil bli oppdatert.',gammeltNavn);
+  if(nyttNavn===null)return;/* Avbrutt */
+  nyttNavn=nyttNavn.trim();
+  if(!nyttNavn){alert('Navnet kan ikke være tomt.');return;}
+  if(nyttNavn===gammeltNavn)return;/* Ingen endring */
+  /* Sjekk om nytt navn allerede finnes – advarsel om sammenslåing */
+  var eksisterende=alleSalg.filter(function(s){return s.arkiv===nyttNavn;});
+  if(eksisterende.length){
+    if(!confirm('«'+nyttNavn+'» finnes allerede med '+eksisterende.length+' salg.\n\nVil du SLÅ SAMMEN mappene? Da havner alle '+(salg.length+eksisterende.length)+' salgene i «'+nyttNavn+'».'))return;
+  }
+  var ids=salg.map(function(s){return s.id;});
+  var r=await sb.from('salg').update({arkiv:nyttNavn}).in('id',ids);
+  if(r.error){alert('Feil: '+r.error.message);return;}
+  /* Oppdater lokalt så vi slipper full reload */
+  alleSalg.forEach(function(s){if(s.arkiv===gammeltNavn)s.arkiv=nyttNavn;});
+  renderSalg();
 }
 
 function exportArkivExcel(arkivNavn,salg){
