@@ -1241,30 +1241,7 @@ function byggFilterTabs(){
   nylige.addEventListener('click',function(){aktivFilter='alle';visArkiv=false;visFaktura=false;visVip=false;sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
   wrap.appendChild(nylige);
 
-  /* Faktura-tab – alltid synlig, rett ved siden av Nylige salg */
-  var ft=document.createElement('button');
-  ft.className='ftab'+(visFaktura?' active':'');
-  ft.style.borderColor='#e07020';ft.style.color=visFaktura?'#fff':'#e07020';
-  if(visFaktura)ft.style.background='#e07020';
-  ft.textContent='📄 Faktura'+(fakturaAntall>0?' ('+fakturaAntall+')':'');
-  ft.addEventListener('click',async function(){
-    visFaktura=!visFaktura;visArkiv=false;visVip=false;aktivFilter='alle';sokeTekst='';
-    document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();
-    if(visFaktura&&alleIr.length===0)await loadIr();
-    renderSalg();byggFilterTabs();
-  });
-  wrap.appendChild(ft);
-
-  /* VIP-tab – alltid synlig */
-  var vipAntall=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk&&s.vip;}).length;
-  var vt=document.createElement('button');
-  vt.className='ftab'+(visVip?' active':'');
-  vt.style.borderColor='#d4a500';vt.style.color=visVip?'#fff':'#a07000';
-  if(visVip)vt.style.background='#d4a500';
-  vt.textContent='⭐ VIP'+(vipAntall>0?' ('+vipAntall+')':'');
-  vt.addEventListener('click',function(){visVip=!visVip;visArkiv=false;visFaktura=false;aktivFilter='alle';sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
-  wrap.appendChild(vt);
-
+  /* Kunstner-faner */
   var kunstnere=[];
   aktive.forEach(function(s){
     if(s.ekstraliste)return; /* Ekstraliste-salg får ikke egen kunstnerfane */
@@ -1297,6 +1274,32 @@ function byggFilterTabs(){
     btn.addEventListener('click',function(){aktivFilter='__ekstra:'+navn;visArkiv=false;visFaktura=false;visVip=false;sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
     wrap.appendChild(btn);
   });
+
+  /* ────── Sekundære faner sist: Faktura, VIP, Arkiv ────── */
+
+  /* Faktura-tab */
+  var ft=document.createElement('button');
+  ft.className='ftab'+(visFaktura?' active':'');
+  ft.style.borderColor='#e07020';ft.style.color=visFaktura?'#fff':'#e07020';
+  if(visFaktura)ft.style.background='#e07020';
+  ft.textContent='📄 Faktura'+(fakturaAntall>0?' ('+fakturaAntall+')':'');
+  ft.addEventListener('click',async function(){
+    visFaktura=!visFaktura;visArkiv=false;visVip=false;aktivFilter='alle';sokeTekst='';
+    document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();
+    if(visFaktura&&alleIr.length===0)await loadIr();
+    renderSalg();byggFilterTabs();
+  });
+  wrap.appendChild(ft);
+
+  /* VIP-tab */
+  var vipAntall=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk&&s.vip;}).length;
+  var vt=document.createElement('button');
+  vt.className='ftab'+(visVip?' active':'');
+  vt.style.borderColor='#d4a500';vt.style.color=visVip?'#fff':'#a07000';
+  if(visVip)vt.style.background='#d4a500';
+  vt.textContent='⭐ VIP'+(vipAntall>0?' ('+vipAntall+')':'');
+  vt.addEventListener('click',function(){visVip=!visVip;visArkiv=false;visFaktura=false;aktivFilter='alle';sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
+  wrap.appendChild(vt);
 
   if(arkiverte.length>0){
     var at=document.createElement('button');
