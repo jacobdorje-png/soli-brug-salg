@@ -2620,11 +2620,41 @@ function bygExcelFraSalg(data,filnavn,erEkstra){
       });
     });
 
+    /* ────── SAMMENDRAG NEDERST ────── */
+    var totPris=data.reduce(function(a,s){return a+(s.pris||0);},0);
+    var totBkh=data.reduce(function(a,s){return a+(s.bkh||0);},0);
+    var totRamme=data.reduce(function(a,s){return a+(s.ramme||0);},0);
+    var totTilSoli=data.reduce(function(a,s){return a+Math.round((s.pris||0)*0.4);},0);
+    var totTilKunstner=data.reduce(function(a,s){return a+Math.round((s.pris||0)*0.6);},0);
+    var totFrakt=data.reduce(function(a,s){return a+(s.frakt||0);},0);
+    var totTotal=data.reduce(function(a,s){return a+(s.total||0);},0);
+    /* 2 tomme rader før sammendrag */
+    wsData.push([]);wsData.push([]);
+    /* TOTALER-rad (fet, matcher tabellkolonnene) */
+    var totalRadIdx=wsData.length;
+    var totalRad=new Array(NUM_COLS).fill('');
+    totalRad[0]='TOTALT';
+    totalRad[9]=totPris;
+    totalRad[10]=totBkh;
+    totalRad[11]=totRamme;
+    totalRad[13]=totTilSoli;
+    totalRad[14]=totTilKunstner;
+    totalRad[15]=totTilKunstner; /* Total sum til alle kunstnere */
+    totalRad[16]=totFrakt;
+    totalRad[17]=totTotal;
+    wsData.push(totalRad);
+    /* Antall salg-rad */
+    var antallRadIdx=wsData.length;
+    var antallRad=new Array(NUM_COLS).fill('');
+    antallRad[0]='ANTALL SALG';
+    antallRad[9]=data.length;
+    wsData.push(antallRad);
+
     var ws=XLSX.utils.aoa_to_sheet(wsData);
     ws['!cols']=[
-      {wch:10},{wch:12},{wch:22},{wch:14},{wch:24},{wch:28},
+      {wch:12},{wch:12},{wch:22},{wch:14},{wch:24},{wch:28},
       {wch:20},{wch:24},{wch:10},
-      {wch:10},{wch:10},{wch:10},{wch:16},
+      {wch:12},{wch:10},{wch:10},{wch:16},
       {wch:14},{wch:16},{wch:16},
       {wch:8},{wch:10},{wch:9},{wch:8},{wch:14},{wch:14},{wch:30}
     ];
@@ -2647,13 +2677,35 @@ function bygExcelFraSalg(data,filnavn,erEkstra){
         if(!ws[a])ws[a]={t:'n',v:0};
         ws[a].s={font:{bold:true,sz:12,color:{rgb:'1A5A3A'}},fill:{fgColor:{rgb:'D4EDDA'}},alignment:{horizontal:'right'}};
       });
-      for(var r=1;r<wsData.length;r++){
+      for(var r=1;r<wsData.length-2;r++){
         if(kunstnerHeaderRows.indexOf(r)>-1)continue;
+        if(r===totalRadIdx||r===antallRadIdx)continue;
         if(!wsData[r]||!wsData[r].length)continue;
         var aS=XLSX.utils.encode_cell({r:r,c:13});
         var aK=XLSX.utils.encode_cell({r:r,c:14});
         if(ws[aS])ws[aS].s={fill:{fgColor:{rgb:'E8F5EC'}},font:{color:{rgb:'2A5A40'}}};
         if(ws[aK])ws[aK].s={fill:{fgColor:{rgb:'C8E6D0'}},font:{color:{rgb:'1A5A3A'},bold:true}};
+      }
+      /* TOTALT-raden – fet med sterk beige-bakgrunn og gul topp-border */
+      for(var c=0;c<NUM_COLS;c++){
+        var at=XLSX.utils.encode_cell({r:totalRadIdx,c:c});
+        if(!ws[at])ws[at]={t:'s',v:''};
+        ws[at].s={
+          font:{bold:true,sz:12,color:{rgb:'333333'}},
+          fill:{fgColor:{rgb:'F5E4A8'}},
+          border:{top:{style:'medium',color:{rgb:'B08820'}},bottom:{style:'medium',color:{rgb:'B08820'}}},
+          alignment:{horizontal:c>=9?'right':'left'}
+        };
+      }
+      /* ANTALL SALG-raden – fet med lys bakgrunn */
+      for(var c=0;c<NUM_COLS;c++){
+        var aa=XLSX.utils.encode_cell({r:antallRadIdx,c:c});
+        if(!ws[aa])ws[aa]={t:'s',v:''};
+        ws[aa].s={
+          font:{bold:true,sz:11,color:{rgb:'555555'}},
+          fill:{fgColor:{rgb:'FAF0D4'}},
+          alignment:{horizontal:c===9?'right':'left'}
+        };
       }
     }
 
