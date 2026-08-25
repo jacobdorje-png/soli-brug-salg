@@ -3926,16 +3926,23 @@ async function submitSale(){
   };
   if(mode==='gammelt'){var dv=document.getElementById('f-dato').value;if(dv)baseRow.created_at=new Date(dv).toISOString();}
 
-  /* Første verk */
-  var rows=[Object.assign({},baseRow,{
-    kunstner:document.getElementById('f-kunstner').value.trim(),
-    tittel:document.getElementById('f-tittel').value.trim(),
-    edisjon:document.getElementById('f-edisjon').value.trim(),
-    type:typeValg?typeValg.value:'',
-    pris:nv('f-pris'),bkh:nv('f-bkh'),ramme:nv('f-ramme'),frakt:nv('f-frakt'),total:nv('f-total'),
-    ramme_info:document.getElementById('f-ramme-info').value.trim(),
-    bilde_url:fFotoUrl
-  })];
+  /* Første verk – kun hvis det faktisk er fylt ut (kunstner, tittel eller pris) */
+  var kunstner1=document.getElementById('f-kunstner').value.trim();
+  var tittel1=document.getElementById('f-tittel').value.trim();
+  var pris1=nv('f-pris');
+  var harForsteVerk=!!(kunstner1||tittel1||pris1);
+  var rows=[];
+  if(harForsteVerk){
+    rows.push(Object.assign({},baseRow,{
+      kunstner:kunstner1,
+      tittel:tittel1,
+      edisjon:document.getElementById('f-edisjon').value.trim(),
+      type:typeValg?typeValg.value:'',
+      pris:pris1,bkh:nv('f-bkh'),ramme:nv('f-ramme'),frakt:nv('f-frakt'),total:nv('f-total'),
+      ramme_info:document.getElementById('f-ramme-info').value.trim(),
+      bilde_url:fFotoUrl
+    }));
+  }
 
   /* Gavekort (inline) */
   var gavekortFelt=document.getElementById('gavekort-felt');
@@ -3983,6 +3990,7 @@ async function submitSale(){
     }
   });
 
+  if(!rows.length){msg.style.color='var(--danger)';msg.textContent='Legg til minst ett verk eller gavekort.';btn.disabled=false;btn.textContent='Registrer salg';return;}
   var r=await sb.from('salg').insert(rows);
   btn.disabled=false;btn.textContent='Registrer salg';
   if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
