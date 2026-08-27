@@ -717,17 +717,29 @@ datalist{display:none!important}
 <!-- ══════ MAIL-VALG MODAL ══════ -->
 <div class="modal-bg" id="mail-valg-modal-bg">
   <div class="modal-box sm">
-    <div class="modal-head"><h2 style="color:#3a7a52">📧 Velg e-postklient</h2><button class="modal-close-btn" onclick="lukkMailValg()">×</button></div>
-    <p style="margin:.4rem 0 .5rem;font-weight:600;color:var(--muted);font-size:.88rem" id="mail-valg-info"></p>
-    <p style="margin:0 0 1rem;font-weight:700;font-size:.9rem;color:#111" id="mail-valg-adr"></p>
-    <div style="display:flex;flex-direction:column;gap:.6rem">
-      <button id="mv-outlook-app" class="btn-save" style="background:#0078d4;border-color:#0078d4">📧 Outlook (app)</button>
-      <button id="mv-outlook" class="btn-save" style="background:#106ebe;border-color:#106ebe">📧 Outlook Web</button>
-      <button id="mv-gmail" class="btn-save" style="background:#d93025;border-color:#d93025">📧 Gmail Web</button>
-      <button id="mv-standard" class="btn-save" style="background:#3a7a52;border-color:#3a7a52">✉️ Standard e-post (mailto)</button>
-      <button id="mv-del" class="btn-save" style="background:#7a3a5a;border-color:#7a3a5a;display:none">📤 Del via delark</button>
-      <button class="btn-cancel" onclick="lukkMailValg()">Avbryt</button>
+    <div class="modal-head"><h2 style="color:#3a7a52">📧 Send kvittering</h2><button class="modal-close-btn" onclick="lukkMailValg()">×</button></div>
+    <p style="margin:.4rem 0 .3rem;font-weight:700;font-size:.95rem;color:#111" id="mail-valg-adr"></p>
+    <p style="margin:0 0 1rem;font-weight:600;color:var(--muted);font-size:.82rem" id="mail-valg-info"></p>
+
+    <!-- PRIMÆR: Web Share (kun mobil) – automatisk vedlagt PDF -->
+    <div id="mv-share-seksjon" style="display:none;margin-bottom:1rem">
+      <div style="font-size:.72rem;font-weight:800;color:#1a5a3a;letter-spacing:.5px;margin-bottom:.4rem">📎 PDF LEGGES AUTOMATISK VED</div>
+      <button id="mv-del" class="btn-save" style="background:#3a8060;border-color:#3a8060;width:100%;font-size:1rem;padding:.85rem">📤 Del kvittering (velg Outlook / Mail / …)</button>
+      <p style="margin:.4rem 0 0;font-size:.78rem;color:var(--muted);font-weight:600">Åpner delark der du kan velge Outlook-appen (eller andre) – PDF-en blir vedlagt automatisk.</p>
     </div>
+
+    <!-- SEKUNDÆR: mail-klienter – manuelt vedlegg -->
+    <div>
+      <div style="font-size:.72rem;font-weight:800;color:#a04010;letter-spacing:.5px;margin-bottom:.4rem">✍️ ÅPNE MAIL – VEDLEGG PDF MANUELT</div>
+      <div style="display:flex;flex-direction:column;gap:.5rem">
+        <button id="mv-outlook-app" class="btn-save" style="background:#0078d4;border-color:#0078d4">📧 Outlook (app)</button>
+        <button id="mv-outlook" class="btn-save" style="background:#106ebe;border-color:#106ebe">📧 Outlook Web</button>
+        <button id="mv-gmail" class="btn-save" style="background:#d93025;border-color:#d93025">📧 Gmail Web</button>
+        <button id="mv-standard" class="btn-save" style="background:#6a6a6a;border-color:#6a6a6a">✉️ Standard e-post (mailto)</button>
+      </div>
+      <p style="margin:.5rem 0 0;font-size:.78rem;color:#c05500;font-weight:700;background:#fff3e0;padding:.5rem .7rem;border-radius:6px;border-left:3px solid #e07020">⚠️ PDF er lastet ned – <strong>vedlegg den manuelt</strong> i mailen som åpnes.</p>
+    </div>
+    <button class="btn-cancel" onclick="lukkMailValg()" style="margin-top:1rem;width:100%">Avbryt</button>
   </div>
 </div>
 
@@ -3509,17 +3521,14 @@ function visMailValgModal(epost,s,file){
   var subject=encodeURIComponent('Kvittering fra Soli Brug – '+salgOnr(s));
   var body='Hei'+(s.navn?' '+s.navn.split(' ')[0]:'')+',\n\nVennligst finn vedlagt kvittering for ditt kjøp (ordre '+salgOnr(s)+').\n\nTusen takk for handelen!\n\nMed vennlig hilsen,\nSoli Brug Galleri\nwww.soli-brug.no';
   var bodyEnc=encodeURIComponent(body);
-  document.getElementById('mail-valg-info').textContent='PDF er lastet ned. Velg hvor du vil sende den (fest PDF-en manuelt i mailen):';
   document.getElementById('mail-valg-adr').textContent='Til: '+epost;
-  /* Outlook (app) – ms-outlook: URL scheme fungerer for både Outlook Mobile og Outlook Desktop 2016+ */
-  document.getElementById('mv-outlook-app').onclick=function(){window.location.href='ms-outlook://compose?to='+encodeURIComponent(epost)+'&subject='+subject+'&body='+bodyEnc;lukkMailValg();};
-  document.getElementById('mv-outlook').onclick=function(){window.open('https://outlook.office.com/mail/deeplink/compose?to='+encodeURIComponent(epost)+'&subject='+subject+'&body='+bodyEnc,'_blank');lukkMailValg();};
-  document.getElementById('mv-gmail').onclick=function(){window.open('https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(epost)+'&su='+subject+'&body='+bodyEnc,'_blank');lukkMailValg();};
-  document.getElementById('mv-standard').onclick=function(){window.location.href='mailto:'+epost+'?subject='+subject+'&body='+bodyEnc;lukkMailValg();};
-  /* Del via delark – kun synlig hvis Web Share API støttes og vi har en fil */
+  document.getElementById('mail-valg-info').textContent=(s.navn?'Kunde: '+s.navn+' · ':'')+'Ordre '+salgOnr(s);
+
+  /* PRIMÆR: Del via delark – kun hvis Web Share API støttes og vi har fil */
+  var shareSeksjon=document.getElementById('mv-share-seksjon');
   var delBtn=document.getElementById('mv-del');
   if(file&&navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-    delBtn.style.display='';
+    shareSeksjon.style.display='';
     delBtn.onclick=async function(){
       try{
         await navigator.share({files:[file],title:'Kvittering '+salgOnr(s),text:'Kvittering fra Soli Brug'});
@@ -3527,8 +3536,15 @@ function visMailValgModal(epost,s,file){
       }catch(e){if(e.name!=='AbortError')alert('Deling feilet: '+e.message);}
     };
   } else {
-    delBtn.style.display='none';
+    shareSeksjon.style.display='none';
   }
+
+  /* SEKUNDÆR: Mail-klienter – brukeren må vedlegge PDF manuelt */
+  document.getElementById('mv-outlook-app').onclick=function(){window.location.href='ms-outlook://compose?to='+encodeURIComponent(epost)+'&subject='+subject+'&body='+bodyEnc;lukkMailValg();};
+  document.getElementById('mv-outlook').onclick=function(){window.open('https://outlook.office.com/mail/deeplink/compose?to='+encodeURIComponent(epost)+'&subject='+subject+'&body='+bodyEnc,'_blank');lukkMailValg();};
+  document.getElementById('mv-gmail').onclick=function(){window.open('https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(epost)+'&su='+subject+'&body='+bodyEnc,'_blank');lukkMailValg();};
+  document.getElementById('mv-standard').onclick=function(){window.location.href='mailto:'+epost+'?subject='+subject+'&body='+bodyEnc;lukkMailValg();};
+
   document.getElementById('mail-valg-modal-bg').classList.add('open');
 }
 function lukkMailValg(){document.getElementById('mail-valg-modal-bg').classList.remove('open');}
