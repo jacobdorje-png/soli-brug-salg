@@ -725,7 +725,7 @@ datalist{display:none!important}
     <div id="mv-share-seksjon" style="display:none;margin-bottom:1rem">
       <div style="font-size:.72rem;font-weight:800;color:#1a5a3a;letter-spacing:.5px;margin-bottom:.4rem">📎 PDF LEGGES AUTOMATISK VED</div>
       <button id="mv-del" class="btn-save" style="background:#3a8060;border-color:#3a8060;width:100%;font-size:1rem;padding:.85rem">📤 Del kvittering (velg Outlook / Mail / …)</button>
-      <p style="margin:.4rem 0 0;font-size:.78rem;color:var(--muted);font-weight:600">Åpner delark der du kan velge Outlook-appen (eller andre) – PDF-en blir vedlagt automatisk.</p>
+      <p style="margin:.4rem 0 0;font-size:.78rem;color:var(--muted);font-weight:600">Åpner delark – velg <strong>Outlook</strong>, <strong>Mail</strong> eller lignende. PDF vedlegges automatisk, og kundens e-post kopieres til utklippstavlen (lim inn i Til-feltet med langt trykk).</p>
     </div>
 
     <!-- SEKUNDÆR: mail-klienter – manuelt vedlegg -->
@@ -3530,9 +3530,22 @@ function visMailValgModal(epost,s,file){
   if(file&&navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
     shareSeksjon.style.display='';
     delBtn.onclick=async function(){
+      /* Kopier kundens e-post til clipboard FØR deling, så brukeren enkelt kan lime inn i Til-feltet */
+      var epostKopiert=false;
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        try{
+          await navigator.clipboard.writeText(epost);
+          epostKopiert=true;
+        }catch(e){/* Fallback: skip clipboard */}
+      }
       try{
-        await navigator.share({files:[file],title:'Kvittering '+salgOnr(s),text:'Kvittering fra Soli Brug'});
+        await navigator.share({
+          files:[file],
+          title:'Kvittering fra Soli Brug – ordre '+salgOnr(s),
+          text:'Til: '+epost+'\n\n'+decodeURIComponent(bodyEnc)
+        });
         lukkMailValg();
+        if(epostKopiert)visToast('📋 E-post kopiert! Lim inn i Til-feltet med langt trykk.');
       }catch(e){if(e.name!=='AbortError')alert('Deling feilet: '+e.message);}
     };
   } else {
