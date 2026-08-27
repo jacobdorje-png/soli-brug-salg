@@ -721,9 +721,11 @@ datalist{display:none!important}
     <p style="margin:.4rem 0 .5rem;font-weight:600;color:var(--muted);font-size:.88rem" id="mail-valg-info"></p>
     <p style="margin:0 0 1rem;font-weight:700;font-size:.9rem;color:#111" id="mail-valg-adr"></p>
     <div style="display:flex;flex-direction:column;gap:.6rem">
-      <button id="mv-standard" class="btn-save" style="background:#3a7a52;border-color:#3a7a52">✉️ Standard e-post (Apple Mail / Outlook)</button>
-      <button id="mv-outlook" class="btn-save" style="background:#0078d4;border-color:#0078d4">📧 Outlook Web</button>
+      <button id="mv-outlook-app" class="btn-save" style="background:#0078d4;border-color:#0078d4">📧 Outlook (app)</button>
+      <button id="mv-outlook" class="btn-save" style="background:#106ebe;border-color:#106ebe">📧 Outlook Web</button>
       <button id="mv-gmail" class="btn-save" style="background:#d93025;border-color:#d93025">📧 Gmail Web</button>
+      <button id="mv-standard" class="btn-save" style="background:#3a7a52;border-color:#3a7a52">✉️ Standard e-post (mailto)</button>
+      <button id="mv-del" class="btn-save" style="background:#7a3a5a;border-color:#7a3a5a;display:none">📤 Del via delark</button>
       <button class="btn-cancel" onclick="lukkMailValg()">Avbryt</button>
     </div>
   </div>
@@ -3486,17 +3488,7 @@ async function lagKvitteringPDF(s,btn){
 }
 
 async function sendKvitteringPDF(file,s,btn,origLabel){
-  /* Prøv Web Share API for iOS/Android – lar bruker velge Mail */
-  if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
-    try{
-      await navigator.share({files:[file],title:'Kvittering '+salgOnr(s),text:'Kvittering fra Soli Brug'});
-      btn.disabled=false;btn.innerHTML=origLabel;
-      return;
-    }catch(e){
-      if(e.name==='AbortError'){btn.disabled=false;btn.innerHTML=origLabel;return;}
-    }
-  }
-  /* Fallback: last ned PDF og la bruker velge mail-klient */
+  /* Last alltid ned PDF-en først (så bruker har den lokalt) */
   var url=URL.createObjectURL(file);
   var a=document.createElement('a');a.href=url;a.download=file.name;
   document.body.appendChild(a);a.click();document.body.removeChild(a);
@@ -3509,18 +3501,34 @@ async function sendKvitteringPDF(file,s,btn,origLabel){
     if(!epost){btn.disabled=false;btn.innerHTML=origLabel;return;}
   }
   btn.disabled=false;btn.innerHTML=origLabel;
-  visMailValgModal(epost,s);
+  /* Vis modal med alle e-postklient-valg (inkl. iOS/Android delark hvis støttet) */
+  visMailValgModal(epost,s,file);
 }
 
-function visMailValgModal(epost,s){
+function visMailValgModal(epost,s,file){
   var subject=encodeURIComponent('Kvittering fra Soli Brug – '+salgOnr(s));
   var body='Hei'+(s.navn?' '+s.navn.split(' ')[0]:'')+',\n\nVennligst finn vedlagt kvittering for ditt kjøp (ordre '+salgOnr(s)+').\n\nTusen takk for handelen!\n\nMed vennlig hilsen,\nSoli Brug Galleri\nwww.soli-brug.no';
   var bodyEnc=encodeURIComponent(body);
-  document.getElementById('mail-valg-info').textContent='PDF er lastet ned. Velg e-postklient (fest PDF-en manuelt etterpå):';
+  document.getElementById('mail-valg-info').textContent='PDF er lastet ned. Velg hvor du vil sende den (fest PDF-en manuelt i mailen):';
   document.getElementById('mail-valg-adr').textContent='Til: '+epost;
-  document.getElementById('mv-standard').onclick=function(){window.location.href='mailto:'+epost+'?subject='+subject+'&body='+bodyEnc;lukkMailValg();};
+  /* Outlook (app) – ms-outlook: URL scheme fungerer for både Outlook Mobile og Outlook Desktop 2016+ */
+  document.getElementById('mv-outlook-app').onclick=function(){window.location.href='ms-outlook://compose?to='+encodeURIComponent(epost)+'&subject='+subject+'&body='+bodyEnc;lukkMailValg();};
   document.getElementById('mv-outlook').onclick=function(){window.open('https://outlook.office.com/mail/deeplink/compose?to='+encodeURIComponent(epost)+'&subject='+subject+'&body='+bodyEnc,'_blank');lukkMailValg();};
   document.getElementById('mv-gmail').onclick=function(){window.open('https://mail.google.com/mail/?view=cm&fs=1&to='+encodeURIComponent(epost)+'&su='+subject+'&body='+bodyEnc,'_blank');lukkMailValg();};
+  document.getElementById('mv-standard').onclick=function(){window.location.href='mailto:'+epost+'?subject='+subject+'&body='+bodyEnc;lukkMailValg();};
+  /* Del via delark – kun synlig hvis Web Share API støttes og vi har en fil */
+  var delBtn=document.getElementById('mv-del');
+  if(file&&navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+    delBtn.style.display='';
+    delBtn.onclick=async function(){
+      try{
+        await navigator.share({files:[file],title:'Kvittering '+salgOnr(s),text:'Kvittering fra Soli Brug'});
+        lukkMailValg();
+      }catch(e){if(e.name!=='AbortError')alert('Deling feilet: '+e.message);}
+    };
+  } else {
+    delBtn.style.display='none';
+  }
   document.getElementById('mail-valg-modal-bg').classList.add('open');
 }
 function lukkMailValg(){document.getElementById('mail-valg-modal-bg').classList.remove('open');}
