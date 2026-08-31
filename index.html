@@ -3230,10 +3230,16 @@ function renderBetaling(){
   var summaryEl=document.getElementById('betaling-summary');
   list.innerHTML='';subWrap.innerHTML='';empty.style.display='none';summaryEl.innerHTML='';
 
-  /* Kun ikke-arkiverte salg */
-  var aktive=alleSalg.filter(function(s){return!s.arkiv;});
+  /* Alle salg vurderes – både aktive og arkiverte.
+     Ubetalte MÅ vises selv om de er arkivert, ellers mister vi kontrollen.
+     Betalte arkiverte salg trenger vi ikke å blåse opp listen med. */
+  var vurderes=alleSalg.filter(function(s){
+    if(!s.arkiv)return true;
+    /* Arkivert: kun med hvis IKKE fullt betalt (dvs. står fortsatt på oppgjør) */
+    return betalingKategori(s)!=='betalt';
+  });
   var ikkeBetalt=[],delvis=[],fakturaVenter=[],fakturaSendt=[],betalt=[];
-  aktive.forEach(function(s){
+  vurderes.forEach(function(s){
     var k=betalingKategori(s);
     if(k==='ikke_betalt')ikkeBetalt.push(s);
     else if(k==='delvis')delvis.push(s);
