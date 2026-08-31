@@ -97,9 +97,13 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 #logout-btn{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;padding:.5rem .85rem;border-radius:8px;font-size:.82rem;font-family:'proxima-nova','Nunito',sans-serif;font-weight:700;cursor:pointer;min-height:var(--touch);display:flex;align-items:center}
 
 /* MAIN NAV */
-.main-nav{display:grid;grid-template-columns:repeat(3,1fr);background:var(--white);border-bottom:2px solid var(--border);position:sticky;top:64px;z-index:190;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.main-nav{display:grid;grid-template-columns:repeat(12,1fr);background:var(--white);border-bottom:2px solid var(--border);position:sticky;top:64px;z-index:190;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .main-tab{padding:.55rem .3rem;border:none;background:transparent;font-family:'proxima-nova','Nunito',sans-serif;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:4px solid transparent;margin-bottom:-2px;transition:all .2s;text-align:center;line-height:1.15;min-height:50px;display:flex;align-items:center;justify-content:center;gap:.2rem}
-@media(min-width:700px){.main-nav{grid-template-columns:repeat(7,1fr)}.main-tab{font-size:.9rem;min-height:44px}}
+/* Rad 1 – 3 registrerings-faner, hver spenner 4/12 kolonner */
+#tab-soli,#tab-fredrikstad,#tab-innramming{grid-column:span 4}
+/* Rad 2 – 4 oppfølgings-faner, hver spenner 3/12 kolonner */
+#tab-faktura,#tab-levering,#tab-hentet,#tab-betaling{grid-column:span 3}
+@media(min-width:700px){.main-nav{grid-template-columns:repeat(7,1fr)}.main-tab{font-size:.9rem;min-height:44px}#tab-soli,#tab-fredrikstad,#tab-innramming,#tab-faktura,#tab-levering,#tab-hentet,#tab-betaling{grid-column:auto}}
 .main-tab:active{opacity:.75}
 /* Soli – grønn */
 #tab-soli{color:#3a7a52}
@@ -119,8 +123,6 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 /* Betaling – turkis */
 #tab-betaling{color:#1a6a6a}
 #tab-betaling.active{color:#fff;background:#1a6a6a;border-bottom-color:#0a5050;border-radius:6px 6px 0 0}
-/* På mobil: Betaling spenner over full bredde i siste rad (siden vi har 7 faner totalt) */
-@media(max-width:699px){#tab-betaling{grid-column:1 / -1}}
 #tab-innramming.active{color:#fff;background:#3a5a7a;border-bottom-color:#2d4860;border-radius:6px 6px 0 0}
 
 /* PAGES */
