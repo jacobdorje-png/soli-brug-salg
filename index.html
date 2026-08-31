@@ -99,7 +99,7 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 /* MAIN NAV */
 .main-nav{display:grid;grid-template-columns:repeat(3,1fr);background:var(--white);border-bottom:2px solid var(--border);position:sticky;top:64px;z-index:190;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .main-tab{padding:.55rem .3rem;border:none;background:transparent;font-family:'proxima-nova','Nunito',sans-serif;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:4px solid transparent;margin-bottom:-2px;transition:all .2s;text-align:center;line-height:1.15;min-height:50px;display:flex;align-items:center;justify-content:center;gap:.2rem}
-@media(min-width:700px){.main-nav{grid-template-columns:repeat(6,1fr)}.main-tab{font-size:.9rem;min-height:44px}}
+@media(min-width:700px){.main-nav{grid-template-columns:repeat(7,1fr)}.main-tab{font-size:.9rem;min-height:44px}}
 .main-tab:active{opacity:.75}
 /* Soli – grønn */
 #tab-soli{color:#3a7a52}
@@ -113,9 +113,14 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 /* Levering – lilla */
 #tab-levering{color:#5a3a7a}
 #tab-levering.active{color:#fff;background:#5a3a7a;border-bottom-color:#3a2560;border-radius:6px 6px 0 0}
+/* Hentet – dyp plomme */
+#tab-hentet{color:#6a2050}
+#tab-hentet.active{color:#fff;background:#6a2050;border-bottom-color:#4a1030;border-radius:6px 6px 0 0}
 /* Betaling – turkis */
 #tab-betaling{color:#1a6a6a}
 #tab-betaling.active{color:#fff;background:#1a6a6a;border-bottom-color:#0a5050;border-radius:6px 6px 0 0}
+/* På mobil: Betaling spenner over full bredde i siste rad (siden vi har 7 faner totalt) */
+@media(max-width:699px){#tab-betaling{grid-column:1 / -1}}
 #tab-innramming.active{color:#fff;background:#3a5a7a;border-bottom-color:#2d4860;border-radius:6px 6px 0 0}
 
 /* PAGES */
@@ -468,6 +473,7 @@ datalist{display:none!important}
     <button class="main-tab" id="tab-innramming" onclick="setMainTab('innramming')">🖼 Innramming</button>
     <button class="main-tab" id="tab-faktura" onclick="setMainTab('faktura')">📄 Faktura</button>
     <button class="main-tab" id="tab-levering" onclick="setMainTab('levering')">🚚 Levering</button>
+    <button class="main-tab" id="tab-hentet" onclick="setMainTab('hentet')">🛍️ Hentet</button>
     <button class="main-tab" id="tab-betaling" onclick="setMainTab('betaling')">💰 Betaling</button>
   </div>
 
@@ -667,6 +673,18 @@ datalist{display:none!important}
     <div class="filter-wrap"><div class="filter-tabs" id="levering-subtabs"></div></div>
     <div id="levering-list" style="padding:0 .85rem"></div>
     <div id="levering-empty" style="text-align:center;color:var(--muted);padding:2rem;font-size:.9rem;font-weight:600;display:none">Ingen leveringer her.</div>
+  </div>
+</div>
+
+<!-- ══════ HENTET-SIDE ══════ -->
+<div class="page" id="page-hentet">
+  <div class="section">
+    <div class="section-head">
+      <div class="stitle">🛍️ Hentet</div>
+    </div>
+    <div class="filter-wrap"><div class="filter-tabs" id="hentet-subtabs"></div></div>
+    <div id="hentet-list" style="padding:0 .85rem"></div>
+    <div id="hentet-empty" style="text-align:center;color:var(--muted);padding:2rem;font-size:.9rem;font-weight:600;display:none">Ingen salg her.</div>
   </div>
 </div>
 
@@ -1081,6 +1099,7 @@ document.getElementById('refresh-btn').addEventListener('click',async function()
     if(pid==='page-innramming')renderIr();
     else if(pid==='page-faktura')renderFaktura();
     else if(pid==='page-levering')renderLevering();
+    else if(pid==='page-hentet')renderHentet();
     else if(pid==='page-betaling')renderBetaling();
     suksess=true;
   }catch(e){
@@ -1098,16 +1117,18 @@ if(sessionStorage.getItem('sbauth')==='1'){document.getElementById('login-screen
 
 /* ── MAIN TAB ── */
 function setMainTab(tab){
-  ['soli','fredrikstad','innramming','faktura','levering','betaling'].forEach(function(t){
+  ['soli','fredrikstad','innramming','faktura','levering','hentet','betaling'].forEach(function(t){
     var el=document.getElementById('tab-'+t);if(el)el.className='main-tab'+(tab===t?' active':'');
   });
   document.getElementById('page-salg').className='page'+(tab==='soli'||tab==='fredrikstad'?' active':'');
   document.getElementById('page-innramming').className='page'+(tab==='innramming'?' active':'');
   document.getElementById('page-faktura').className='page'+(tab==='faktura'?' active':'');
   document.getElementById('page-levering').className='page'+(tab==='levering'?' active':'');
+  document.getElementById('page-hentet').className='page'+(tab==='hentet'?' active':'');
   document.getElementById('page-betaling').className='page'+(tab==='betaling'?' active':'');
   if(tab==='faktura')loadFaktura();
   if(tab==='levering')loadLevering();
+  if(tab==='hentet')loadHentet();
   if(tab==='betaling')loadBetaling();
   if(tab==='soli'||tab==='fredrikstad'){
     aktivButikk=tab;
@@ -1790,6 +1811,8 @@ async function toggle(s,field,btn){
   if((field==='skal_ha_faktura'||field==='faktura_sendt')&&document.getElementById('page-faktura').classList.contains('active'))renderFaktura();
   /* Oppdater leveringoversikten hvis den er åpen */
   if(field==='hentet'&&document.getElementById('page-levering').classList.contains('active'))renderLevering();
+  /* Oppdater hentet-oversikten hvis den er åpen */
+  if(field==='hentet'&&document.getElementById('page-hentet').classList.contains('active'))renderHentet();
   /* Oppdater betalingoversikten hvis den er åpen */
   if((field==='skal_ha_faktura'||field==='faktura_sendt'||field==='betalt_kort')&&document.getElementById('page-betaling').classList.contains('active'))renderBetaling();
 }
@@ -1894,6 +1917,7 @@ function apneDatoModal(s,btn,field){
         if(r.error){s[field]=true;s[datoField_]=oldDato;settDatoBtn(btn,field,true,oldDato);}
         if((field==='skal_ha_faktura'||field==='faktura_sendt')&&document.getElementById('page-faktura').classList.contains('active'))renderFaktura();
         if(field==='hentet'&&document.getElementById('page-levering').classList.contains('active'))renderLevering();
+        if(field==='hentet'&&document.getElementById('page-hentet').classList.contains('active'))renderHentet();
       });
     }
     return;
@@ -1942,6 +1966,7 @@ async function lagreDato(){
   document.getElementById('dato-modal-bg').classList.remove('open');
   if((datoField==='skal_ha_faktura'||datoField==='faktura_sendt')&&document.getElementById('page-faktura').classList.contains('active'))renderFaktura();
   if(datoField==='hentet'&&document.getElementById('page-levering').classList.contains('active'))renderLevering();
+  if(datoField==='hentet'&&document.getElementById('page-hentet').classList.contains('active'))renderHentet();
   datoSalgId=null;datoBtn=null;datoField=null;
 }
 
@@ -3126,7 +3151,59 @@ function renderLevering(){
   salgVis.forEach(function(s){list.appendChild(makeCard(s,false));});
 }
 
-/* ══════════════ BETALING-OVERSIKT ══════════════ */
+/* ══════════════ HENTET-OVERSIKT ══════════════ */
+var hentetSubTab='skal_hentes';
+/* Salg som skal hentes: alle som IKKE skal leveres (motsatt av Levering-fanen) */
+function skalHentes(s){
+  /* Hvis salget skal leveres eller er nevnt i notat med "lever" → hører hjemme på Levering, ikke Hentet */
+  if(s.levering)return false;
+  if(s.notat&&/lever/i.test(s.notat))return false;
+  return true;
+}
+async function loadHentet(){
+  if(alleIr.length===0)await loadIr();
+  renderHentet();
+}
+function renderHentet(){
+  var list=document.getElementById('hentet-list');
+  var empty=document.getElementById('hentet-empty');
+  var subWrap=document.getElementById('hentet-subtabs');
+  list.innerHTML='';subWrap.innerHTML='';empty.style.display='none';
+
+  var skalHentesSalg=alleSalg.filter(function(s){return!s.arkiv&&skalHentes(s)&&!s.hentet;});
+  var hentedeSalg=alleSalg.filter(function(s){return!s.arkiv&&skalHentes(s)&&s.hentet;});
+
+  function lagSubTab(navn,verdi,antall){
+    var b=document.createElement('button');
+    b.className='ftab'+(hentetSubTab===verdi?' active':'');
+    b.style.borderColor='#6a2050';
+    b.style.color=hentetSubTab===verdi?'#fff':'#6a2050';
+    if(hentetSubTab===verdi)b.style.background='#6a2050';
+    b.textContent=navn+' ('+antall+')';
+    b.addEventListener('click',function(){hentetSubTab=verdi;renderHentet();});
+    return b;
+  }
+  subWrap.appendChild(lagSubTab('🛍️ Skal hentes','skal_hentes',skalHentesSalg.length));
+  subWrap.appendChild(lagSubTab('✅ Hentet','hentede',hentedeSalg.length));
+
+  var salgVis=hentetSubTab==='skal_hentes'?skalHentesSalg:hentedeSalg;
+  if(!salgVis.length){
+    empty.style.display='block';
+    empty.textContent=hentetSubTab==='skal_hentes'?'Ingen salg som venter på henting.':'Ingen hentede salg enda.';
+    return;
+  }
+  /* Sortering: eldste ordre først i 'skal hentes' (så du ser hva som har hengt lengst),
+     nyeste hentet-dato først i 'hentede' */
+  if(hentetSubTab==='skal_hentes'){
+    salgVis.sort(function(a,b){return(a.ordrenummer||0)-(b.ordrenummer||0);});
+  } else {
+    salgVis.sort(function(a,b){
+      if(a.hentet_dato&&b.hentet_dato)return b.hentet_dato.localeCompare(a.hentet_dato);
+      return(b.ordrenummer||0)-(a.ordrenummer||0);
+    });
+  }
+  salgVis.forEach(function(s){list.appendChild(makeCard(s,false));});
+}
 var betalingSubTab='ikke_betalt';
 /* Kategoriser et salg: 'ikke_betalt' | 'delvis' | 'faktura_venter' | 'faktura_sendt' | 'betalt' */
 function betalingKategori(s){
