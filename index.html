@@ -3929,7 +3929,16 @@ function init(){
   document.getElementById('arkiv-navn-input').addEventListener('keydown',function(e){if(e.key==='Enter')utforArkivering();});
 
   /* Søk */
-  document.getElementById('search-input').addEventListener('input',function(){sokeTekst=this.value.trim();oppdaterSokeUI();renderSalg();});
+  var sokeTimeout=null;
+  document.getElementById('search-input').addEventListener('input',function(){
+    var val=this.value.trim();
+    sokeTekst=val;
+    /* UI-oppdatering (clear-knapp, aktiv-indikator) skjer umiddelbart */
+    oppdaterSokeUI();
+    /* Tung re-render debounces – venter 180ms etter siste tastetrykk før filtrering kjøres */
+    if(sokeTimeout)clearTimeout(sokeTimeout);
+    sokeTimeout=setTimeout(function(){renderSalg();},180);
+  });
   document.getElementById('search-clear').addEventListener('click',function(){sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();renderSalg();document.getElementById('search-input').focus();});
 
   /* Innramming */
@@ -4228,8 +4237,17 @@ function initKundeAutocomplete(){
   var navnDD=document.getElementById('navn-forslag');
   var tlfDD=document.getElementById('tlf-forslag');
   if(!navnInp||!tlfInp||!navnDD||!tlfDD)return;
-  navnInp.addEventListener('input',function(){visKundeForslag(this.value,navnDD,'navn');tlfDD.classList.remove('aapen');});
-  tlfInp.addEventListener('input',function(){visKundeForslag(this.value,tlfDD,'tlf');navnDD.classList.remove('aapen');});
+  var navnTimeout=null,tlfTimeout=null;
+  navnInp.addEventListener('input',function(){
+    var v=this.value;tlfDD.classList.remove('aapen');
+    if(navnTimeout)clearTimeout(navnTimeout);
+    navnTimeout=setTimeout(function(){visKundeForslag(v,navnDD,'navn');},150);
+  });
+  tlfInp.addEventListener('input',function(){
+    var v=this.value;navnDD.classList.remove('aapen');
+    if(tlfTimeout)clearTimeout(tlfTimeout);
+    tlfTimeout=setTimeout(function(){visKundeForslag(v,tlfDD,'tlf');},150);
+  });
   navnInp.addEventListener('blur',function(){setTimeout(function(){navnDD.classList.remove('aapen');},150);});
   tlfInp.addEventListener('blur',function(){setTimeout(function(){tlfDD.classList.remove('aapen');},150);});
   navnInp.addEventListener('focus',function(){if(this.value.trim().length>=2)visKundeForslag(this.value,navnDD,'navn');});
