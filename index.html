@@ -2633,7 +2633,6 @@ function eksporterKunstnerExcel(kunstnerNavn){
 
   function lagXlsx(){
     var XLSX=window.XLSX;
-    /* Header: Tittel: | Pris: | Til Kunstner: | Kontonummer: */
     var wsData=[['Tittel:','Pris:','Til Kunstner:','Kontonummer:']];
     var sumPris=0,sumTilKunstner=0;
     data.forEach(function(s){
@@ -2646,53 +2645,37 @@ function eksporterKunstnerExcel(kunstnerNavn){
     wsData.push(['SUM:',sumPris,sumTilKunstner,'']);
 
     var ws=XLSX.utils.aoa_to_sheet(wsData);
-    /* Kolonnebredder matcher eksempelet */
     ws['!cols']=[{wch:36},{wch:30},{wch:27},{wch:27}];
-    /* Radhøyder: header + sum litt høyere enn data-rader */
     ws['!rows']=[{hpt:26}];
     for(var i=0;i<data.length;i++)ws['!rows'].push({hpt:24});
-    ws['!rows'].push({hpt:26}); /* SUM-rad */
+    ws['!rows'].push({hpt:26});
+    /* Marger for landscape-utskrift */
+    ws['!margins']={left:0.7,right:0.7,top:0.75,bottom:0.75,header:0.3,footer:0.3};
 
     if(XLSX.__hasStyle){
       var mediumBorder={style:'medium',color:{rgb:'000000'}};
       var thinBorder={style:'thin',color:{rgb:'000000'}};
-
-      /* HEADER-rad: fet, sentrert, medium border rundt */
+      /* HEADER-rad */
       for(var c=0;c<4;c++){
         var ah=XLSX.utils.encode_cell({r:0,c:c});
         if(!ws[ah])ws[ah]={t:'s',v:''};
-        ws[ah].s={
-          font:{bold:true,sz:14,name:'Calibri'},
-          alignment:{horizontal:'center',vertical:'center'},
-          border:{top:mediumBorder,bottom:mediumBorder,left:mediumBorder,right:mediumBorder}
-        };
+        ws[ah].s={font:{bold:true,sz:14,name:'Calibri'},alignment:{horizontal:'center',vertical:'center'},border:{top:mediumBorder,bottom:mediumBorder,left:mediumBorder,right:mediumBorder}};
       }
-
-      /* DATA-rader (rad 1 til sumRadIdx-1) */
+      /* DATA-rader */
       for(var r=1;r<sumRadIdx;r++){
         for(var c=0;c<4;c++){
           var a=XLSX.utils.encode_cell({r:r,c:c});
           if(!ws[a])ws[a]={t:c===1||c===2?'n':'s',v:c===1||c===2?0:''};
-          /* B (Pris) og C (Til Kunstner) er fet – A (Tittel) og D (Kontonummer) er normal */
           var erFet=(c===1||c===2);
-          ws[a].s={
-            font:{bold:erFet,sz:14,name:'Calibri'},
-            alignment:{horizontal:'center',vertical:'center'},
-            border:{top:thinBorder,bottom:thinBorder,left:thinBorder,right:thinBorder}
-          };
+          ws[a].s={font:{bold:erFet,sz:14,name:'Calibri'},alignment:{horizontal:'center',vertical:'center'},border:{top:thinBorder,bottom:thinBorder,left:thinBorder,right:thinBorder}};
         }
       }
-
-      /* SUM-rad: fet på B og C, medium border rundt hele raden */
+      /* SUM-rad */
       for(var c=0;c<4;c++){
         var aS=XLSX.utils.encode_cell({r:sumRadIdx,c:c});
         if(!ws[aS])ws[aS]={t:c===1||c===2?'n':'s',v:c===1||c===2?0:''};
         var erFet=(c===1||c===2);
-        ws[aS].s={
-          font:{bold:erFet||c===0,sz:14,name:'Calibri'},
-          alignment:{horizontal:'center',vertical:'center'},
-          border:{top:mediumBorder,bottom:mediumBorder,left:c===0?mediumBorder:thinBorder,right:c===3?mediumBorder:thinBorder}
-        };
+        ws[aS].s={font:{bold:erFet||c===0,sz:14,name:'Calibri'},alignment:{horizontal:'center',vertical:'center'},border:{top:mediumBorder,bottom:mediumBorder,left:c===0?mediumBorder:thinBorder,right:c===3?mediumBorder:thinBorder}};
       }
     }
 
@@ -2700,11 +2683,53 @@ function eksporterKunstnerExcel(kunstnerNavn){
     XLSX.utils.book_append_sheet(wb,ws,kunstnerNavn.substring(0,31));
     var wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
     var blob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-    delEllerLastNed(blob,filnavn,'📊 «'+filnavn+'» er klar');
+
+    /* Legg til topp/bunntekst + landscape via JSZip (SheetJS støtter ikke dette direkte) */
+    leggTilHeaderFooterOgLandscape(blob,kunstnerNavn,ekstraNavn).then(function(nyBlob){
+      delEllerLastNed(nyBlob,filnavn,'📊 «'+filnavn+'» er klar');
+    }).catch(function(err){
+      console.warn('Kunne ikke legge til topptekst/bunntekst:',err);
+      delEllerLastNed(blob,filnavn,'📊 «'+filnavn+'» er klar');
+    });
   }
 
   if(window.XLSX&&window.XLSX.__hasStyle){lagXlsx();}
   else{var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js';s.onload=function(){window.XLSX.__hasStyle=true;lagXlsx();};document.head.appendChild(s);}
+}
+
+/* Legger til topptekst, bunntekst og landscape-orientering ved å manipulere xlsx-XML direkte (via JSZip) */
+function leggTilHeaderFooterOgLandscape(blob,kunstnerNavn,ekstraNavn){
+  function gjor(){
+    return JSZip.loadAsync(blob).then(function(zip){
+      var sheetPath='xl/worksheets/sheet1.xml';
+      var file=zip.file(sheetPath);
+      if(!file)return blob;
+      return file.async('string').then(function(xml){
+        function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+        var periodeTekst=ekstraNavn?('Oversikt over salg i perioden '+ekstraNavn):'Oversikt over salg';
+        /* XLSX header/footer-format: &L = venstre, &C = senter, &R = høyre. & må skrives &amp; i XML.
+           _x000a_ er linjeskift internt (openpyxl bruker samme). */
+        var oddHeader='&amp;LSoli Brug AS&amp;C'+esc(periodeTekst)+'&amp;RKunstner: '+esc(kunstnerNavn);
+        var oddFooter='&amp;LSoli Brug AS&amp;CKontakt: Jacob D'+String.fromCharCode(248)+'rje. Tlf: 98071211_x000a_Mail: jacob@soli-brug.no';
+        var headerFooterXml='<headerFooter><oddHeader>'+oddHeader+'</oddHeader><oddFooter>'+oddFooter+'</oddFooter></headerFooter>';
+        var pageSetupXml='<pageSetup orientation="landscape" paperSize="9"/>';
+        /* Fjern evt. eksisterende, deretter sett inn før </worksheet> (rekkefølge: pageSetup → headerFooter) */
+        xml=xml.replace(/<headerFooter[\s\S]*?<\/headerFooter>/g,'');
+        xml=xml.replace(/<pageSetup[^\/]*\/>/g,'');
+        xml=xml.replace('</worksheet>',pageSetupXml+headerFooterXml+'</worksheet>');
+        zip.file(sheetPath,xml);
+        return zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+      });
+    });
+  }
+  if(window.JSZip)return gjor();
+  return new Promise(function(resolve,reject){
+    var s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+    s.onload=function(){gjor().then(resolve,reject);};
+    s.onerror=function(){reject(new Error('Kunne ikke laste JSZip'));};
+    document.head.appendChild(s);
+  });
 }
 
 /* Felles Excel-bygger: kolonner, 40/60-fordeling, sum per kunstner, valgfri gruppering */
