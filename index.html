@@ -1517,12 +1517,25 @@ function renderSalg(){
     tittel.style.cssText='font-size:.72rem;font-weight:800;color:#7a5020;margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.5px';
     tittel.textContent='🎨 Kunstnere i mappen ('+kunstnerListe.length+' stk · '+raaData.length+' salg totalt)';
     oversikt.appendChild(tittel);
+    var undertekst=document.createElement('div');
+    undertekst.style.cssText='font-size:.7rem;color:#a07040;margin-bottom:.55rem;font-weight:600';
+    undertekst.textContent='💡 Trykk på en kunstner for å laste ned oppgjør-Excel';
+    oversikt.appendChild(undertekst);
     var chips=document.createElement('div');
     chips.style.cssText='display:flex;flex-wrap:wrap;gap:.35rem';
     kunstnerListe.forEach(function(k){
-      var chip=document.createElement('span');
-      chip.style.cssText='background:#fff;border:1.5px solid #d4b06e;color:#7a5020;padding:.3rem .35rem .3rem .7rem;border-radius:20px;font-size:.85rem;font-weight:700;display:inline-flex;align-items:center;gap:.4rem;line-height:1.2';
-      chip.innerHTML=k.navn+'<span style="background:#7a5020;color:#fff;padding:.1rem .5rem;border-radius:20px;font-size:.75rem;font-weight:800;min-width:1.4rem;text-align:center">'+k.antall+'</span>';
+      var chip=document.createElement('button');
+      chip.type='button';
+      chip.title='Last ned Excel-oppgjør for '+k.navn;
+      chip.style.cssText='background:#fff;border:1.5px solid #d4b06e;color:#7a5020;padding:.3rem .35rem .3rem .7rem;border-radius:20px;font-size:.85rem;font-weight:700;display:inline-flex;align-items:center;gap:.4rem;line-height:1.2;cursor:pointer;font-family:inherit;transition:background .12s,transform .08s';
+      chip.innerHTML='📊 '+k.navn+'<span style="background:#7a5020;color:#fff;padding:.1rem .5rem;border-radius:20px;font-size:.75rem;font-weight:800;min-width:1.4rem;text-align:center">'+k.antall+'</span>';
+      chip.addEventListener('mouseenter',function(){chip.style.background='#faedc9';});
+      chip.addEventListener('mouseleave',function(){chip.style.background='#fff';});
+      chip.addEventListener('mousedown',function(){chip.style.transform='scale(0.97)';});
+      chip.addEventListener('mouseup',function(){chip.style.transform='';});
+      (function(navnLokal){
+        chip.addEventListener('click',function(e){e.stopPropagation();eksporterKunstnerExcel(navnLokal);});
+      })(k.navn);
       chips.appendChild(chip);
     });
     oversikt.appendChild(chips);
