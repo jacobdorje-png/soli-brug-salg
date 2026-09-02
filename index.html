@@ -2633,7 +2633,7 @@ function eksporterKunstnerExcel(kunstnerNavn){
 
   function lagXlsx(){
     var XLSX=window.XLSX;
-    /* Header: Tittel | Pris | Til Kunstner | Kontonummer */
+    /* Header: Tittel: | Pris: | Til Kunstner: | Kontonummer: */
     var wsData=[['Tittel:','Pris:','Til Kunstner:','Kontonummer:']];
     var sumPris=0,sumTilKunstner=0;
     data.forEach(function(s){
@@ -2642,44 +2642,56 @@ function eksporterKunstnerExcel(kunstnerNavn){
       sumPris+=pris;sumTilKunstner+=tilKunstner;
       wsData.push([s.tittel||'',pris,tilKunstner,'']);
     });
-    /* SUM-rad */
     var sumRadIdx=wsData.length;
     wsData.push(['SUM:',sumPris,sumTilKunstner,'']);
 
     var ws=XLSX.utils.aoa_to_sheet(wsData);
-    ws['!cols']=[{wch:38},{wch:14},{wch:16},{wch:20}];
+    /* Kolonnebredder matcher eksempelet */
+    ws['!cols']=[{wch:36},{wch:30},{wch:27},{wch:27}];
+    /* Radhøyder: header + sum litt høyere enn data-rader */
+    ws['!rows']=[{hpt:26}];
+    for(var i=0;i<data.length;i++)ws['!rows'].push({hpt:24});
+    ws['!rows'].push({hpt:26}); /* SUM-rad */
 
     if(XLSX.__hasStyle){
-      /* Header-rad: fet, gul bakgrunn */
+      var mediumBorder={style:'medium',color:{rgb:'000000'}};
+      var thinBorder={style:'thin',color:{rgb:'000000'}};
+
+      /* HEADER-rad: fet, sentrert, medium border rundt */
       for(var c=0;c<4;c++){
         var ah=XLSX.utils.encode_cell({r:0,c:c});
         if(!ws[ah])ws[ah]={t:'s',v:''};
         ws[ah].s={
-          font:{bold:true,sz:12,color:{rgb:'333333'}},
-          fill:{fgColor:{rgb:'F5C060'}},
-          alignment:{horizontal:'left',vertical:'center'},
-          border:{bottom:{style:'medium',color:{rgb:'B08820'}}}
+          font:{bold:true,sz:14,name:'Calibri'},
+          alignment:{horizontal:'center',vertical:'center'},
+          border:{top:mediumBorder,bottom:mediumBorder,left:mediumBorder,right:mediumBorder}
         };
       }
-      /* Data-rader: uthev "Til Kunstner" (grønn) og "Kontonummer" (blank gul, klar for utfylling) */
+
+      /* DATA-rader (rad 1 til sumRadIdx-1) */
       for(var r=1;r<sumRadIdx;r++){
-        var aK=XLSX.utils.encode_cell({r:r,c:2});
-        if(ws[aK])ws[aK].s={fill:{fgColor:{rgb:'D4EDDA'}},font:{color:{rgb:'1A5A3A'},bold:true},alignment:{horizontal:'right'}};
-        var aKn=XLSX.utils.encode_cell({r:r,c:3});
-        if(!ws[aKn])ws[aKn]={t:'s',v:''};
-        ws[aKn].s={fill:{fgColor:{rgb:'FEF7C8'}},alignment:{horizontal:'left'}};
-        var aP=XLSX.utils.encode_cell({r:r,c:1});
-        if(ws[aP])ws[aP].s={alignment:{horizontal:'right'}};
+        for(var c=0;c<4;c++){
+          var a=XLSX.utils.encode_cell({r:r,c:c});
+          if(!ws[a])ws[a]={t:c===1||c===2?'n':'s',v:c===1||c===2?0:''};
+          /* B (Pris) og C (Til Kunstner) er fet – A (Tittel) og D (Kontonummer) er normal */
+          var erFet=(c===1||c===2);
+          ws[a].s={
+            font:{bold:erFet,sz:14,name:'Calibri'},
+            alignment:{horizontal:'center',vertical:'center'},
+            border:{top:thinBorder,bottom:thinBorder,left:thinBorder,right:thinBorder}
+          };
+        }
       }
-      /* SUM-rad: fet, uthevet bakgrunn */
+
+      /* SUM-rad: fet på B og C, medium border rundt hele raden */
       for(var c=0;c<4;c++){
         var aS=XLSX.utils.encode_cell({r:sumRadIdx,c:c});
-        if(!ws[aS])ws[aS]={t:'s',v:''};
+        if(!ws[aS])ws[aS]={t:c===1||c===2?'n':'s',v:c===1||c===2?0:''};
+        var erFet=(c===1||c===2);
         ws[aS].s={
-          font:{bold:true,sz:12,color:{rgb:'333333'}},
-          fill:{fgColor:{rgb:'F5E4A8'}},
-          border:{top:{style:'medium',color:{rgb:'B08820'}},bottom:{style:'medium',color:{rgb:'B08820'}}},
-          alignment:{horizontal:c===0?'left':'right'}
+          font:{bold:erFet||c===0,sz:14,name:'Calibri'},
+          alignment:{horizontal:'center',vertical:'center'},
+          border:{top:mediumBorder,bottom:mediumBorder,left:c===0?mediumBorder:thinBorder,right:c===3?mediumBorder:thinBorder}
         };
       }
     }
