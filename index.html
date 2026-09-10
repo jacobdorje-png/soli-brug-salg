@@ -3866,7 +3866,7 @@ async function genererRegnskapPDF(){
       });
       var mndKeys=Object.keys(perMnd).sort();
       var sideNr=2;
-      var KORT_H=82;/* mm per salgskort */
+      var KORT_H=75;/* mm per salgskort – 3 per side */
       var MAKS_Y=H-M-8;/* nederste tillatte y før side-brudd */
       mndKeys.forEach(function(mk){
         var mndInfo=perMnd[mk];
@@ -3942,56 +3942,65 @@ function tegnSalgskort(doc,s,x,y,w,h,gronn,graBorder,graTekst){
   else farge=[100,100,100];
   doc.setFillColor.apply(doc,farge);
   doc.rect(x,y,2.5,h,'F');
-  /* Header-rad: ordrenr | dato | butikk */
-  var xInn=x+6,yInn=y+6;
+  /* Header-rad: ordrenr | butikk | dato */
+  var xInn=x+6,yInn=y+5.5;
   var d=new Date(s.created_at);
   var datoStr=isNaN(d.getTime())?'':d.toLocaleDateString('nb-NO',{day:'2-digit',month:'2-digit',year:'2-digit'})+' '+d.toLocaleTimeString('nb-NO',{hour:'2-digit',minute:'2-digit'});
-  doc.setFont('helvetica','bold');doc.setFontSize(11);doc.setTextColor(20);
+  doc.setFont('helvetica','bold');doc.setFontSize(10);doc.setTextColor(20);
   doc.text(salgOnr(s),xInn,yInn);
   var butikkLabel=s.butikk==='soli'?'Soli':(s.butikk==='fredrikstad'?'Fredrikstad':(s.butikk==='innramming'?'Innramming':(s.kunstner==='Gavekort'?'Gavekort':'')));
   doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor.apply(doc,farge);
-  doc.text(butikkLabel,xInn+38,yInn);
+  doc.text(butikkLabel,xInn+30,yInn);
   doc.setTextColor.apply(doc,graTekst);
   doc.text(datoStr,x+w-4,yInn,{align:'right'});
   /* Skille-linje */
   doc.setDrawColor.apply(doc,graBorder);
   doc.setLineWidth(0.2);
   doc.line(xInn,yInn+2,x+w-4,yInn+2);
-  /* Kunde-info */
+
+  /* Body – venstre side: kunde + kunstverk */
   var yy=yInn+7;
   doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(30);
   var kundeNavn=(s.navn||'—');
-  if(kundeNavn.length>50)kundeNavn=kundeNavn.substring(0,47)+'…';
-  doc.text(kundeNavn,xInn,yy);yy+=4;
-  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(70);
+  if(kundeNavn.length>45)kundeNavn=kundeNavn.substring(0,42)+'...';
+  doc.text(kundeNavn,xInn,yy);yy+=3.8;
+  doc.setFont('helvetica','normal');doc.setFontSize(7.8);doc.setTextColor(70);
   var kontakt=[];
   if(s.telefon)kontakt.push(s.telefon);
   if(s.epost)kontakt.push(s.epost);
-  if(kontakt.length){doc.text(kontakt.join(' · '),xInn,yy);yy+=4;}
-  if(s.adresse){var adr=s.adresse.length>60?s.adresse.substring(0,57)+'…':s.adresse;doc.text(adr,xInn,yy);yy+=4;}
-  yy+=2;
-  /* Kunstverk-info (kunstner + tittel) */
-  doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(30);
+  if(kontakt.length){
+    var kontaktLinje=kontakt.join(' | ');
+    if(kontaktLinje.length>62)kontaktLinje=kontaktLinje.substring(0,59)+'...';
+    doc.text(kontaktLinje,xInn,yy);yy+=3.5;
+  }
+  if(s.adresse){
+    var adr=s.adresse.length>62?s.adresse.substring(0,59)+'...':s.adresse;
+    doc.text(adr,xInn,yy);yy+=3.5;
+  }
+  yy+=1.5;
+  /* Kunstverk-info */
+  doc.setFont('helvetica','bold');doc.setFontSize(8.5);doc.setTextColor(30);
   var verkTekst;
   if(s.kunstner==='Gavekort')verkTekst='Gavekort';
   else if(s.butikk==='innramming')verkTekst='Innramming: '+(s.tittel||'—');
   else verkTekst=(s.kunstner||'—')+' – '+(s.tittel||'—')+(s.edisjon?' ('+s.edisjon+')':'');
-  if(verkTekst.length>80)verkTekst=verkTekst.substring(0,77)+'…';
-  doc.text(verkTekst,xInn,yy);yy+=4;
+  if(verkTekst.length>72)verkTekst=verkTekst.substring(0,69)+'...';
+  doc.text(verkTekst,xInn,yy);yy+=3.8;
   if(s.type&&s.type!=='Innramming'){
-    doc.setFont('helvetica','italic');doc.setFontSize(8);doc.setTextColor(100);
-    doc.text(s.type,xInn,yy);yy+=4;
+    doc.setFont('helvetica','italic');doc.setFontSize(7.5);doc.setTextColor(120);
+    doc.text(s.type,xInn,yy);
   }
-  /* Priser (høyre side) */
+
+  /* Priser (høyre side) – kompakt */
   var xPris=x+w-4;
   var yPris=yInn+7;
-  doc.setFont('helvetica','normal');doc.setFontSize(8);doc.setTextColor(70);
+  doc.setFont('helvetica','normal');doc.setFontSize(7.8);doc.setTextColor(70);
   function prisLinje(label,verdi,fet){
-    doc.text(label,xPris-25,yPris,{align:'right'});
-    if(fet){doc.setFont('helvetica','bold');doc.setTextColor(20);}
+    doc.text(label,xPris-27,yPris,{align:'right'});
+    if(fet){doc.setFont('helvetica','bold');doc.setTextColor(20);doc.setFontSize(8.5);}
     doc.text(kr(verdi),xPris,yPris,{align:'right'});
-    if(fet){doc.setFont('helvetica','normal');doc.setTextColor(70);}
-    yPris+=4;
+    if(fet){doc.setFont('helvetica','normal');doc.setTextColor(70);doc.setFontSize(7.8);}
+    yPris+=3.6;
   }
   if(s.pris)prisLinje('Pris:',s.pris);
   if(s.bkh)prisLinje('BKH 5%:',s.bkh);
@@ -4000,22 +4009,30 @@ function tegnSalgskort(doc,s,x,y,w,h,gronn,graBorder,graTekst){
   /* Total-strek */
   doc.setDrawColor(180);
   doc.setLineWidth(0.2);
-  doc.line(xPris-32,yPris-2,xPris,yPris-2);
+  doc.line(xPris-34,yPris-1.6,xPris,yPris-1.6);
   prisLinje('TOTAL:',s.total,true);
 
-  /* Bunn-linje: status */
-  var yStatus=y+h-4;
-  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(100);
+  /* Bunn-linje: status – ASCII-tegn (jsPDF default font støtter ikke unicode-symboler) */
+  var yStatus=y+h-3;
+  doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(100);
   var statuser=[];
-  if(s.betalt_kort)statuser.push('✓ Betalt kort');
-  else if(s.skal_ha_faktura&&s.faktura_sendt)statuser.push('✓ Faktura sendt');
-  else if(s.skal_ha_faktura)statuser.push('◯ Faktura');
-  else statuser.push('◯ Ubetalt');
-  if(s.levering)statuser.push('Leveres');
-  else if(s.hentet)statuser.push('✓ Hentet');
+  if(s.betalt_kort)statuser.push('Betalt kort');
+  else if(s.skal_ha_faktura&&s.faktura_sendt)statuser.push('Faktura sendt');
+  else if(s.skal_ha_faktura)statuser.push('Faktura ikke sendt');
+  else statuser.push('Ubetalt');
+  if(s.levering)statuser.push('Skal leveres');
+  else if(s.hentet)statuser.push('Hentet');
   if(s.selger)statuser.push('Selger: '+s.selger);
   if(s.ekstraliste)statuser.push('Liste: '+s.ekstraliste);
-  doc.text(statuser.join('   ·   '),xInn,yStatus);
+  doc.text(statuser.join('   |   '),xInn,yStatus);
+
+  /* Notat hvis det finnes – over statuslinjen */
+  if(s.notat){
+    doc.setFont('helvetica','italic');doc.setFontSize(7);doc.setTextColor(120);
+    var notat=s.notat.replace(/\s+/g,' ');
+    if(notat.length>90)notat=notat.substring(0,87)+'...';
+    doc.text('Notat: '+notat,xInn,y+h-7.5);
+  }
 }
 function renderBetaling(){
   var list=document.getElementById('betaling-list');
