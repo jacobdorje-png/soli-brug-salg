@@ -99,11 +99,11 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 /* MAIN NAV */
 .main-nav{display:grid;grid-template-columns:repeat(12,1fr);background:var(--white);border-bottom:2px solid var(--border);position:sticky;top:64px;z-index:190;box-shadow:0 2px 8px rgba(0,0,0,.06)}
 .main-tab{padding:.55rem .3rem;border:none;background:transparent;font-family:'proxima-nova','Nunito',sans-serif;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer;border-bottom:4px solid transparent;margin-bottom:-2px;transition:all .2s;text-align:center;line-height:1.15;min-height:50px;display:flex;align-items:center;justify-content:center;gap:.2rem}
-/* Rad 1 – 3 registrerings-faner, hver spenner 4/12 kolonner */
-#tab-soli,#tab-fredrikstad,#tab-innramming{grid-column:span 4}
+/* Rad 1 – 4 registrerings-/referanse-faner, hver spenner 3/12 kolonner */
+#tab-soli,#tab-fredrikstad,#tab-innramming,#tab-kunder{grid-column:span 3}
 /* Rad 2 – 4 oppfølgings-faner, hver spenner 3/12 kolonner */
 #tab-faktura,#tab-levering,#tab-hentet,#tab-betaling{grid-column:span 3}
-@media(min-width:700px){.main-nav{grid-template-columns:repeat(7,1fr)}.main-tab{font-size:.9rem;min-height:44px}#tab-soli,#tab-fredrikstad,#tab-innramming,#tab-faktura,#tab-levering,#tab-hentet,#tab-betaling{grid-column:auto}}
+@media(min-width:700px){.main-nav{grid-template-columns:repeat(8,1fr)}.main-tab{font-size:.9rem;min-height:44px}#tab-soli,#tab-fredrikstad,#tab-innramming,#tab-kunder,#tab-faktura,#tab-levering,#tab-hentet,#tab-betaling{grid-column:auto}}
 .main-tab:active{opacity:.75}
 /* Soli – grønn */
 #tab-soli{color:#3a7a52}
@@ -123,6 +123,9 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 /* Betaling – turkis */
 #tab-betaling{color:#1a6a6a}
 #tab-betaling.active{color:#fff;background:#1a6a6a;border-bottom-color:#0a5050;border-radius:6px 6px 0 0}
+/* Kunder – mørk kaffebrun */
+#tab-kunder{color:#5a3a20}
+#tab-kunder.active{color:#fff;background:#5a3a20;border-bottom-color:#3a2510;border-radius:6px 6px 0 0}
 #tab-innramming.active{color:#fff;background:#3a5a7a;border-bottom-color:#2d4860;border-radius:6px 6px 0 0}
 
 /* PAGES */
@@ -475,6 +478,7 @@ datalist{display:none!important}
     <button class="main-tab active" id="tab-soli" onclick="setMainTab('soli')">🛒 Salg Soli</button>
     <button class="main-tab" id="tab-fredrikstad" onclick="setMainTab('fredrikstad')">🛒 Salg Fredrikstad</button>
     <button class="main-tab" id="tab-innramming" onclick="setMainTab('innramming')">🖼 Innramming</button>
+    <button class="main-tab" id="tab-kunder" onclick="setMainTab('kunder')">📇 Kunder</button>
     <button class="main-tab" id="tab-faktura" onclick="setMainTab('faktura')">📄 Faktura</button>
     <button class="main-tab" id="tab-levering" onclick="setMainTab('levering')">🚚 Levering</button>
     <button class="main-tab" id="tab-hentet" onclick="setMainTab('hentet')">🛍️ Hentet</button>
@@ -654,6 +658,18 @@ datalist{display:none!important}
       <div id="ir-empty">Ingen innrammingsjobber ennå.</div>
       <div id="ir-list"></div>
     </div>
+  </div>
+</div>
+
+<!-- ══════ KUNDEKARTOTEK ══════ -->
+<div class="page" id="page-kunder">
+  <div class="section">
+    <div class="section-head">
+      <div class="stitle">📇 Kundekartotek</div>
+      <div id="kunder-toolbar" style="display:flex;gap:.5rem;align-items:center"></div>
+    </div>
+    <div id="kunder-innhold" style="padding:0 .5rem"></div>
+    <div id="kunder-empty" style="text-align:center;color:var(--muted);padding:2rem;font-size:.9rem;font-weight:600;display:none">Ingen kunder registrert enda.</div>
   </div>
 </div>
 
@@ -1123,6 +1139,7 @@ document.getElementById('refresh-btn').addEventListener('click',async function()
     else if(pid==='page-faktura')renderFaktura();
     else if(pid==='page-levering')renderLevering();
     else if(pid==='page-hentet')renderHentet();
+    else if(pid==='page-kunder')renderKunder();
     else if(pid==='page-betaling')renderBetaling();
     suksess=true;
   }catch(e){
@@ -1140,11 +1157,12 @@ if(sessionStorage.getItem('sbauth')==='1'){document.getElementById('login-screen
 
 /* ── MAIN TAB ── */
 function setMainTab(tab){
-  ['soli','fredrikstad','innramming','faktura','levering','hentet','betaling'].forEach(function(t){
+  ['soli','fredrikstad','innramming','kunder','faktura','levering','hentet','betaling'].forEach(function(t){
     var el=document.getElementById('tab-'+t);if(el)el.className='main-tab'+(tab===t?' active':'');
   });
   document.getElementById('page-salg').className='page'+(tab==='soli'||tab==='fredrikstad'?' active':'');
   document.getElementById('page-innramming').className='page'+(tab==='innramming'?' active':'');
+  document.getElementById('page-kunder').className='page'+(tab==='kunder'?' active':'');
   document.getElementById('page-faktura').className='page'+(tab==='faktura'?' active':'');
   document.getElementById('page-levering').className='page'+(tab==='levering'?' active':'');
   document.getElementById('page-hentet').className='page'+(tab==='hentet'?' active':'');
@@ -1153,6 +1171,7 @@ function setMainTab(tab){
   if(tab==='levering')loadLevering();
   if(tab==='hentet')loadHentet();
   if(tab==='betaling')loadBetaling();
+  if(tab==='kunder')loadKunder();
   if(tab==='soli'||tab==='fredrikstad'){
     aktivButikk=tab;
     /* Bakgrunnsfarge og header-farge */
@@ -3668,6 +3687,278 @@ function betalingKategori(s){
 }
 async function loadBetaling(){
   renderBetaling();
+}
+
+/* ══════════════════════════════════════════════════════
+   KUNDEKARTOTEK
+   ══════════════════════════════════════════════════════
+   Grupperer alle salg etter TELEFONNUMMER. Alle salg med samme telefon
+   samles på samme kunde, uansett hvor lang tid det går mellom kjøpene.
+   Salg uten telefon vises IKKE i kartoteket.
+   Har egen søkefunksjon (påvirker ikke hovedsøket). */
+var kunderAktivTlf=null;/* null=liste-modus, ellers=aktivt kunde-telefon */
+var kunderSokTekst='';
+var kunderSokTimeout=null;
+
+async function loadKunder(){
+  renderKunder();
+}
+
+/* Normaliser telefonnummer: fjern mellomrom, bindestrek, plusstegn, land-kode 47 */
+function normTlf(tlf){
+  if(!tlf)return '';
+  var t=String(tlf).replace(/[\s\-()]/g,'').replace(/^\+?47/,'');
+  return t;
+}
+
+/* Bygger opp {tlf: {navn, telefon, epost, adresse, salg, antallKjop, totalSum, sisteSalg}} */
+function samleKunder(){
+  var kunder={};
+  alleSalg.forEach(function(s){
+    var tlf=normTlf(s.telefon);
+    if(!tlf)return;/* Ignorer salg uten telefon */
+    if(!kunder[tlf]){
+      kunder[tlf]={
+        telefon:tlf,visTlf:s.telefon,navn:'',epost:'',adresse:'',
+        salg:[],antallKjop:0,totalSum:0,sisteSalg:'',forsteSalg:''
+      };
+    }
+    var k=kunder[tlf];
+    k.salg.push(s);
+    k.antallKjop++;
+    k.totalSum+=(s.total||0);
+    var kdato=s.created_at||'';
+    if(!k.forsteSalg||kdato<k.forsteSalg)k.forsteSalg=kdato;
+    /* Bruk seneste kjente info */
+    if(!k.sisteSalg||kdato>=k.sisteSalg){
+      k.sisteSalg=kdato;
+      if(s.navn)k.navn=s.navn;
+      if(s.epost)k.epost=s.epost;
+      if(s.adresse)k.adresse=s.adresse;
+      if(s.telefon)k.visTlf=s.telefon;
+    }
+    /* Fyll inn fra eldre salg hvis siste ikke har det */
+    if(!k.navn&&s.navn)k.navn=s.navn;
+    if(!k.epost&&s.epost)k.epost=s.epost;
+    if(!k.adresse&&s.adresse)k.adresse=s.adresse;
+  });
+  return Object.values(kunder);
+}
+
+/* Første bokstav for alfabet-gruppering. Æ/Ø/Å bevares. # for tallnavn eller uten navn. */
+function kundeBokstav(k){
+  var navn=(k.navn||'').trim();
+  if(!navn)return '?';
+  var b=navn.charAt(0).toUpperCase();
+  if(/[A-ZÆØÅ]/.test(b))return b;
+  return '#';
+}
+
+function renderKunder(){
+  if(kunderAktivTlf){
+    renderKundeDetalj();
+  } else {
+    renderKundeListe();
+  }
+}
+
+function renderKundeListe(){
+  var innhold=document.getElementById('kunder-innhold');
+  var empty=document.getElementById('kunder-empty');
+  var toolbar=document.getElementById('kunders-toolbar')||document.getElementById('kunder-toolbar');
+  innhold.innerHTML='';
+  toolbar.innerHTML='';
+
+  var alleKunder=samleKunder();
+  if(!alleKunder.length){
+    empty.style.display='block';
+    empty.innerHTML='Ingen kunder registrert enda.<br><span style="font-weight:400;color:var(--muted);font-size:.85rem">Kunder legges inn automatisk fra salg som har telefonnummer.</span>';
+    return;
+  }
+  empty.style.display='none';
+
+  /* Toolbar: totalt antall kunder */
+  var stat=document.createElement('div');
+  stat.style.cssText='font-size:.8rem;color:#5a3a20;font-weight:700;padding:.35rem .7rem;background:#f5eede;border:1.5px solid #d4b06e;border-radius:20px';
+  stat.textContent='👥 '+alleKunder.length+' kunder';
+  toolbar.appendChild(stat);
+
+  /* Søkefelt (egen, uavhengig av hovedsøket) */
+  var sokBoks=document.createElement('div');
+  sokBoks.style.cssText='padding:.5rem;margin-bottom:.6rem';
+  sokBoks.innerHTML='<div style="position:relative">'
+    +'<span style="position:absolute;left:.9rem;top:50%;transform:translateY(-50%);font-size:1rem;color:#7a5030;pointer-events:none">🔍</span>'
+    +'<input type="text" id="kunde-sok-input" placeholder="Søk etter navn, telefon eller e-post…" value="'+kunderSokTekst.replace(/"/g,'&quot;')+'" '
+    +'style="width:100%;padding:.7rem 2.5rem .7rem 2.5rem;border:1.8px solid #d4b06e;border-radius:10px;font-size:.95rem;font-family:inherit;background:#fff;box-sizing:border-box">'
+    +(kunderSokTekst?'<button type="button" id="kunde-sok-clear" style="position:absolute;right:.5rem;top:50%;transform:translateY(-50%);background:#5a3a20;color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center">×</button>':'')
+    +'</div>';
+  innhold.appendChild(sokBoks);
+
+  /* Filtrer og sorter kunder alfabetisk */
+  var filter=kunderSokTekst.trim().toLowerCase();
+  var visKunder=alleKunder.filter(function(k){
+    if(!filter)return true;
+    if((k.navn||'').toLowerCase().indexOf(filter)>=0)return true;
+    if((k.telefon||'').indexOf(filter.replace(/\D/g,''))>=0)return true;
+    if((k.visTlf||'').toLowerCase().indexOf(filter)>=0)return true;
+    if((k.epost||'').toLowerCase().indexOf(filter)>=0)return true;
+    return false;
+  });
+  visKunder.sort(function(a,b){
+    var ba=kundeBokstav(a),bb=kundeBokstav(b);
+    /* # og ? til slutt */
+    var pri={'#':999,'?':1000};
+    var pa=pri[ba]||ba.charCodeAt(0),pb=pri[bb]||bb.charCodeAt(0);
+    if(pa!==pb)return pa-pb;
+    return (a.navn||a.visTlf||'').localeCompare(b.navn||b.visTlf||'','nb');
+  });
+
+  if(!visKunder.length){
+    var ingen=document.createElement('div');
+    ingen.style.cssText='text-align:center;color:var(--muted);padding:2rem;font-size:.9rem;font-weight:600';
+    ingen.textContent='Ingen kunder matcher søket.';
+    innhold.appendChild(ingen);
+    settOppKundeSok();
+    return;
+  }
+
+  /* Grupper etter bokstav og lag alfabet-navigasjon */
+  var grupper={};
+  visKunder.forEach(function(k){
+    var b=kundeBokstav(k);
+    if(!grupper[b])grupper[b]=[];
+    grupper[b].push(k);
+  });
+  var bokstaver=Object.keys(grupper).sort(function(a,b){
+    var pri={'#':999,'?':1000};
+    return (pri[a]||a.charCodeAt(0))-(pri[b]||b.charCodeAt(0));
+  });
+
+  /* Alfabet-navigasjon (hopp til bokstav) */
+  if(!filter&&bokstaver.length>1){
+    var alfabetBar=document.createElement('div');
+    alfabetBar.style.cssText='display:flex;flex-wrap:wrap;gap:.25rem;padding:.4rem .5rem;background:#fef7e8;border-radius:8px;margin-bottom:.6rem;position:sticky;top:0;z-index:5';
+    bokstaver.forEach(function(b){
+      var chip=document.createElement('button');
+      chip.type='button';
+      chip.textContent=b;
+      chip.style.cssText='background:#fff;border:1.5px solid #d4b06e;color:#5a3a20;padding:.25rem .55rem;border-radius:6px;font-size:.85rem;font-weight:800;cursor:pointer;font-family:inherit;min-width:2rem';
+      chip.addEventListener('click',function(){
+        var target=document.getElementById('kunde-gruppe-'+b);
+        if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
+      });
+      alfabetBar.appendChild(chip);
+    });
+    innhold.appendChild(alfabetBar);
+  }
+
+  /* Kunde-rader gruppert etter bokstav */
+  bokstaver.forEach(function(b){
+    var gruppeHeader=document.createElement('div');
+    gruppeHeader.id='kunde-gruppe-'+b;
+    gruppeHeader.style.cssText='font-size:1.3rem;font-weight:800;color:#5a3a20;padding:.7rem .8rem .4rem;background:linear-gradient(135deg,#fef7e8 0%,#faedc9 100%);border-left:5px solid #d4b06e;border-radius:8px;margin:.4rem 0 .4rem';
+    gruppeHeader.textContent=b==='?'?'Ukjent navn':(b==='#'?'#':b);
+    innhold.appendChild(gruppeHeader);
+
+    grupper[b].forEach(function(k){
+      var rad=document.createElement('div');
+      rad.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.7rem .85rem;background:#fff;border:1.5px solid var(--border);border-radius:10px;margin-bottom:.4rem;cursor:pointer;transition:transform .08s,box-shadow .15s,border-color .15s';
+      rad.addEventListener('mouseenter',function(){rad.style.borderColor='#5a3a20';rad.style.boxShadow='0 2px 8px rgba(90,58,32,.12)';});
+      rad.addEventListener('mouseleave',function(){rad.style.borderColor='';rad.style.boxShadow='';});
+      rad.addEventListener('mousedown',function(){rad.style.transform='scale(0.99)';});
+      rad.addEventListener('mouseup',function(){rad.style.transform='';});
+      rad.addEventListener('click',function(){kunderAktivTlf=k.telefon;renderKunder();window.scrollTo({top:0,behavior:'smooth'});});
+
+      var venstre=document.createElement('div');
+      venstre.style.cssText='flex:1;min-width:0';
+      venstre.innerHTML='<div style="font-weight:800;color:#111;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(k.navn||'(Uten navn)')+'</div>'
+        +'<div style="font-size:.78rem;color:var(--muted);font-weight:600;margin-top:.15rem">📞 '+(k.visTlf||k.telefon)+(k.epost?' · ✉️ '+k.epost:'')+'</div>';
+      var hoyre=document.createElement('div');
+      hoyre.style.cssText='display:flex;flex-direction:column;align-items:flex-end;gap:.15rem;font-size:.75rem;font-weight:700;color:#5a3a20;white-space:nowrap';
+      hoyre.innerHTML='<span style="background:#5a3a20;color:#fff;padding:.15rem .55rem;border-radius:10px;font-weight:800">'+k.antallKjop+' kjøp</span>'
+        +'<span style="color:#1a5a3a;font-size:.85rem">'+kr(k.totalSum)+'</span>';
+      rad.appendChild(venstre);rad.appendChild(hoyre);
+      innhold.appendChild(rad);
+    });
+  });
+
+  settOppKundeSok();
+}
+
+function settOppKundeSok(){
+  var input=document.getElementById('kunde-sok-input');
+  if(!input)return;
+  input.addEventListener('input',function(){
+    var v=this.value;
+    if(kunderSokTimeout)clearTimeout(kunderSokTimeout);
+    kunderSokTimeout=setTimeout(function(){
+      kunderSokTekst=v;
+      renderKunder();
+    },180);
+  });
+  var clr=document.getElementById('kunde-sok-clear');
+  if(clr)clr.addEventListener('click',function(){
+    kunderSokTekst='';
+    renderKunder();
+  });
+}
+
+function renderKundeDetalj(){
+  var innhold=document.getElementById('kunder-innhold');
+  var toolbar=document.getElementById('kunder-toolbar');
+  innhold.innerHTML='';
+  toolbar.innerHTML='';
+  document.getElementById('kunder-empty').style.display='none';
+
+  var alleKunder=samleKunder();
+  var kunde=alleKunder.find(function(k){return k.telefon===kunderAktivTlf;});
+  if(!kunde){kunderAktivTlf=null;renderKunder();return;}
+
+  /* Toolbar: tilbake-knapp */
+  var tilbakeBtn=document.createElement('button');
+  tilbakeBtn.type='button';
+  tilbakeBtn.style.cssText='background:#fff;border:1.5px solid #5a3a20;color:#5a3a20;padding:.4rem .8rem;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit';
+  tilbakeBtn.innerHTML='← Tilbake til liste';
+  tilbakeBtn.addEventListener('click',function(){kunderAktivTlf=null;renderKunder();});
+  toolbar.appendChild(tilbakeBtn);
+
+  /* Kunde-header */
+  var header=document.createElement('div');
+  header.style.cssText='background:linear-gradient(135deg,#fef7e8 0%,#faedc9 100%);border-left:5px solid #5a3a20;border-radius:12px;padding:1.2rem 1rem;margin:.4rem 0 .8rem';
+  header.innerHTML='<div style="font-size:1.4rem;font-weight:800;color:#111;margin-bottom:.4rem">'+(kunde.navn||'(Uten navn)')+'</div>'
+    +'<div style="font-size:.88rem;color:#5a3a20;font-weight:600;line-height:1.7">'
+      +'<div>📞 <a href="tel:'+kunde.visTlf+'" style="color:#5a3a20;text-decoration:none;font-weight:700">'+kunde.visTlf+'</a></div>'
+      +(kunde.epost?'<div>✉️ <a href="mailto:'+kunde.epost+'" style="color:#5a3a20;text-decoration:none;font-weight:700">'+kunde.epost+'</a></div>':'')
+      +(kunde.adresse?'<div>🏠 '+kunde.adresse+'</div>':'')
+    +'</div>';
+  innhold.appendChild(header);
+
+  /* Statistikk-boks */
+  var stat=document.createElement('div');
+  stat.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1rem';
+  function statBoks(label,verdi,farge){
+    return '<div style="background:#fff;border:1.5px solid '+farge+';border-radius:10px;padding:.7rem .5rem;text-align:center">'
+      +'<div style="font-size:.72rem;font-weight:700;color:'+farge+';text-transform:uppercase;letter-spacing:.5px;margin-bottom:.2rem">'+label+'</div>'
+      +'<div style="font-size:1.1rem;font-weight:800;color:#111">'+verdi+'</div>'
+      +'</div>';
+  }
+  var forsteData=kunde.forsteSalg?new Date(kunde.forsteSalg):null;
+  var forsteStr=forsteData?forsteData.toLocaleDateString('nb-NO',{day:'2-digit',month:'2-digit',year:'2-digit'}):'—';
+  stat.innerHTML=statBoks('Antall kjøp',kunde.antallKjop,'#5a3a20')
+    +statBoks('Total sum',kr(kunde.totalSum),'#1a5a3a')
+    +statBoks('Første kjøp',forsteStr,'#3a5a7a');
+  innhold.appendChild(stat);
+
+  /* Alle salgskort sortert nyeste først */
+  var overskrift=document.createElement('div');
+  overskrift.style.cssText='font-size:.9rem;font-weight:800;color:#5a3a20;padding:.6rem .5rem;letter-spacing:.5px;text-transform:uppercase';
+  overskrift.textContent='🛒 Alle kjøp ('+kunde.antallKjop+')';
+  innhold.appendChild(overskrift);
+
+  var kundeSalg=kunde.salg.slice().sort(function(a,b){return (b.created_at||'').localeCompare(a.created_at||'');});
+  kundeSalg.forEach(function(s){
+    innhold.appendChild(makeCard(s,false));
+  });
 }
 
 /* ══════════════ REGNSKAPS-PDF ══════════════
