@@ -3703,6 +3703,7 @@ async function loadBetaling(){
 var kunderAktivTlf=null;/* null=liste-modus, ellers=aktivt kunde-telefon */
 var kunderSokTekst='';
 var kunderSokTimeout=null;
+var kunderSortering='alfabetisk';/* 'alfabetisk' | 'sum' | 'antall' */
 
 async function loadKunder(){
   renderKunder();
@@ -3789,7 +3790,7 @@ function renderKundeListe(){
 
   /* Søkefelt (egen, uavhengig av hovedsøket) */
   var sokBoks=document.createElement('div');
-  sokBoks.style.cssText='padding:.5rem;margin-bottom:.6rem';
+  sokBoks.style.cssText='padding:.5rem;margin-bottom:.4rem';
   sokBoks.innerHTML='<div style="position:relative">'
     +'<span style="position:absolute;left:.9rem;top:50%;transform:translateY(-50%);font-size:1rem;color:#7a5030;pointer-events:none">🔍</span>'
     +'<input type="text" id="kunde-sok-input" placeholder="Søk etter navn, telefon eller e-post…" value="'+kunderSokTekst.replace(/"/g,'&quot;')+'" '
@@ -3798,7 +3799,29 @@ function renderKundeListe(){
     +'</div>';
   innhold.appendChild(sokBoks);
 
-  /* Filtrer og sorter kunder alfabetisk */
+  /* Sortering-chips: Alfabetisk / Sum / Antall */
+  var sortWrap=document.createElement('div');
+  sortWrap.style.cssText='display:flex;gap:.35rem;padding:0 .5rem .6rem;flex-wrap:wrap;align-items:center';
+  var sortLabel=document.createElement('span');
+  sortLabel.style.cssText='font-size:.75rem;font-weight:800;color:#5a3a20;text-transform:uppercase;letter-spacing:.5px;margin-right:.2rem';
+  sortLabel.textContent='Sortér:';
+  sortWrap.appendChild(sortLabel);
+  function lagSortChip(navn,verdi){
+    var chip=document.createElement('button');
+    chip.type='button';
+    var aktiv=kunderSortering===verdi;
+    chip.style.cssText='padding:.3rem .75rem;border-radius:20px;font-size:.78rem;font-weight:700;cursor:pointer;font-family:inherit;border:1.5px solid #5a3a20;transition:background .12s;'
+      +(aktiv?'background:#5a3a20;color:#fff':'background:#fff;color:#5a3a20');
+    chip.textContent=navn;
+    chip.addEventListener('click',function(){kunderSortering=verdi;renderKunder();});
+    return chip;
+  }
+  sortWrap.appendChild(lagSortChip('🔤 A–Å','alfabetisk'));
+  sortWrap.appendChild(lagSortChip('💰 Høyest sum','sum'));
+  sortWrap.appendChild(lagSortChip('🛒 Flest kjøp','antall'));
+  innhold.appendChild(sortWrap);
+
+  /* Filtrer og sorter kunder */
   var filter=kunderSokTekst.trim().toLowerCase();
   var visKunder=alleKunder.filter(function(k){
     if(!filter)return true;
@@ -3808,14 +3831,23 @@ function renderKundeListe(){
     if((k.epost||'').toLowerCase().indexOf(filter)>=0)return true;
     return false;
   });
-  visKunder.sort(function(a,b){
-    var ba=kundeBokstav(a),bb=kundeBokstav(b);
-    /* # og ? til slutt */
-    var pri={'#':999,'?':1000};
-    var pa=pri[ba]||ba.charCodeAt(0),pb=pri[bb]||bb.charCodeAt(0);
-    if(pa!==pb)return pa-pb;
-    return (a.navn||a.visTlf||'').localeCompare(b.navn||b.visTlf||'','nb');
-  });
+  if(kunderSortering==='sum'){
+    visKunder.sort(function(a,b){return b.totalSum-a.totalSum;});
+  } else if(kunderSortering==='antall'){
+    visKunder.sort(function(a,b){
+      if(b.antallKjop!==a.antallKjop)return b.antallKjop-a.antallKjop;
+      return b.totalSum-a.totalSum;
+    });
+  } else {
+    /* Alfabetisk (standard) */
+    visKunder.sort(function(a,b){
+      var ba=kundeBokstav(a),bb=kundeBokstav(b);
+      var pri={'#':999,'?':1000};
+      var pa=pri[ba]||ba.charCodeAt(0),pb=pri[bb]||bb.charCodeAt(0);
+      if(pa!==pb)return pa-pb;
+      return (a.navn||a.visTlf||'').localeCompare(b.navn||b.visTlf||'','nb');
+    });
+  }
 
   if(!visKunder.length){
     var ingen=document.createElement('div');
@@ -3826,67 +3858,84 @@ function renderKundeListe(){
     return;
   }
 
-  /* Grupper etter bokstav og lag alfabet-navigasjon */
-  var grupper={};
-  visKunder.forEach(function(k){
-    var b=kundeBokstav(k);
-    if(!grupper[b])grupper[b]=[];
-    grupper[b].push(k);
-  });
-  var bokstaver=Object.keys(grupper).sort(function(a,b){
-    var pri={'#':999,'?':1000};
-    return (pri[a]||a.charCodeAt(0))-(pri[b]||b.charCodeAt(0));
-  });
-
-  /* Alfabet-navigasjon (hopp til bokstav) */
-  if(!filter&&bokstaver.length>1){
-    var alfabetBar=document.createElement('div');
-    alfabetBar.style.cssText='display:flex;flex-wrap:wrap;gap:.25rem;padding:.4rem .5rem;background:#fef7e8;border-radius:8px;margin-bottom:.6rem;position:sticky;top:0;z-index:5';
-    bokstaver.forEach(function(b){
-      var chip=document.createElement('button');
-      chip.type='button';
-      chip.textContent=b;
-      chip.style.cssText='background:#fff;border:1.5px solid #d4b06e;color:#5a3a20;padding:.25rem .55rem;border-radius:6px;font-size:.85rem;font-weight:800;cursor:pointer;font-family:inherit;min-width:2rem';
-      chip.addEventListener('click',function(){
-        var target=document.getElementById('kunde-gruppe-'+b);
-        if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
-      });
-      alfabetBar.appendChild(chip);
+  /* Alfabet-navigasjon (kun i alfabetisk modus, uten filter) */
+  if(kunderSortering==='alfabetisk'&&!filter){
+    var grupper={};
+    visKunder.forEach(function(k){
+      var b=kundeBokstav(k);
+      if(!grupper[b])grupper[b]=[];
+      grupper[b].push(k);
     });
-    innhold.appendChild(alfabetBar);
+    var bokstaver=Object.keys(grupper).sort(function(a,b){
+      var pri={'#':999,'?':1000};
+      return (pri[a]||a.charCodeAt(0))-(pri[b]||b.charCodeAt(0));
+    });
+    if(bokstaver.length>1){
+      var alfabetBar=document.createElement('div');
+      alfabetBar.style.cssText='display:flex;flex-wrap:wrap;gap:.25rem;padding:.4rem .5rem;background:#fef7e8;border-radius:8px;margin-bottom:.6rem;position:sticky;top:0;z-index:5';
+      bokstaver.forEach(function(b){
+        var chip=document.createElement('button');
+        chip.type='button';
+        chip.textContent=b;
+        chip.style.cssText='background:#fff;border:1.5px solid #d4b06e;color:#5a3a20;padding:.25rem .55rem;border-radius:6px;font-size:.85rem;font-weight:800;cursor:pointer;font-family:inherit;min-width:2rem';
+        chip.addEventListener('click',function(){
+          var target=document.getElementById('kunde-gruppe-'+b);
+          if(target)target.scrollIntoView({behavior:'smooth',block:'start'});
+        });
+        alfabetBar.appendChild(chip);
+      });
+      innhold.appendChild(alfabetBar);
+    }
+    /* Kunde-rader gruppert etter bokstav */
+    bokstaver.forEach(function(b){
+      var gruppeHeader=document.createElement('div');
+      gruppeHeader.id='kunde-gruppe-'+b;
+      gruppeHeader.style.cssText='font-size:1.3rem;font-weight:800;color:#5a3a20;padding:.7rem .8rem .4rem;background:linear-gradient(135deg,#fef7e8 0%,#faedc9 100%);border-left:5px solid #d4b06e;border-radius:8px;margin:.4rem 0 .4rem';
+      gruppeHeader.textContent=b==='?'?'Ukjent navn':(b==='#'?'#':b);
+      innhold.appendChild(gruppeHeader);
+      grupper[b].forEach(function(k){innhold.appendChild(lagKundeRad(k));});
+    });
+  } else {
+    /* Flat liste (sum/antall-sortering eller filter aktiv) */
+    var rangHeader=document.createElement('div');
+    rangHeader.style.cssText='font-size:.8rem;font-weight:800;color:#5a3a20;padding:.5rem .8rem;background:linear-gradient(135deg,#fef7e8 0%,#faedc9 100%);border-left:5px solid #d4b06e;border-radius:8px;margin:.4rem 0 .4rem;letter-spacing:.3px';
+    if(filter){
+      rangHeader.textContent='🔍 '+visKunder.length+' treff'+(kunderSortering!=='alfabetisk'?' — sortert etter '+(kunderSortering==='sum'?'sum':'antall kjøp'):'');
+    } else if(kunderSortering==='sum'){
+      rangHeader.textContent='💰 Sortert etter total sum (høyest først)';
+    } else if(kunderSortering==='antall'){
+      rangHeader.textContent='🛒 Sortert etter antall kjøp (flest først)';
+    }
+    innhold.appendChild(rangHeader);
+    visKunder.forEach(function(k,i){innhold.appendChild(lagKundeRad(k,i+1));});
   }
 
-  /* Kunde-rader gruppert etter bokstav */
-  bokstaver.forEach(function(b){
-    var gruppeHeader=document.createElement('div');
-    gruppeHeader.id='kunde-gruppe-'+b;
-    gruppeHeader.style.cssText='font-size:1.3rem;font-weight:800;color:#5a3a20;padding:.7rem .8rem .4rem;background:linear-gradient(135deg,#fef7e8 0%,#faedc9 100%);border-left:5px solid #d4b06e;border-radius:8px;margin:.4rem 0 .4rem';
-    gruppeHeader.textContent=b==='?'?'Ukjent navn':(b==='#'?'#':b);
-    innhold.appendChild(gruppeHeader);
-
-    grupper[b].forEach(function(k){
-      var rad=document.createElement('div');
-      rad.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.7rem .85rem;background:#fff;border:1.5px solid var(--border);border-radius:10px;margin-bottom:.4rem;cursor:pointer;transition:transform .08s,box-shadow .15s,border-color .15s';
-      rad.addEventListener('mouseenter',function(){rad.style.borderColor='#5a3a20';rad.style.boxShadow='0 2px 8px rgba(90,58,32,.12)';});
-      rad.addEventListener('mouseleave',function(){rad.style.borderColor='';rad.style.boxShadow='';});
-      rad.addEventListener('mousedown',function(){rad.style.transform='scale(0.99)';});
-      rad.addEventListener('mouseup',function(){rad.style.transform='';});
-      rad.addEventListener('click',function(){kunderAktivTlf=k.telefon;renderKunder();window.scrollTo({top:0,behavior:'smooth'});});
-
-      var venstre=document.createElement('div');
-      venstre.style.cssText='flex:1;min-width:0';
-      venstre.innerHTML='<div style="font-weight:800;color:#111;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(k.navn||'(Uten navn)')+'</div>'
-        +'<div style="font-size:.78rem;color:var(--muted);font-weight:600;margin-top:.15rem">📞 '+(k.visTlf||k.telefon)+(k.epost?' · ✉️ '+k.epost:'')+'</div>';
-      var hoyre=document.createElement('div');
-      hoyre.style.cssText='display:flex;flex-direction:column;align-items:flex-end;gap:.15rem;font-size:.75rem;font-weight:700;color:#5a3a20;white-space:nowrap';
-      hoyre.innerHTML='<span style="background:#5a3a20;color:#fff;padding:.15rem .55rem;border-radius:10px;font-weight:800">'+k.antallKjop+' kjøp</span>'
-        +'<span style="color:#1a5a3a;font-size:.85rem">'+kr(k.totalSum)+'</span>';
-      rad.appendChild(venstre);rad.appendChild(hoyre);
-      innhold.appendChild(rad);
-    });
-  });
-
   settOppKundeSok();
+}
+
+/* Hjelpefunksjon: lag én kunde-rad. rangNr vises som rangeringsnummer i sum/antall-modus. */
+function lagKundeRad(k,rangNr){
+  var rad=document.createElement('div');
+  rad.style.cssText='display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.7rem .85rem;background:#fff;border:1.5px solid var(--border);border-radius:10px;margin-bottom:.4rem;cursor:pointer;transition:transform .08s,box-shadow .15s,border-color .15s';
+  rad.addEventListener('mouseenter',function(){rad.style.borderColor='#5a3a20';rad.style.boxShadow='0 2px 8px rgba(90,58,32,.12)';});
+  rad.addEventListener('mouseleave',function(){rad.style.borderColor='';rad.style.boxShadow='';});
+  rad.addEventListener('mousedown',function(){rad.style.transform='scale(0.99)';});
+  rad.addEventListener('mouseup',function(){rad.style.transform='';});
+  rad.addEventListener('click',function(){kunderAktivTlf=k.telefon;renderKunder();window.scrollTo({top:0,behavior:'smooth'});});
+  var venstre=document.createElement('div');
+  venstre.style.cssText='flex:1;min-width:0;display:flex;align-items:center;gap:.55rem';
+  var rangHtml=rangNr?'<span style="background:#5a3a20;color:#fff;min-width:1.6rem;height:1.6rem;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:800;flex-shrink:0">'+rangNr+'</span>':'';
+  venstre.innerHTML=rangHtml
+    +'<div style="flex:1;min-width:0">'
+      +'<div style="font-weight:800;color:#111;font-size:1rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(k.navn||'(Uten navn)')+'</div>'
+      +'<div style="font-size:.78rem;color:var(--muted);font-weight:600;margin-top:.15rem">📞 '+(k.visTlf||k.telefon)+(k.epost?' · ✉️ '+k.epost:'')+'</div>'
+    +'</div>';
+  var hoyre=document.createElement('div');
+  hoyre.style.cssText='display:flex;flex-direction:column;align-items:flex-end;gap:.15rem;font-size:.75rem;font-weight:700;color:#5a3a20;white-space:nowrap';
+  hoyre.innerHTML='<span style="background:#5a3a20;color:#fff;padding:.15rem .55rem;border-radius:10px;font-weight:800">'+k.antallKjop+' kjøp</span>'
+    +'<span style="color:#1a5a3a;font-size:.85rem">'+kr(k.totalSum)+'</span>';
+  rad.appendChild(venstre);rad.appendChild(hoyre);
+  return rad;
 }
 
 function settOppKundeSok(){
