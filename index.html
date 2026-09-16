@@ -1828,7 +1828,7 @@ function makeCard(s,erGruppert){
   d.querySelector('[data-action=copy-ex]').addEventListener('click',function(e){e.stopPropagation();visKvitteringMeny(e,s,'ex');});
   var ab=d.querySelector('[data-action=arkiver]');if(ab)ab.addEventListener('click',function(e){e.stopPropagation();åpneArkivModal('enkelt',s.id);});
   var fb=d.querySelector('[data-action=foto]');if(fb)fb.addEventListener('click',function(e){e.stopPropagation();visFoto(s.bilde_url);});
-  var tlfBtn=d.querySelector('[data-tlf]');if(tlfBtn)tlfBtn.addEventListener('click',function(e){e.stopPropagation();phonePopup(e,this.dataset.tlf);});
+  var tlfBtn=d.querySelector('[data-tlf]');if(tlfBtn)tlfBtn.addEventListener('click',function(e){e.stopPropagation();phonePopup(e,this.dataset.tlf,s);});
   var epostBtn=d.querySelector('[data-epost]');if(epostBtn)epostBtn.addEventListener('click',function(e){e.stopPropagation();emailPopup(e,this.dataset.epost);});
   return d;
 }
@@ -2379,7 +2379,48 @@ function showPopup(e,items,title,cb){
 }
 function closePopup(){popup.classList.remove('open');}
 document.addEventListener('click',function(e){if(!popup.contains(e.target))closePopup();});
-function phonePopup(e,tlf){showPopup(e,[{icon:'📞',label:'Ring',href:'tel:'+tlf},{icon:'💬',label:'Send SMS',href:'sms:'+tlf}],tlf);}
+
+/* Beregn hentedato: nærmeste søndag ca 2 uker frem.
+   Heller 1.9 uker enn 2.1 uker (dvs. prioriter tidligere ved lik avstand). */
+function beregnHentedato(){
+  var d=new Date();d.setHours(0,0,0,0);
+  d.setDate(d.getDate()+14);
+  var dag=d.getDay();/* 0=søndag */
+  if(dag===0)return d;
+  var tilbake=dag;/* dager til foregående søndag */
+  var fremover=7-dag;/* dager til neste søndag */
+  if(tilbake<=fremover)d.setDate(d.getDate()-tilbake);
+  else d.setDate(d.getDate()+fremover);
+  return d;
+}
+function formaterHentedato(d){return d.getDate()+'.'+(d.getMonth()+1);}
+
+/* Bygg hentemelding-tekst for et salg/innramming */
+function lagHentemelding(s){
+  var dato=formaterHentedato(beregnHentedato());
+  var onr=salgOnr(s);
+  return 'Hei! Bildet ditt med ordrenr: '+onr+' er klart til henting! Det kan hentes her alle dager 13.30-17.30 tom. '+dato+' 😊\n\nMvh Jacob Dørje, Soli Brug';
+}
+
+function phonePopup(e,tlf,s){
+  var valg=[
+    {icon:'📞',label:'Ring',href:'tel:'+tlf},
+    {icon:'💬',label:'Send SMS',href:'sms:'+tlf}
+  ];
+  /* Kun for salgskort/innramming med ordrenummer: legg til hentemelding */
+  if(s&&salgOnr(s)){
+    valg.push({icon:'📦',label:'Send hentemelding',hentemelding:true});
+  }
+  showPopup(e,valg,tlf,function(item){
+    if(item.hentemelding){
+      var tekst=lagHentemelding(s);
+      /* SMS-URI med body – iOS og Android tolker '?body=' og '&body=' forskjellig.
+         Prøv iOS-vennlig '&body=' først (fungerer også på Android 4.4+). */
+      var url='sms:'+tlf+(/iP(hone|ad|od)/.test(navigator.userAgent)?'&':'?')+'body='+encodeURIComponent(tekst);
+      window.location.href=url;
+    }
+  });
+}
 function emailPopup(e,epost){
   showPopup(e,[
     {icon:'📋',label:'Kopier e-post',copy:true},
@@ -3293,7 +3334,7 @@ function makeVipKort(s){
     var r=await sb.from('salg').update({vip:false}).eq('id',s.id);
     if(!r.error)loadSales(true);
   });
-  var vipTlfBtn=d.querySelector('[data-tlf]');if(vipTlfBtn)vipTlfBtn.addEventListener('click',function(e){e.stopPropagation();phonePopup(e,this.dataset.tlf);});
+  var vipTlfBtn=d.querySelector('[data-tlf]');if(vipTlfBtn)vipTlfBtn.addEventListener('click',function(e){e.stopPropagation();phonePopup(e,this.dataset.tlf,s);});
   return d;
 }
 
@@ -3320,7 +3361,7 @@ function makeIrCard(x){
       '<button class="ir-btn" data-action="edit" style="margin-left:auto">✏️ Rediger</button>'+
     '</div>';
   var fb=d.querySelector('[data-action=foto]');if(fb)fb.addEventListener('click',function(){visFoto(x.bilde_url);});
-  var tlfBtn=d.querySelector('[data-tlf]');if(tlfBtn)tlfBtn.addEventListener('click',function(e){e.stopPropagation();phonePopup(e,this.dataset.tlf);});
+  var tlfBtn=d.querySelector('[data-tlf]');if(tlfBtn)tlfBtn.addEventListener('click',function(e){e.stopPropagation();phonePopup(e,this.dataset.tlf,x);});
   d.querySelector('[data-action=ferdig]').addEventListener('click',function(){setIrStatus(x,x.status==='ferdig'?'aktiv':'ferdig',this);});
   d.querySelector('[data-action=hentet]').addEventListener('click',function(){setIrStatus(x,x.status==='hentet'?'aktiv':'hentet',this);});
   d.querySelector('[data-action=sendt_hentemeld]').addEventListener('click',async function(){
