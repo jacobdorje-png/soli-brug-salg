@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<!-- Redeploy trigger 1789564129 -->
 <html lang="no">
 <head>
 <meta charset="UTF-8">
@@ -2359,12 +2358,14 @@ function showPopup(e,items,title,cb){
     if(i>0){var hr=document.createElement('hr');hr.className='popup-divider';container.appendChild(hr);}
     var el=document.createElement('a');el.className='popup-item';
     el.innerHTML='<span class="pi-icon">'+item.icon+'</span>'+item.label;
-    if(item.copy){
-      el.href='#';
-      el.addEventListener('click',function(ev){ev.preventDefault();closePopup();if(cb)cb(item);});
-    } else {
+    if(item.href){
+      /* Normal href-lenke (tel:, sms:, mailto: osv.) */
       el.href=item.href;
       el.addEventListener('click',function(){closePopup();});
+    } else {
+      /* Ingen href → callback (Kopier, Send hentemelding osv.) */
+      el.href='#';
+      el.addEventListener('click',function(ev){ev.preventDefault();closePopup();if(cb)cb(item);});
     }
     container.appendChild(el);
   });
