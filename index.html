@@ -2818,6 +2818,7 @@ function byggOppgjorFilnavn(kunstnerNavn,ekstraNavn){
    Beregner {tilSoli, tilKunstner} basert på kunstner/type/pris/tittel.
    Standard: 40% Soli / 60% kunstner. Unntak:
    - Hanne Linnes, Liz Ravn, Jane Hupe, Martin Schreiner:  45% / 55%
+   - Julia Staflund, Mia Alajasko (skulpturer):            50% / 50%
    - Lise Amundsen:                                        35% / 65%
    - Nico Widerberg (skulptur = type 'Skulptur'/'Original'):  30% / 70%
    - Petter Hepsø (skulptur = type 'Skulptur'/'Original'):    total / 3 til Soli, resten til kunstner
@@ -2840,6 +2841,10 @@ function beregnFordeling(kunstner,type,pris,tittel){
   } else if(k==='Randi Strand'&&/ameri[ck]ay/i.test(ti)){
     /* Spesialbilde: 60% til Soli, 40% til Randi */
     tilSoli=Math.round(p*0.6);
+    tilKunstner=p-tilSoli;
+  } else if(k==='Julia Staflund'||k==='Mia Alajasko'){
+    /* 50/50 skulptur-avtale */
+    tilSoli=Math.round(p*0.5);
     tilKunstner=p-tilSoli;
   } else if(k==='Lise Amundsen'){
     /* 35% til Soli, 65% til Lise */
