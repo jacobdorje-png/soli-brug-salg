@@ -249,8 +249,8 @@ body.butikk-innramming #floating-search #fs-toggle-btn{background:#3a5a7a}
 .excel-btn{display:inline-flex;align-items:center;gap:.35rem;background:none;border:1.5px solid var(--green);color:var(--green);padding:.4rem .8rem;border-radius:8px;font-size:.82rem;font-weight:700;cursor:pointer;font-family:'proxima-nova','Nunito',sans-serif;min-height:38px}
 .selger-filter-wrap{display:flex;align-items:center;gap:.5rem;margin:0 .85rem .65rem;padding:.55rem .75rem;background:#fafafa;border:1.5px solid var(--border);border-radius:10px;flex-wrap:wrap}
 .selger-lbl{font-size:.82rem;font-weight:700;color:var(--muted);flex-shrink:0}
-.selger-knapper{display:flex;gap:.35rem;flex-wrap:wrap;flex:1}
-.selger-knapp{padding:.35rem .7rem;border-radius:18px;border:1.5px solid var(--border);background:var(--white);font-family:'proxima-nova','Nunito',sans-serif;font-size:.78rem;font-weight:700;color:var(--muted);cursor:pointer;min-height:34px}
+.selger-knapper{display:grid;grid-template-columns:repeat(auto-fit,minmax(95px,1fr));gap:.4rem;flex:1}
+.selger-knapp{padding:.4rem .5rem;border-radius:18px;border:1.5px solid var(--border);background:var(--white);font-family:'proxima-nova','Nunito',sans-serif;font-size:.78rem;font-weight:700;color:var(--muted);cursor:pointer;min-height:34px;white-space:nowrap;text-align:center;text-overflow:ellipsis;overflow:hidden}
 .selger-knapp.aktiv{background:#e07020;border-color:#e07020;color:#fff}
 .selger-filter-wrap.aktiv{background:#fff3e0;border-color:#e07020}
 .selger-filter-wrap.aktiv .selger-lbl{color:#e07020}
