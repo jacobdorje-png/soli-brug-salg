@@ -537,6 +537,7 @@ datalist{display:none!important}
             <label class="type-chip"><input type="radio" name="f-type" value="Grafikk"> Grafikk</label>
             <label class="type-chip"><input type="radio" name="f-type" value="Monotypi"> Monotypi</label>
             <label class="type-chip"><input type="radio" name="f-type" value="Original"> Original</label>
+            <label class="type-chip"><input type="radio" name="f-type" value="Skulptur"> Skulptur</label>
           </div>
         </div>
         <hr class="fdiv">
@@ -908,6 +909,7 @@ datalist{display:none!important}
           <label class="type-chip"><input type="radio" name="m-type" value="Grafikk"> Grafikk</label>
           <label class="type-chip"><input type="radio" name="m-type" value="Monotypi"> Monotypi</label>
           <label class="type-chip"><input type="radio" name="m-type" value="Original"> Original</label>
+          <label class="type-chip"><input type="radio" name="m-type" value="Skulptur"> Skulptur</label>
         </div>
       </div>
       <hr class="fdiv">
@@ -1591,7 +1593,7 @@ function renderSalg(){
       var ka=(a.kunstner||'~').toLowerCase();
       var kb=(b.kunstner||'~').toLowerCase();
       if(ka!==kb)return ka.localeCompare(kb,'nb');
-      /* Innad: Original → Monotypi → Grafikk, deretter tittel */
+      /* Innad: Skulptur/Original → Monotypi → Grafikk, deretter tittel */
       function tR(s){var t=(s.type||'').toLowerCase();if(t==='grafikk')return 2;if(t==='monotypi')return 1;return 0;}
       var ra=tR(a),rb=tR(b);
       if(ra!==rb)return ra-rb;
@@ -2178,7 +2180,7 @@ function naavarendeEkstraliste(){
   return perioder[d.getMonth()]+' '+aar;
 }
 function sorterEkstraliste(data){
-  /* Alfabetisk på kunstner, så Maleri/Original → Monotypi → Grafikk innad */
+  /* Alfabetisk på kunstner, så Skulptur/Original → Monotypi → Grafikk innad */
   function typeRangE(s){
     var t=(s.type||'').toLowerCase();
     if(t==='grafikk')return 2;
@@ -2817,8 +2819,8 @@ function byggOppgjorFilnavn(kunstnerNavn,ekstraNavn){
    Standard: 40% Soli / 60% kunstner. Unntak:
    - Hanne Linnes, Liz Ravn, Jane Hupe, Martin Schreiner:  45% / 55%
    - Lise Amundsen:                                        35% / 65%
-   - Nico Widerberg (skulptur = type 'Original'):          30% / 70%
-   - Petter Hepsø (skulptur = type 'Original'):            total / 3 til Soli, resten til kunstner
+   - Nico Widerberg (skulptur = type 'Skulptur'/'Original'):  30% / 70%
+   - Petter Hepsø (skulptur = type 'Skulptur'/'Original'):    total / 3 til Soli, resten til kunstner
      (evt. øre-avvik går til Petter)
    - Randi Strand, KUN bildet "The shores of Amerikay" (Americay/Amerikay): 60% / 40%
      Andre Randi Strand-bilder følger standard 40/60. */
@@ -2827,11 +2829,12 @@ function beregnFordeling(kunstner,type,pris,tittel){
   var k=(kunstner||'').trim();
   var t=(type||'').trim();
   var ti=(tittel||'').toLowerCase();
+  var erSkulpturType=(t==='Skulptur'||t==='Original');
   var tilSoli,tilKunstner;
-  if(k==='Petter Hepsø'&&t==='Original'){
+  if(k==='Petter Hepsø'&&erSkulpturType){
     tilSoli=Math.floor(p/3);
     tilKunstner=p-tilSoli;
-  } else if(k==='Nico Widerberg'&&t==='Original'){
+  } else if(k==='Nico Widerberg'&&erSkulpturType){
     tilSoli=Math.round(p*0.3);
     tilKunstner=p-tilSoli;
   } else if(k==='Randi Strand'&&/ameri[ck]ay/i.test(ti)){
@@ -2950,7 +2953,7 @@ function lagKunstnerOppgjorBlob(kunstnerNavn,data,ekstraNavn){
   });
 }
 
-/* Sorter en kunstners salg internt: Original → Monotypi → Grafikk, deretter tittel */
+/* Sorter en kunstners salg internt: Skulptur/Original → Monotypi → Grafikk, deretter tittel */
 function sorterKunstnerSalg(data){
   function typeRang(s){var t=(s.type||'').toLowerCase();if(t==='grafikk')return 2;if(t==='monotypi')return 1;return 0;}
   return data.slice().sort(function(a,b){
@@ -4571,6 +4574,7 @@ function lagEkstraVerkHTML(idx){
           '<label class="type-chip"><input type="radio" name="ev-type-'+idx+'" value="Grafikk"> Grafikk</label>'+
           '<label class="type-chip"><input type="radio" name="ev-type-'+idx+'" value="Monotypi"> Monotypi</label>'+
           '<label class="type-chip"><input type="radio" name="ev-type-'+idx+'" value="Original"> Original</label>'+
+          '<label class="type-chip"><input type="radio" name="ev-type-'+idx+'" value="Skulptur"> Skulptur</label>'+
         '</div>'+
       '</div>'+
       '<div class="frow">'+
