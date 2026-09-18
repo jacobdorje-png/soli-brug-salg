@@ -602,6 +602,10 @@ datalist{display:none!important}
         <span class="selger-lbl">👤 Selger:</span>
         <div id="selger-knapper" class="selger-knapper"></div>
       </div>
+      <div class="selger-filter-wrap">
+        <span class="selger-lbl">🔀 Sortér:</span>
+        <div id="sort-knapper" class="selger-knapper"></div>
+      </div>
       <div id="loading">Laster inn salg…</div>
       <div id="empty">Ingen salg ennå.</div>
       <div id="sales-list"></div>
@@ -1308,6 +1312,56 @@ function oppdaterSelgerFilter(){
   if(filterWrap)filterWrap.className='selger-filter-wrap'+(selgerFilter?' aktiv':'');
 }
 
+/* ══════════════ SORTERING ══════════════
+   Sorterings-alternativer for salgslisten. 'standard' = original rekkefølge:
+   - Nylige salg: nyeste først (via loadSales)
+   - Ekstraliste: alfabetisk kunstner + Skulptur/Original → Monotypi → Grafikk
+   - Kunstner-fane: gruppert på tittel */
+var sorteringsValg='standard';
+var SORTERING_ALT=[
+  {id:'standard',label:'Standard'},
+  {id:'nyeste',label:'📅 Sist solgt'},
+  {id:'eldste',label:'📅 Først solgt'},
+  {id:'hoyest',label:'💰 Høyest sum'},
+  {id:'lavest',label:'💰 Lavest sum'}
+];
+
+function oppdaterSortFilter(){
+  var wrap=document.getElementById('sort-knapper');
+  if(!wrap)return;
+  wrap.innerHTML='';
+  SORTERING_ALT.forEach(function(alt){
+    var btn=document.createElement('button');
+    btn.className='selger-knapp'+(sorteringsValg===alt.id?' aktiv':'');
+    btn.textContent=alt.label;
+    btn.addEventListener('click',function(){
+      sorteringsValg=alt.id;
+      oppdaterSortFilter();
+      renderSalg();
+    });
+    wrap.appendChild(btn);
+  });
+  /* Visuell indikator når ikke-standard sortering er aktiv */
+  var wrapper=wrap.closest('.selger-filter-wrap');
+  if(wrapper)wrapper.className='selger-filter-wrap'+(sorteringsValg!=='standard'?' aktiv':'');
+}
+
+/* Sorterer en kopi av salgslisten etter valgt sortering. Returnerer null hvis standard. */
+function sorterSalgListe(data){
+  if(sorteringsValg==='standard')return null;/* la caller beholde nåværende rekkefølge */
+  var kopi=data.slice();
+  if(sorteringsValg==='nyeste'){
+    kopi.sort(function(a,b){return (b.created_at||'').localeCompare(a.created_at||'');});
+  } else if(sorteringsValg==='eldste'){
+    kopi.sort(function(a,b){return (a.created_at||'').localeCompare(b.created_at||'');});
+  } else if(sorteringsValg==='hoyest'){
+    kopi.sort(function(a,b){return (b.total||b.pris||0)-(a.total||a.pris||0);});
+  } else if(sorteringsValg==='lavest'){
+    kopi.sort(function(a,b){return (a.total||a.pris||0)-(b.total||b.pris||0);});
+  }
+  return kopi;
+}
+
 function byggFilterTabs(){
   var wrap=document.getElementById('filter-tabs');wrap.innerHTML='';
   var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
@@ -1409,7 +1463,7 @@ async function loadSales(bevarScroll){
     document.getElementById('loading').style.display='none';
     if(r.error){document.getElementById('sales-list').innerHTML='<p style="color:var(--danger);font-weight:700">Feil: '+r.error.message+'</p>';return;}
     alleSalg=r.data||[];
-    oppdaterAutocomplete();byggFilterTabs();oppdaterArkivBar();oppdaterSelgerFilter();oppdaterTypeFilter();renderSalg();
+    oppdaterAutocomplete();byggFilterTabs();oppdaterArkivBar();oppdaterSelgerFilter();oppdaterTypeFilter();oppdaterSortFilter();renderSalg();
     if(bevarScroll)requestAnimationFrame(function(){window.scrollTo(0,scrollY);});
   } finally {
     _loadSalesPending=false;
@@ -1544,6 +1598,13 @@ function renderSalg(){
   document.getElementById('alle-oppgjor-btn').style.display=(raaData.length&&erEkstraliste)?'inline-flex':'none';
 
   if(!raaData.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Ingen salg ennå.';return;}
+  /* Sortering: hvis ikke standard, bruk flat sortert liste og hopp over gruppering */
+  var brukSortering=sorterSalgListe(raaData);
+  if(brukSortering){
+    brukSortering.forEach(function(s){list.appendChild(makeCard(s,false));});
+    visTotals(raaData);
+    return;
+  }
   if(erAlle){raaData.forEach(function(s){list.appendChild(makeCard(s,false));});}
   else if(erEkstraliste){
     /* KUNSTNER-OVERSIKT: viser hvilke kunstnere som er representert i mappen + antall + total sum */
