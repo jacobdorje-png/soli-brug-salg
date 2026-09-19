@@ -14,10 +14,32 @@
 /* Hindre Android auto-detect styling av telefonnummer, dato, adresse */
 a[href^="tel:"],a[href^="sms:"],a[href^="mailto:"]{color:inherit;text-decoration:none}
 html{-webkit-text-size-adjust:100%}
-body{background:#f0ebe3;color:#111;font-family:'proxima-nova','Nunito',sans-serif;font-size:16px;min-height:100dvh;padding-bottom:5rem;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .35s}
-body.butikk-soli{background:#eaf2ee}
-body.butikk-fredrikstad{background:#f5eaec}
-:root{--bg:#f0ebe3;--white:#fff;--border:#d5c8b8;--accent:#7a5c3a;--muted:#555;--danger:#c0392b;--green:#1e8a3e;--blue:#1a5fa8;--orange:#c06010;--r:12px;--touch:48px;--arkiv:#9a7040}
+body{background:#f4ebd8;color:#111;font-family:'proxima-nova','Nunito',sans-serif;font-size:16px;min-height:100dvh;padding-bottom:5rem;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .35s}
+body.butikk-soli{background:#eaf0dc}
+body.butikk-fredrikstad{background:#f5e4d4}
+:root{--bg:#f4ebd8;--white:#fff;--border:#d4bc94;--accent:#7a5020;--muted:#5a4530;--danger:#c0392b;--green:#1e8a3e;--blue:#1a5fa8;--orange:#c06010;--r:12px;--touch:48px;--arkiv:#9a7040}
+
+/* ════════ HØST-TEMA: fallende blader ════════ */
+.autumn-leaves{position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden}
+.autumn-leaves .leaf{position:absolute;top:-8vh;font-size:1.7rem;opacity:.42;animation:leaf-fall linear infinite;filter:drop-shadow(0 2px 3px rgba(120,60,20,.2));will-change:transform}
+@keyframes leaf-fall{
+  0%{transform:translateY(-8vh) translateX(0) rotate(0deg)}
+  25%{transform:translateY(28vh) translateX(-45px) rotate(90deg)}
+  50%{transform:translateY(52vh) translateX(35px) rotate(180deg)}
+  75%{transform:translateY(78vh) translateX(-25px) rotate(270deg)}
+  100%{transform:translateY(108vh) translateX(30px) rotate(360deg)}
+}
+.autumn-leaves .leaf.l1{left:6%;animation-duration:17s;animation-delay:0s;font-size:1.5rem}
+.autumn-leaves .leaf.l2{left:18%;animation-duration:22s;animation-delay:4s;font-size:1.9rem}
+.autumn-leaves .leaf.l3{left:32%;animation-duration:19s;animation-delay:8s;font-size:1.4rem}
+.autumn-leaves .leaf.l4{left:46%;animation-duration:24s;animation-delay:2s;font-size:2.1rem;opacity:.35}
+.autumn-leaves .leaf.l5{left:58%;animation-duration:18s;animation-delay:11s;font-size:1.6rem}
+.autumn-leaves .leaf.l6{left:72%;animation-duration:21s;animation-delay:6s;font-size:1.8rem}
+.autumn-leaves .leaf.l7{left:84%;animation-duration:20s;animation-delay:13s;font-size:1.5rem;opacity:.38}
+.autumn-leaves .leaf.l8{left:92%;animation-duration:23s;animation-delay:16s;font-size:1.7rem}
+@media(prefers-reduced-motion:reduce){
+  .autumn-leaves{display:none}
+}
 
 /* LOGIN */
 #login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:1.5rem;gap:1.5rem;position:fixed;inset:0;background:var(--bg);z-index:250}
@@ -430,6 +452,17 @@ datalist{display:none!important}
 </style>
 </head>
 <body>
+<!-- 🍁 Høst-tema: fallende løvblader (position:fixed, pointer-events:none, subtile) -->
+<div class="autumn-leaves" aria-hidden="true">
+  <span class="leaf l1">🍁</span>
+  <span class="leaf l2">🍂</span>
+  <span class="leaf l3">🍁</span>
+  <span class="leaf l4">🍂</span>
+  <span class="leaf l5">🍁</span>
+  <span class="leaf l6">🍂</span>
+  <span class="leaf l7">🍁</span>
+  <span class="leaf l8">🍂</span>
+</div>
 <input type="file" id="foto-input-hidden" accept="image/*" style="display:none">
 
 <div id="contact-popup">
@@ -466,7 +499,7 @@ datalist{display:none!important}
 
 <div id="app">
   <header>
-    <div><div class="hname">Soli Brug Salg</div><div class="hsub">Salgsoversikt</div></div>
+    <div><div class="hname">🍁 Soli Brug Salg 🍂</div><div class="hsub">Salgsoversikt</div></div>
     <div style="display:flex;gap:.5rem;align-items:center">
       <button id="refresh-btn" title="Oppdater" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;padding:.5rem .75rem;border-radius:8px;font-size:1.1rem;cursor:pointer;min-height:var(--touch);display:flex;align-items:center">↻</button>
       <button id="logout-btn">Logg ut</button>
