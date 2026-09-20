@@ -24,39 +24,6 @@ body.butikk-soli{background-color:#eaf0dc}
 body.butikk-fredrikstad{background-color:#f5e4d4}
 :root{--bg:#f4ebd8;--white:#fff;--border:#d4bc94;--accent:#7a5020;--muted:#5a4530;--danger:#c0392b;--green:#1e8a3e;--blue:#1a5fa8;--orange:#c06010;--r:12px;--touch:48px;--arkiv:#9a7040}
 
-/* ════════ HØST-TEMA: fallende blader ════════ */
-.autumn-leaves{position:fixed;top:0;left:0;right:0;bottom:0;width:100vw;max-width:100vw;pointer-events:none;z-index:9999;overflow:hidden}
-.autumn-leaves .leaf{position:absolute;top:-8vh;font-size:1.7rem;opacity:.5;animation:leaf-fall linear infinite;filter:drop-shadow(0 2px 3px rgba(120,60,20,.25));will-change:transform}
-@keyframes leaf-fall{
-  0%{transform:translateY(-8vh) translateX(0) rotate(0deg)}
-  15%{transform:translateY(15vh) translateX(-55px) rotate(80deg)}
-  30%{transform:translateY(32vh) translateX(35px) rotate(160deg)}
-  45%{transform:translateY(48vh) translateX(-40px) rotate(240deg)}
-  60%{transform:translateY(65vh) translateX(45px) rotate(320deg)}
-  75%{transform:translateY(80vh) translateX(-30px) rotate(400deg)}
-  100%{transform:translateY(108vh) translateX(25px) rotate(520deg)}
-}
-/* 16 blader med ulik hastighet, størrelse, opacity og posisjon */
-.autumn-leaves .leaf.l1 {left: 4%; animation-duration:17s; animation-delay: 0s;  font-size:1.5rem}
-.autumn-leaves .leaf.l2 {left:11%; animation-duration:22s; animation-delay: 3s;  font-size:1.9rem; opacity:.4}
-.autumn-leaves .leaf.l3 {left:19%; animation-duration:19s; animation-delay: 7s;  font-size:1.4rem}
-.autumn-leaves .leaf.l4 {left:27%; animation-duration:24s; animation-delay: 2s;  font-size:2.1rem; opacity:.42}
-.autumn-leaves .leaf.l5 {left:34%; animation-duration:18s; animation-delay:10s;  font-size:1.6rem}
-.autumn-leaves .leaf.l6 {left:42%; animation-duration:21s; animation-delay: 5s;  font-size:1.8rem; opacity:.45}
-.autumn-leaves .leaf.l7 {left:50%; animation-duration:20s; animation-delay:12s;  font-size:1.5rem}
-.autumn-leaves .leaf.l8 {left:58%; animation-duration:23s; animation-delay: 4s;  font-size:1.7rem}
-.autumn-leaves .leaf.l9 {left:65%; animation-duration:19s; animation-delay: 8s;  font-size:2.0rem; opacity:.4}
-.autumn-leaves .leaf.l10{left:72%; animation-duration:25s; animation-delay:14s;  font-size:1.4rem}
-.autumn-leaves .leaf.l11{left:79%; animation-duration:17s; animation-delay: 6s;  font-size:1.8rem; opacity:.48}
-.autumn-leaves .leaf.l12{left:85%; animation-duration:22s; animation-delay:11s;  font-size:1.6rem}
-.autumn-leaves .leaf.l13{left:91%; animation-duration:20s; animation-delay: 1s;  font-size:1.9rem; opacity:.42}
-.autumn-leaves .leaf.l14{left:96%; animation-duration:24s; animation-delay:15s;  font-size:1.5rem}
-.autumn-leaves .leaf.l15{left:15%; animation-duration:21s; animation-delay:17s;  font-size:1.7rem; opacity:.45}
-.autumn-leaves .leaf.l16{left:63%; animation-duration:19s; animation-delay:19s;  font-size:1.6rem}
-@media(prefers-reduced-motion:reduce){
-  .autumn-leaves{display:none}
-}
-
 /* LOGIN */
 #login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100dvh;padding:1.5rem;gap:1.5rem;position:fixed;inset:0;background:var(--bg);z-index:250}
 .logo{font-size:2.2rem;font-weight:700;text-align:center;color:var(--accent);line-height:1.2}
@@ -481,25 +448,7 @@ datalist{display:none!important}
 </style>
 </head>
 <body>
-<!-- 🍁 Høst-tema: fallende løvblader og kastanjer/sopp/kornaks -->
-<div class="autumn-leaves" aria-hidden="true">
-  <span class="leaf l1">🍁</span>
-  <span class="leaf l2">🍂</span>
-  <span class="leaf l3">🍁</span>
-  <span class="leaf l4">🌰</span>
-  <span class="leaf l5">🍂</span>
-  <span class="leaf l6">🍁</span>
-  <span class="leaf l7">🍄</span>
-  <span class="leaf l8">🍂</span>
-  <span class="leaf l9">🍁</span>
-  <span class="leaf l10">🌰</span>
-  <span class="leaf l11">🍂</span>
-  <span class="leaf l12">🌾</span>
-  <span class="leaf l13">🍁</span>
-  <span class="leaf l14">🍂</span>
-  <span class="leaf l15">🍁</span>
-  <span class="leaf l16">🌰</span>
-</div>
+<!-- (Fallende høstblader fjernet – pattern-bakgrunn og varme farger beholdt) -->
 <input type="file" id="foto-input-hidden" accept="image/*" style="display:none">
 
 <div id="contact-popup">
@@ -524,8 +473,8 @@ datalist{display:none!important}
 </div>
 
 <div id="login-screen">
-  <div class="logo">🍁 Soli Brug 🍂<br>Salg</div>
-  <p class="sub">Salgsoversikt · Høsten 2026</p>
+  <div class="logo">Soli Brug<br>Salg</div>
+  <p class="sub">Salgsoversikt</p>
   <div class="login-card">
     <div><span class="lbl">Tilgangskode</span><input type="password" id="code-input" placeholder="Skriv inn kode" autocomplete="current-password"></div>
     <div id="login-error" style="color:var(--danger);font-size:.9rem;font-weight:700;display:none">Feil kode – prøv igjen</div>
@@ -536,7 +485,7 @@ datalist{display:none!important}
 
 <div id="app">
   <header>
-    <div><div class="hname">🍁 Soli Brug Salg 🍂</div><div class="hsub">Salgsoversikt</div></div>
+    <div><div class="hname">Soli Brug Salg</div><div class="hsub">Salgsoversikt</div></div>
     <div style="display:flex;gap:.5rem;align-items:center">
       <button id="refresh-btn" title="Oppdater" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);color:#fff;padding:.5rem .75rem;border-radius:8px;font-size:1.1rem;cursor:pointer;min-height:var(--touch);display:flex;align-items:center">↻</button>
       <button id="logout-btn">Logg ut</button>
@@ -1949,8 +1898,8 @@ function makeCard(s,erGruppert){
     '</div>'+
     '<div class="sc-bottom-row">'+
       '<div class="row1">'+
-        '<button class="sc-copy-btn" data-action="copy-ux">📋 Kvittering UX</button>'+
-        '<button class="sc-copy-btn" data-action="copy-ex">📋 Kvittering EX</button>'+
+        '<button class="sc-copy-btn" data-action="copy-ux">📋 Ordrebekreftelse UX</button>'+
+        '<button class="sc-copy-btn" data-action="copy-ex">📋 Ordrebekreftelse EX</button>'+
         '<button class="sc-arkiver-btn" data-action="print">🖨️ Skriv ut</button>'+
       '</div>'+
       '<div class="row2">'+
@@ -1960,7 +1909,7 @@ function makeCard(s,erGruppert){
       '</div>'+
       '<div class="row2" style="margin-top:.4rem">'+
         '<button class="sc-copy-btn" data-action="del" style="border-color:#1a5fa8;color:#1a5fa8;font-size:.78rem">📤 Del salgskort</button>'+
-        '<button class="sc-copy-btn" data-action="pdf" style="border-color:#5a3a7a;color:#5a3a7a;font-size:.78rem">📄 Kvittering PDF</button>'+
+        '<button class="sc-copy-btn" data-action="pdf" style="border-color:#5a3a7a;color:#5a3a7a;font-size:.78rem">📄 Ordrebekreftelse PDF</button>'+
       '</div>'+
     '</div>'+
     '<div class="sc-inline-notat"><textarea class="sc-inline-notat-inp" placeholder="Enkelt notat…" data-action="notat">'+escHtml(s.notat||'')+'</textarea></div>';
@@ -2535,7 +2484,7 @@ function exportArkivExcel(arkivNavn,salg){
 
 function visKvitteringMeny(e,s,type){
   var tekst=type==='ux'?lagKvitteringUX(s):lagKvitteringEX(s);
-  var label=type==='ux'?'Kvittering UX':'Kvittering EX';
+  var label=type==='ux'?'Ordrebekreftelse UX':'Ordrebekreftelse EX';
   var epost=s.epost||'';
   var tlf=s.telefon||'';
   var emne=encodeURIComponent('Soli Brug');
@@ -5010,7 +4959,7 @@ async function sendKvitteringPDF(file,s,btn,origLabel){
   /* Prøv Web Share API for iOS/Android – lar bruker velge Mail/Outlook (PDF vedlagt automatisk) */
   if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
     try{
-      await navigator.share({files:[file],title:'Kvittering '+salgOnr(s),text:'Kvittering fra Soli Brug'});
+      await navigator.share({files:[file],title:'Ordrebekreftelse '+salgOnr(s),text:'Ordrebekreftelse fra Soli Brug'});
       btn.disabled=false;btn.innerHTML=origLabel;
       return;
     }catch(e){
@@ -5034,7 +4983,7 @@ async function sendKvitteringPDF(file,s,btn,origLabel){
 }
 
 function visMailValgModal(epost,s,file){
-  var subject=encodeURIComponent('Kvittering fra Soli Brug – '+salgOnr(s));
+  var subject=encodeURIComponent('Ordrebekreftelse fra Soli Brug – '+salgOnr(s));
   var body='Hei'+(s.navn?' '+s.navn.split(' ')[0]:'')+',\n\nVennligst finn vedlagt kvittering for ditt kjøp (ordre '+salgOnr(s)+').\n\nTusen takk for handelen!\n\nMed vennlig hilsen,\nSoli Brug Galleri\nwww.soli-brug.no';
   var bodyEnc=encodeURIComponent(body);
   document.getElementById('mail-valg-adr').textContent='Til: '+epost;
