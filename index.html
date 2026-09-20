@@ -290,6 +290,18 @@ body.butikk-innramming #floating-search #fs-toggle-btn{background:#3a5a7a}
 .selger-lbl{font-size:.82rem;font-weight:700;color:var(--muted);flex-shrink:0}
 .selger-knapper{display:grid;grid-template-columns:repeat(auto-fit,minmax(95px,1fr));gap:.4rem;flex:1}
 .selger-knapp{padding:.4rem .5rem;border-radius:18px;border:1.5px solid var(--border);background:var(--white);font-family:'proxima-nova','Nunito',sans-serif;font-size:.78rem;font-weight:700;color:var(--muted);cursor:pointer;min-height:34px;white-space:nowrap;text-align:center;text-overflow:ellipsis;overflow:hidden}
+
+/* ══════ KOMPAKT FILTER-TOOLBAR ══════ */
+.filter-toolbar{display:flex;gap:.4rem;margin:0 .85rem .55rem;flex-wrap:wrap;align-items:center}
+.ft-btn{padding:.45rem .8rem;background:#fff;border:1.5px solid var(--border);border-radius:20px;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:.35rem;font-family:'proxima-nova','Nunito',sans-serif;min-height:38px;position:relative;transition:all .15s}
+.ft-btn:hover{border-color:var(--accent);color:var(--accent)}
+.ft-btn.open{background:#fef7e8;border-color:#d4b06e;color:#7a5020}
+.ft-btn.har-filter::after{content:'';position:absolute;top:6px;right:6px;width:8px;height:8px;background:#e07020;border-radius:50%;border:2px solid #fff}
+/* Skjul filter-rader som default - vises kun når toggle er åpen */
+.selger-filter-wrap{display:none}
+.selger-filter-wrap.open{display:flex}
+/* Skjul eksport-knappene helt - de vises kun via popup-menyen */
+.eksport-knapper{display:none}
 .selger-knapp.aktiv{background:#e07020;border-color:#e07020;color:#fff}
 .selger-filter-wrap.aktiv{background:#fff3e0;border-color:#e07020}
 .selger-filter-wrap.aktiv .selger-lbl{color:#e07020}
@@ -652,15 +664,21 @@ datalist{display:none!important}
           <button class="excel-btn" id="excel-btn" style="display:none" onclick="exportExcel()">📊 Excel</button>
         </div>
       </div>
-      <div class="selger-filter-wrap">
+      <div class="filter-toolbar" id="filter-toolbar">
+        <button type="button" class="ft-btn" id="ft-type" onclick="toggleFilterMeny('type')">🎨 Type</button>
+        <button type="button" class="ft-btn" id="ft-selger" onclick="toggleFilterMeny('selger')">👤 Selger</button>
+        <button type="button" class="ft-btn" id="ft-sort" onclick="toggleFilterMeny('sort')">🔀 Sortér</button>
+        <button type="button" class="ft-btn" id="ft-eksport" onclick="visEksportMeny(event)">📤 Eksport</button>
+      </div>
+      <div class="selger-filter-wrap" id="filter-wrap-type">
         <span class="selger-lbl">🎨 Type:</span>
         <div id="type-knapper" class="selger-knapper"></div>
       </div>
-      <div class="selger-filter-wrap">
+      <div class="selger-filter-wrap" id="filter-wrap-selger">
         <span class="selger-lbl">👤 Selger:</span>
         <div id="selger-knapper" class="selger-knapper"></div>
       </div>
-      <div class="selger-filter-wrap">
+      <div class="selger-filter-wrap" id="filter-wrap-sort">
         <span class="selger-lbl">🔀 Sortér:</span>
         <div id="sort-knapper" class="selger-knapper"></div>
       </div>
@@ -1326,7 +1344,7 @@ function oppdaterTypeFilter(){
   alleBtn.textContent='Alle';
   alleBtn.addEventListener('click',function(){typeFilter='';oppdaterTypeFilter();renderSalg();});
   wrap.appendChild(alleBtn);
-  ['Grafikk','Monotypi','Original'].forEach(function(t){
+  ['Grafikk','Monotypi','Original','Skulptur'].forEach(function(t){
     var btn=document.createElement('button');
     btn.className='selger-knapp'+(typeFilter===t?' aktiv':'');
     btn.textContent=t;
@@ -1418,6 +1436,66 @@ function sorterSalgListe(data){
     kopi.sort(function(a,b){return (a.total||a.pris||0)-(b.total||b.pris||0);});
   }
   return kopi;
+}
+
+/* ══════════════ KOMPAKT FILTER-TOOLBAR ══════════════
+   4 knapper: Type, Selger, Sortér, Eksport – hvert chip-panel er skjult som default.
+   Klikk på knapp = åpne relevant panel og lukke de andre.
+   Klikk igjen = lukk panelet. */
+var aapentFilter=null;
+function toggleFilterMeny(hvilken){
+  aapentFilter=(aapentFilter===hvilken)?null:hvilken;
+  ['type','selger','sort'].forEach(function(n){
+    var wrap=document.getElementById('filter-wrap-'+n);
+    var btn=document.getElementById('ft-'+n);
+    if(wrap)wrap.className='selger-filter-wrap'+(aapentFilter===n?' open':'');
+    if(btn)btn.className='ft-btn'+(aapentFilter===n?' open':'')+(harAktivtFilter(n)?' har-filter':'');
+  });
+}
+
+/* Sjekker om et filter er aktivt (viser indikator-prikk på knappen) */
+function harAktivtFilter(hvilken){
+  if(hvilken==='type')return !!typeFilter;
+  if(hvilken==='selger')return !!selgerFilter;
+  if(hvilken==='sort')return sorteringsValg!=='standard';
+  return false;
+}
+
+/* Oppdaterer indikator-prikk på alle filter-knappene */
+function oppdaterFilterIndikatorer(){
+  ['type','selger','sort'].forEach(function(n){
+    var btn=document.getElementById('ft-'+n);
+    if(btn){
+      var aapen=aapentFilter===n;
+      btn.className='ft-btn'+(aapen?' open':'')+(harAktivtFilter(n)?' har-filter':'');
+    }
+  });
+}
+
+/* Eksport-meny: samler alle eksport-valg i én popup istedenfor 4 alltid-synlige knapper */
+function visEksportMeny(e){
+  var epostSynlig=document.getElementById('epost-btn')&&document.getElementById('epost-btn').dataset.harData==='1';
+  var leveringSynlig=document.getElementById('levering-btn')&&document.getElementById('levering-btn').dataset.harData==='1';
+  var oppstillingSynlig=document.getElementById('excel-enkel-btn')&&document.getElementById('excel-enkel-btn').dataset.harData==='1';
+  var excelSynlig=document.getElementById('excel-btn')&&document.getElementById('excel-btn').dataset.harData==='1';
+  var alleZipSynlig=document.getElementById('alle-oppgjor-btn')&&document.getElementById('alle-oppgjor-btn').dataset.harData==='1';
+  var items=[];
+  if(excelSynlig)items.push({icon:'📊',label:'Excel',valg:'excel'});
+  if(oppstillingSynlig)items.push({icon:'📋',label:'Oppstilling',valg:'oppstilling'});
+  if(alleZipSynlig)items.push({icon:'📦',label:'Alle oppgjør (ZIP)',valg:'allezip'});
+  if(epostSynlig)items.push({icon:'✉️',label:'E-poster',valg:'epost'});
+  if(leveringSynlig)items.push({icon:'📦',label:'Leveringsliste',valg:'levering'});
+  if(!items.length){
+    alert('Ingen eksport tilgjengelig for denne visningen.');
+    return;
+  }
+  showPopup(e,items,'📤 Eksport',function(item){
+    if(item.valg==='excel')exportExcel();
+    else if(item.valg==='oppstilling')exportExcelEnkel();
+    else if(item.valg==='allezip')eksporterAlleKunstnereZip();
+    else if(item.valg==='epost')exportEpost();
+    else if(item.valg==='levering')exportLeveringsliste();
+  });
 }
 
 function byggFilterTabs(){
@@ -1530,15 +1608,18 @@ async function loadSales(bevarScroll){
 
 function renderSalg(){
   var list=document.getElementById('sales-list');list.innerHTML='';
-  /* Vis filter-rader som standard – skjules kun i VIP-visning */
+  /* Fjern inline display-styling (VIP-view setter det). CSS-default er 'none' – synlige når .open. */
   document.querySelectorAll('.selger-filter-wrap').forEach(function(w){w.style.display='';});
+  var ftb=document.getElementById('filter-toolbar');if(ftb)ftb.style.display='';
   document.getElementById('empty').style.display='none';
   document.getElementById('grand-totals').style.display='none';
+  /* Oppdater indikatorer på filter-knappene */
+  oppdaterFilterIndikatorer();
 
   /* SØKEMODUS */
   if(sokeTekst){
     document.getElementById('sales-title').textContent='Søkeresultat';
-    document.getElementById('excel-btn').style.display='none';document.getElementById('epost-btn').style.display='none';document.getElementById('excel-enkel-btn').style.display='none';document.getElementById('levering-btn').style.display='none';document.getElementById('alle-oppgjor-btn').style.display='none';
+    ['excel-btn','epost-btn','excel-enkel-btn','levering-btn','alle-oppgjor-btn'].forEach(function(id){var el=document.getElementById(id);if(el){el.style.display='none';el.dataset.harData='0';}});
     var treff=alleSalg.filter(function(s){return sokFilter(s,sokeTekst);});
     var ie=document.getElementById('search-info');
     ie.style.display='block';ie.textContent='Fant '+treff.length+' treff på «'+sokeTekst+'» (alle butikker, inkl. arkiverte)';
@@ -1551,12 +1632,9 @@ function renderSalg(){
   /* VIP-VISNING – kompakt liste */
   if(visVip){
     document.getElementById('sales-title').textContent='⭐ VIP-kunder – '+(aktivButikk==='soli'?'Soli':'Fredrikstad');
-    document.getElementById('excel-btn').style.display='none';
-    document.getElementById('epost-btn').style.display='none';
-    document.getElementById('excel-enkel-btn').style.display='none';
-    var selgerWrap=document.querySelector('.selger-filter-wrap');
-    if(selgerWrap)selgerWrap.style.display='none';
+    ['excel-btn','epost-btn','excel-enkel-btn','levering-btn','alle-oppgjor-btn'].forEach(function(id){var el=document.getElementById(id);if(el){el.style.display='none';el.dataset.harData='0';}});
     document.querySelectorAll('.selger-filter-wrap').forEach(function(w){w.style.display='none';});
+    var ftb=document.getElementById('filter-toolbar');if(ftb)ftb.style.display='none';
     var vipSalg=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk&&s.vip;});
     /* Sortert alfabetisk på kundenavn */
     vipSalg.sort(function(a,b){return((a.navn||'').toLowerCase()).localeCompare((b.navn||'').toLowerCase(),'nb');});
@@ -1572,7 +1650,7 @@ function renderSalg(){
   /* FAKTURA-VISNING */
   if(visFaktura){
     document.getElementById('sales-title').textContent='📄 Faktura – alle butikker';
-    document.getElementById('excel-btn').style.display='none';document.getElementById('epost-btn').style.display='none';document.getElementById('excel-enkel-btn').style.display='none';document.getElementById('levering-btn').style.display='none';document.getElementById('alle-oppgjor-btn').style.display='none';
+    ['excel-btn','epost-btn','excel-enkel-btn','levering-btn','alle-oppgjor-btn'].forEach(function(id){var el=document.getElementById(id);if(el){el.style.display='none';el.dataset.harData='0';}});
     /* Salg med skal_ha_faktura fra alle butikker (ikke arkiverte) */
     var fakturaSalg=alleSalg.filter(function(s){return!s.arkiv&&s.skal_ha_faktura;});
     /* Innrammingsjobber med skal_ha_faktura */
@@ -1592,7 +1670,7 @@ function renderSalg(){
   /* ARKIVVISNING */
   if(visArkiv){
     document.getElementById('sales-title').textContent='Arkiv';
-    document.getElementById('excel-btn').style.display='none';document.getElementById('epost-btn').style.display='none';document.getElementById('excel-enkel-btn').style.display='none';document.getElementById('levering-btn').style.display='none';document.getElementById('alle-oppgjor-btn').style.display='none';
+    ['excel-btn','epost-btn','excel-enkel-btn','levering-btn','alle-oppgjor-btn'].forEach(function(id){var el=document.getElementById(id);if(el){el.style.display='none';el.dataset.harData='0';}});
     var ark=alleSalg.filter(function(s){return!!s.arkiv&&s.butikk===aktivButikk;});
     if(!ark.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Arkivet er tomt.';return;}
     var grp={},rek=[];
@@ -1651,9 +1729,9 @@ function renderSalg(){
 
   var butikkNavn=aktivButikk==='soli'?'Soli':'Fredrikstad';
   document.getElementById('sales-title').textContent=erAlle?'Nylige salg – '+butikkNavn:(erEkstraliste?'📋 '+ekstralisteNavn:aktivFilter);
-  document.getElementById('excel-btn').style.display=raaData.length?'inline-flex':'none';document.getElementById('epost-btn').style.display=raaData.length?'inline-flex':'none';document.getElementById('excel-enkel-btn').style.display=raaData.length?'inline-flex':'none';document.getElementById('levering-btn').style.display=raaData.length?'inline-flex':'none';
+  var __harData=raaData.length?'1':'0';['excel-btn','epost-btn','excel-enkel-btn','levering-btn'].forEach(function(id){var el=document.getElementById(id);if(el)el.dataset.harData=__harData;});
   /* "Alle oppgjør (ZIP)" vises kun i ekstralister (samlet oppgjør for alle kunstnere i mappen) */
-  document.getElementById('alle-oppgjor-btn').style.display=(raaData.length&&erEkstraliste)?'inline-flex':'none';
+  var __zipEl=document.getElementById('alle-oppgjor-btn');if(__zipEl)__zipEl.dataset.harData=(raaData.length&&erEkstraliste)?'1':'0';
 
   if(!raaData.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Ingen salg ennå.';return;}
   /* Sortering: hvis ikke standard, bruk flat sortert liste og hopp over gruppering */
