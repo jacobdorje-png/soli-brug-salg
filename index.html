@@ -3201,11 +3201,15 @@ function leggTilLogoOgHeaderFooter(blob,kunstnerNavn,ekstraNavn){
       var file=zip.file(sheetPath);
       if(!file)return blob;
       return file.async('string').then(function(xml){
-        /* Topptekst matcher brukers eksempel:
+        /* Topptekst med automatisk utfylt periode og kunstnernavn:
            - Venstre: "Soli Brug AS" (tekst)
-           - Senter: "Oversikt over salg i perioden:" + tom linje for dato
-           - Høyre: "Kunstner:" + tom linje for navn */
-        var oddHeader='&amp;LSoli Brug AS&amp;COversikt over salg i perioden: \r\n&amp;RKunstner: \r\n';
+           - Senter: "Oversikt over salg i perioden:" + periode (f.eks. "01.07.26 - 01.09.26")
+           - Høyre: "Kunstner:" + kunstnernavn */
+        function xmlEsc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+        var datoRange=ekstralisteTilDatoRange(ekstraNavn);
+        var periodeTekst=datoRange?xmlEsc(datoRange):(ekstraNavn?xmlEsc(ekstraNavn):'');
+        var kunstnerTekst=xmlEsc(kunstnerNavn||'');
+        var oddHeader='&amp;LSoli Brug AS&amp;COversikt over salg i perioden: \r\n'+periodeTekst+'&amp;RKunstner: \r\n'+kunstnerTekst;
         var oddFooter='&amp;LSoli Brug AS&amp;CKontakt: Jacob D'+String.fromCharCode(248)+'rje. Tlf: 98071211\r\nMail: jacob@soli-brug.no';
         var headerFooterXml='<headerFooter><oddHeader>'+oddHeader+'</oddHeader><oddFooter>'+oddFooter+'</oddFooter></headerFooter>';
         var pageSetupXml='<pageSetup orientation="landscape" paperSize="9"/>';
