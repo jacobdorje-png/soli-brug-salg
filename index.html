@@ -3115,16 +3115,142 @@ function sorterKunstnerSalg(data){
   });
 }
 
+/* Genererer PDF-versjon av oppgjor med lignende layout som Excel.
+   Landscape A4, samme tabellstruktur (Tittel | Pris | Til Kunstner | Kontonummer),
+   pluss topptekst med periode og kunstner, og bunntekst med kontaktinfo. */
+function lagKunstnerOppgjorPDFBlob(kunstnerNavn,data,ekstraNavn){
+  return new Promise(function(resolve,reject){
+    _loadJsPDF(function(){
+      try{
+        var jsPDF=window.jspdf.jsPDF;
+        var doc=new jsPDF({unit:'mm',format:'a4',orientation:'landscape'});
+        var W=297,H=210,M=15;
+        var BLACK=[30,30,30],GRA=[100,100,100],LYSGRA=[200,200,200];
+        var datoRange=ekstralisteTilDatoRange(ekstraNavn);
+        var perTekst=datoRange||(ekstraNavn||'');
+
+        /* Logo øverst til venstre */
+        try{doc.addImage(SOLI_LOGO_B64,'PNG',M,M-2,42,18);}catch(e){}
+
+        /* Topptekst – periode i senter, kunstner til høyre */
+        doc.setFont('helvetica','normal');doc.setFontSize(10);doc.setTextColor.apply(doc,BLACK);
+        doc.text('Oversikt over salg i perioden:',W/2,M+3,{align:'center'});
+        doc.setFont('helvetica','bold');doc.setFontSize(11);
+        doc.text(perTekst||' ',W/2,M+8,{align:'center'});
+        doc.setFont('helvetica','normal');doc.setFontSize(10);
+        doc.text('Kunstner:',W-M,M+3,{align:'right'});
+        doc.setFont('helvetica','bold');doc.setFontSize(11);
+        doc.text(kunstnerNavn||' ',W-M,M+8,{align:'right'});
+
+        /* Tabell-oppsett */
+        var tabStart=M+22;
+        var col1=M,col2=M+110,col3=M+180,col4=M+225,col4End=W-M;
+        var rowH=6.5;
+        var MIN_RADER=20;
+        var antallRader=Math.max(MIN_RADER,data.length);
+        var sumPris=0,sumTilKunstner=0,kontonummer='';
+        data.forEach(function(s,i){
+          sumPris+=(s.pris||0);
+          var f=beregnFordeling(s.kunstner,s.type,s.pris||0,s.tittel);
+          sumTilKunstner+=f.tilKunstner;
+          if(i===0)kontonummer=getKontonummer(s.kunstner,s.type);
+        });
+
+        /* Header-rad */
+        doc.setDrawColor.apply(doc,BLACK);doc.setLineWidth(0.5);
+        doc.rect(col1,tabStart,col4End-col1,rowH);
+        doc.line(col2,tabStart,col2,tabStart+rowH);
+        doc.line(col3,tabStart,col3,tabStart+rowH);
+        doc.line(col4,tabStart,col4,tabStart+rowH);
+        doc.setFont('helvetica','bold');doc.setFontSize(11);
+        var hy=tabStart+rowH-2;
+        doc.text('Tittel:',col1+(col2-col1)/2,hy,{align:'center'});
+        doc.text('Pris:',col2+(col3-col2)/2,hy,{align:'center'});
+        doc.text('Til Kunstner:',col3+(col4-col3)/2,hy,{align:'center'});
+        doc.text('Kontonummer:',col4+(col4End-col4)/2,hy,{align:'center'});
+
+        /* Buffer-rader (2 tomme, matcher Excel) */
+        var y=tabStart+rowH;
+        for(var b=0;b<2;b++){
+          doc.setDrawColor.apply(doc,LYSGRA);doc.setLineWidth(0.2);
+          doc.rect(col1,y,col4End-col1,rowH);
+          doc.line(col2,y,col2,y+rowH);
+          doc.line(col3,y,col3,y+rowH);
+          doc.line(col4,y,col4,y+rowH);
+          y+=rowH;
+        }
+
+        /* Data-rader + fyllrader */
+        doc.setFont('helvetica','normal');doc.setFontSize(10);
+        function fmtKr(n){return (n||0).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');}
+        for(var i=0;i<antallRader;i++){
+          doc.setDrawColor.apply(doc,LYSGRA);doc.setLineWidth(0.2);
+          doc.rect(col1,y,col4End-col1,rowH);
+          doc.line(col2,y,col2,y+rowH);
+          doc.line(col3,y,col3,y+rowH);
+          doc.line(col4,y,col4,y+rowH);
+          if(i<data.length){
+            var s=data[i];
+            var ty=y+rowH-2;
+            doc.setTextColor.apply(doc,BLACK);
+            doc.setFont('helvetica','normal');
+            var tittel=s.tittel||'';
+            if(tittel.length>50)tittel=tittel.substring(0,47)+'...';
+            doc.text(tittel,col1+(col2-col1)/2,ty,{align:'center'});
+            doc.setFont('helvetica','bold');
+            doc.text(fmtKr(s.pris||0),col2+(col3-col2)/2,ty,{align:'center'});
+          }
+          y+=rowH;
+        }
+
+        /* Sum-rad */
+        doc.setDrawColor.apply(doc,BLACK);doc.setLineWidth(0.5);
+        doc.rect(col1,y,col4End-col1,rowH);
+        doc.line(col2,y,col2,y+rowH);
+        doc.line(col3,y,col3,y+rowH);
+        doc.line(col4,y,col4,y+rowH);
+        doc.setFont('helvetica','bold');doc.setFontSize(11);
+        var sy=y+rowH-2;
+        doc.text('SUM:',col1+(col2-col1)/2,sy,{align:'center'});
+        doc.text(fmtKr(sumPris),col2+(col3-col2)/2,sy,{align:'center'});
+        doc.text(fmtKr(sumTilKunstner),col3+(col4-col3)/2,sy,{align:'center'});
+        doc.text(kontonummer||'',col4+(col4End-col4)/2,sy,{align:'center'});
+
+        /* Bunntekst */
+        doc.setFont('helvetica','normal');doc.setFontSize(9);doc.setTextColor.apply(doc,GRA);
+        doc.text('Soli Brug AS',M,H-M);
+        doc.text('Kontakt: Jacob D'+String.fromCharCode(248)+'rje. Tlf: 98071211',W/2,H-M-4,{align:'center'});
+        doc.text('Mail: jacob@soli-brug.no',W/2,H-M,{align:'center'});
+
+        resolve(doc.output('blob'));
+      }catch(err){reject(err);}
+    });
+  });
+}
+
+/* Bygg filnavn for PDF-versjonen (samme som Excel men .pdf) */
+function byggOppgjorPDFFilnavn(kunstnerNavn,ekstraNavn){
+  return byggOppgjorFilnavn(kunstnerNavn,ekstraNavn).replace(/\.xlsx$/,'.pdf');
+}
+
 /* Eksporter kun én kunstner – enkelt oppgjør-format (Tittel | Pris | Til Kunstner | Kontonummer + SUM) */
 function eksporterKunstnerExcel(kunstnerNavn){
   var data=salgIAktivVisning().filter(function(s){return(s.kunstner||'(ukjent)')===kunstnerNavn;});
   if(!data.length){alert('Ingen salg for '+kunstnerNavn);return;}
   var ekstraNavn=aktivFilter.indexOf('__ekstra:')===0?aktivFilter.substring(9):'';
-  var filnavn=byggOppgjorFilnavn(kunstnerNavn,ekstraNavn);
-  lagKunstnerOppgjorBlob(kunstnerNavn,sorterKunstnerSalg(data),ekstraNavn).then(function(blob){
-    delEllerLastNed(blob,filnavn,'📊 «'+filnavn+'» er klar');
+  var sortert=sorterKunstnerSalg(data);
+  var xlsxNavn=byggOppgjorFilnavn(kunstnerNavn,ekstraNavn);
+  var pdfNavn=byggOppgjorPDFFilnavn(kunstnerNavn,ekstraNavn);
+  /* Generer BÅDE Excel og PDF, last ned begge */
+  Promise.all([
+    lagKunstnerOppgjorBlob(kunstnerNavn,sortert,ekstraNavn),
+    lagKunstnerOppgjorPDFBlob(kunstnerNavn,sortert,ekstraNavn)
+  ]).then(function(res){
+    delEllerLastNed(res[0],xlsxNavn,'📊 «'+xlsxNavn+'»');
+    /* Litt forsinkelse så Safari ikke blokkerer andre nedlasting */
+    setTimeout(function(){delEllerLastNed(res[1],pdfNavn,'📄 «'+pdfNavn+'»');},400);
   }).catch(function(err){
-    alert('Kunne ikke lage Excel: '+err.message);
+    alert('Kunne ikke lage oppgjor: '+err.message);
   });
 }
 
@@ -3168,16 +3294,23 @@ function eksporterAlleKunstnereZip(){
           var datoRange=ekstralisteTilDatoRange(ekstraNavn);
           var zipFilnavn='Salgsoppstillinger'+(datoRange?' '+datoRange:(ekstraNavn?' '+ekstraNavn:''))+'.zip';
           if(btn){btn.disabled=false;btn.innerHTML=opprinneligTekst;}
-          delEllerLastNed(zipBlob,zipFilnavn,'📦 «'+zipFilnavn+'» – '+kunstnere.length+' filer klare');
+          delEllerLastNed(zipBlob,zipFilnavn,'📦 «'+zipFilnavn+'» – '+(kunstnere.length*2)+' filer klare (Excel + PDF)');
         });
       }
       var k=kunstnere[i];
-      return lagKunstnerOppgjorBlob(k,sorterKunstnerSalg(grupper[k]),ekstraNavn).then(function(blob){
-        return blob.arrayBuffer().then(function(buf){
-          var kunstnerFilnavn=byggOppgjorFilnavn(k,ekstraNavn);
-          zip.file(kunstnerFilnavn,buf);
+      var sortert=sorterKunstnerSalg(grupper[k]);
+      /* Generer BÅDE Excel og PDF for hver kunstner */
+      return Promise.all([
+        lagKunstnerOppgjorBlob(k,sortert,ekstraNavn),
+        lagKunstnerOppgjorPDFBlob(k,sortert,ekstraNavn)
+      ]).then(function(res){
+        return Promise.all([res[0].arrayBuffer(),res[1].arrayBuffer()]).then(function(buffers){
+          var xlsxNavn=byggOppgjorFilnavn(k,ekstraNavn);
+          var pdfNavn=byggOppgjorPDFFilnavn(k,ekstraNavn);
+          zip.file(xlsxNavn,buffers[0]);
+          zip.file(pdfNavn,buffers[1]);
           ferdig++;
-          if(btn)btn.innerHTML='⏳ Genererer '+ferdig+'/'+kunstnere.length+'...';
+          if(btn)btn.innerHTML='⏳ Genererer '+ferdig+'/'+kunstnere.length+' (Excel + PDF)…';
           return gjorNeste(i+1);
         });
       });
