@@ -3146,7 +3146,8 @@ function lagKunstnerOppgjorPDFBlob(kunstnerNavn,data,ekstraNavn){
         var tabStart=M+22;
         var col1=M,col2=M+110,col3=M+180,col4=M+225,col4End=W-M;
         var rowH=6.5;
-        var MIN_RADER=20;
+        /* MIN_RADER=17 gir plass til SUM-raden + gap til bunnteksten (før: 20 forårsaket overlap) */
+        var MIN_RADER=17;
         var antallRader=Math.max(MIN_RADER,data.length);
         var sumPris=0,sumTilKunstner=0,kontonummer='';
         data.forEach(function(s,i){
