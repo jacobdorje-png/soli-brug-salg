@@ -3285,7 +3285,7 @@ function bygExcelFraSalg(data,filnavn,erEkstra){
       s.kunstner||'',s.tittel||'',
       pris,s.bkh||0,s.ramme||0,
       f.tilSoli,f.tilKunstner,'',/* Sum til kunstner – fylles for siste rad per kunstner */
-      getKontonummer(s.kunstner,s.type),/* Kontonummer – hentes automatisk fra KUNSTNER_KONTO */
+      '',/* Kontonummer – fylles kun på siste rad per kunstner (samme rad som Sum til kunstner) */
       s.frakt||0,s.total||0,s.levering?'Ja':'Nei',s.hentet?'Ja':'Nei',s.faktura_sendt?'Ja':'Nei',s.selger||''
     ];
   }
@@ -3329,6 +3329,7 @@ function bygExcelFraSalg(data,filnavn,erEkstra){
         var rad=radForSalg(s);
         if(i===salgSortert.length-1){
           rad[IDX_SUM]=sumTilKunstner;
+          rad[IDX_KONTO]=getKontonummer(s.kunstner,s.type);
           sumRows.push(wsData.length);
         }
         wsData.push(rad);
@@ -3389,13 +3390,17 @@ function bygExcelFraSalg(data,filnavn,erEkstra){
           ws[a].s={font:{bold:true,sz:13,color:{rgb:'7A5020'}},fill:{fgColor:{rgb:'FEF7E8'}}};
         }
       });
-      /* Sum-rad: uthev "Sum til kunstner"-cellen (kolonne N, oransj og tydelig) */
+      /* Sum-rad: uthev "Sum til kunstner"-cellen (kolonne N, oransj) + Kontonummer (kolonne O, gult fyll og fet) */
       sumRows.forEach(function(r){
         var a=XLSX.utils.encode_cell({r:r,c:IDX_SUM});
         if(!ws[a])ws[a]={t:'n',v:0};
         ws[a].s={font:{bold:true,sz:12,color:{rgb:'8A3A00'}},fill:{fgColor:{rgb:'FFCC80'}},alignment:{horizontal:'right'}};
+        /* Kontonummer på siste rad – gult fyll og fet */
+        var aKn=XLSX.utils.encode_cell({r:r,c:IDX_KONTO});
+        if(!ws[aKn])ws[aKn]={t:'s',v:''};
+        ws[aKn].s={font:{bold:true,color:{rgb:'7A5020'}},fill:{fgColor:{rgb:'FEF7C8'}},alignment:{horizontal:'center'}};
       });
-      /* Uthev Kunstner (kolonne G, fet) + Til Soli/Til Kunstner + Kontonummer på datarader */
+      /* Uthev Kunstner (kolonne G, fet) + Til Soli/Til Kunstner på datarader */
       for(var r=1;r<wsData.length-2;r++){
         if(kunstnerHeaderRows.indexOf(r)>-1)continue;
         if(r===totalRadIdx||r===antallRadIdx)continue;
@@ -3405,11 +3410,8 @@ function bygExcelFraSalg(data,filnavn,erEkstra){
         if(ws[aG])ws[aG].s={font:{bold:true}};
         var aS=XLSX.utils.encode_cell({r:r,c:IDX_TIL_SOLI});
         var aK=XLSX.utils.encode_cell({r:r,c:IDX_TIL_KUNSTNER});
-        var aKn=XLSX.utils.encode_cell({r:r,c:IDX_KONTO});
         if(ws[aS])ws[aS].s={fill:{fgColor:{rgb:'E8F5EC'}},font:{color:{rgb:'2A5A40'}}};
         if(ws[aK])ws[aK].s={fill:{fgColor:{rgb:'C8E6D0'}},font:{color:{rgb:'1A5A3A'},bold:true}};
-        if(!ws[aKn])ws[aKn]={t:'s',v:''};
-        ws[aKn].s={fill:{fgColor:{rgb:'FEF7C8'}}};
       }
       /* TOTALT-raden */
       for(var c=0;c<NUM_COLS;c++){
