@@ -163,8 +163,9 @@ header .hsub{font-size:.68rem;opacity:.75;font-weight:400}
 .tittel-row .tittel-wrap{flex:1}
 .tittel-row .edisjon-wrap{width:90px;flex-shrink:0}
 /* Original / Grafikk */
-.type-row{display:flex;gap:.5rem;margin-top:.4rem}
-.type-chip{display:flex;align-items:center;gap:.35rem;padding:.3rem .7rem;border-radius:20px;border:1.5px solid var(--border);background:#faf8f5;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer}
+.type-row{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin-top:.4rem}
+.type-chip{display:flex;align-items:center;justify-content:center;gap:.35rem;padding:.3rem .7rem;border-radius:20px;border:1.5px solid var(--border);background:#faf8f5;font-size:.82rem;font-weight:700;color:var(--muted);cursor:pointer;min-width:0;white-space:nowrap}
+@media(min-width:520px){.type-row{grid-template-columns:repeat(4,1fr)}}
 .type-chip input[type=radio]{accent-color:var(--accent);width:16px;height:16px}
 body.butikk-soli .type-chip input[type=radio]{accent-color:#3a7a52}
 body.butikk-fredrikstad .type-chip input[type=radio]{accent-color:#8B1a2e}
