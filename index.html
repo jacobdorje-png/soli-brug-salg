@@ -901,6 +901,9 @@ datalist{display:none!important}
 <div class="modal-bg" id="modal-bg">
   <div class="modal-box">
     <div class="modal-head"><h2 id="modal-title">Rediger salg</h2><button class="modal-close-btn" id="modal-close">×</button></div>
+    <div id="m-arkiv-varsel" style="display:none;background:#fff4e0;border:1.5px solid #d4a060;color:#7a4020;padding:.6rem .8rem;border-radius:8px;margin:.4rem 0 .8rem;font-size:.85rem;font-weight:600;line-height:1.35">
+      <span style="font-weight:800">⚠️ Arkivert salg</span> – Dette salget ligger i arkiverte listen <span id="m-arkiv-navn" style="font-weight:800"></span>. Salget er som regel gjort opp med kunstner. Vær forsiktig med å endre ekstraliste eller andre felt som påvirker regnskapet.
+    </div>
     <div class="fgrid">
       <div><span class="lbl">Tidspunkt</span><input type="datetime-local" id="m-dato"></div>
       <div>
@@ -3765,6 +3768,14 @@ async function setIrStatus(x,status,btn){
 function openModal(s){
   editId=s.id;mFotoUrl=s.bilde_url||null;
   document.getElementById('modal-title').textContent='Rediger – '+salgOnr(s);
+  /* Vis/skjul arkiv-varsel */
+  var varsel=document.getElementById('m-arkiv-varsel');
+  if(s.arkiv){
+    document.getElementById('m-arkiv-navn').textContent='«'+s.arkiv+'»';
+    varsel.style.display='block';
+  } else {
+    varsel.style.display='none';
+  }
   document.getElementById('m-dato').value=toLocalInput(s.created_at);
   var mButikk=document.querySelector('input[name="m-butikk"][value="'+(s.butikk||'fredrikstad')+'"]');
   if(mButikk)mButikk.checked=true;
@@ -3818,6 +3829,23 @@ async function saveSale(){
   var mTypeValg=document.querySelector('input[name="m-type"]:checked');
   var mButikkValg=document.querySelector('input[name="m-butikk"]:checked');
   var row={navn:document.getElementById('m-navn').value.trim(),telefon:document.getElementById('m-telefon').value.trim(),epost:document.getElementById('m-epost').value.trim(),adresse:document.getElementById('m-adresse').value.trim(),levering:document.getElementById('m-levering').checked,montering:document.getElementById('m-montering').checked,hentested:document.getElementById('m-hentes-soli').checked?'soli':document.getElementById('m-hentes-fred').checked?'fredrikstad':null,butikk:mButikkValg?mButikkValg.value:'fredrikstad',kunstner:document.getElementById('m-kunstner').value.trim(),tittel:document.getElementById('m-tittel').value.trim(),edisjon:document.getElementById('m-edisjon').value.trim(),type:mTypeValg?mTypeValg.value:'',pris:nv('m-pris'),bkh:nv('m-bkh'),ramme:nv('m-ramme'),frakt:nv('m-frakt'),total:nv('m-total'),ramme_info:document.getElementById('m-ramme-info').value.trim(),selger:document.getElementById('m-selger').value.trim(),notat:document.getElementById('m-notat').value.trim(),bilde_url:mFotoUrl,ekstraliste:document.getElementById('m-ekstraliste').value.trim()||null};
+
+  /* Arkiv-beskyttelse: hvis salget er i en arkivert liste og ekstraliste endres, krev bekreftelse */
+  var origSalg=alleSalg.find(function(x){return x.id===editId;});
+  if(origSalg&&origSalg.arkiv&&(origSalg.ekstraliste||'')!==(row.ekstraliste||'')){
+    var advarsel='⚠️ Dette salget ligger i den ARKIVERTE listen «'+origSalg.arkiv+'».\n\n'
+      +'Arkiverte salg er som regel allerede gjort opp med kunstner og registrert ferdig i regnskapet. '
+      +'Å endre ekstraliste kan gjøre oppgjøret feil.\n\n'
+      +'Fra: '+(origSalg.ekstraliste||'(ingen)')+'\n'
+      +'Til: '+(row.ekstraliste||'(ingen)')+'\n\n'
+      +'Er du helt sikker på at du vil endre?';
+    if(!confirm(advarsel)){
+      btn.disabled=false;btn.textContent='Lagre endringer';
+      msg.style.color='var(--muted)';msg.textContent='Endringen ble avbrutt.';
+      return;
+    }
+  }
+
   var dv=document.getElementById('m-dato').value;if(dv)row.created_at=new Date(dv).toISOString();
   var r=await sb.from('salg').update(row).eq('id',editId);
   if(r.error){btn.disabled=false;btn.textContent='Lagre endringer';msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
