@@ -1835,6 +1835,19 @@ function rerenderCard(s,btn){
   eksisterende.parentNode.replaceChild(nytt,eksisterende);
 }
 
+function rerenderIrCard(x,btn){
+  /* Erstatt et eksisterende innramming-kort med frisk versjon */
+  if(!x)return;
+  var eksisterende=btn&&btn.closest?btn.closest('.ir-card'):null;
+  if(!eksisterende){
+    var alle=document.querySelectorAll('.ir-card[data-ir-id="'+x.id+'"]');
+    if(alle.length)eksisterende=alle[0];
+  }
+  if(!eksisterende)return;
+  var nytt=makeIrCard(x);
+  eksisterende.parentNode.replaceChild(nytt,eksisterende);
+}
+
 function makeCard(s,erGruppert){
   var d=document.createElement('div');d.className='sale-card'+(s.arkiv?' er-arkivert':'');
   d.dataset.saleId=s.id;
@@ -2125,33 +2138,55 @@ function velgKvartal(n){
 }
 
 /* ── DATO MODAL (Hentet / Faktura sendt) ── */
-var datoSalgId=null,datoBtn=null,datoField=null;
-function apneDatoModal(s,btn,field){
+var datoSalgId=null,datoBtn=null,datoField=null,datoIrMode=false;
+function apneDatoModal(s,btn,field,irMode){
+  /* irMode: true = innramming. For innramming lagres 'hentet' i status-feltet,
+     og hentet_dato brukes for dato. */
   var datoField_=field+'_dato';
-  if(s[field]){
+  var erSatt=irMode?(field==='hentet'?(s.status==='hentet'):!!s[field]):!!s[field];
+  var tabell=irMode?'innramming':'salg';
+  var listeSalg=irMode?alleIr:alleSalg;
+  if(erSatt){
     /* Allerede satt – vis info og tilbud å fjerne */
     var etikett=field==='hentet'?'Hentet/Levert':'Faktura sendt';
     var linjer=[etikett+' den '+(s[datoField_]||'ukjent dato')];
     if(confirm(linjer.join('\n')+'\n\nFjerne status?')){
       var oldDato=s[datoField_];
-      s[field]=false;s[datoField_]=null;
+      var oldStatus=s.status;
+      var up={};
+      if(irMode&&field==='hentet'){
+        s.status='aktiv';s.hentet_dato=null;
+        up.status='aktiv';up.hentet_dato=null;
+      } else {
+        s[field]=false;s[datoField_]=null;
+        up[field]=false;up[datoField_]=null;
+      }
       settDatoBtn(btn,field,false);
-      var up={};up[field]=false;up[datoField_]=null;
-      sb.from('salg').update(up).eq('id',s.id).then(function(r){
-        if(r.error){s[field]=true;s[datoField_]=oldDato;settDatoBtn(btn,field,true,oldDato);}
-        if((field==='skal_ha_faktura'||field==='faktura_sendt')&&document.getElementById('page-faktura').classList.contains('active'))renderFaktura();
-        if(field==='hentet'&&document.getElementById('page-levering').classList.contains('active'))renderLevering();
-        if(field==='hentet'&&document.getElementById('page-hentet').classList.contains('active'))renderHentet();
+      if(irMode&&typeof rerenderIrCard==='function'){var s2=listeSalg.find(function(x){return x.id===s.id;});if(s2)rerenderIrCard(s2,btn);}
+      sb.from(tabell).update(up).eq('id',s.id).then(function(r){
+        if(r.error){
+          if(irMode&&field==='hentet'){s.status=oldStatus;s.hentet_dato=oldDato;}
+          else{s[field]=true;s[datoField_]=oldDato;}
+          settDatoBtn(btn,field,true,oldDato);
+        }
+        if(!irMode){
+          if((field==='skal_ha_faktura'||field==='faktura_sendt')&&document.getElementById('page-faktura').classList.contains('active'))renderFaktura();
+          if(field==='hentet'&&document.getElementById('page-levering').classList.contains('active'))renderLevering();
+          if(field==='hentet'&&document.getElementById('page-hentet').classList.contains('active'))renderHentet();
+        }
       });
     }
     return;
   }
-  datoSalgId=s.id;datoBtn=btn;datoField=field;
+  datoSalgId=s.id;datoBtn=btn;datoField=field;datoIrMode=!!irMode;
   var tittel=field==='hentet'?'📦 Marker som hentet/levert':'✉️ Marker faktura sendt';
   var lbl=field==='hentet'?'Dato for henting/levering':'Dato for utsendt faktura';
   document.getElementById('dato-modal-tittel').textContent=tittel;
   document.getElementById('dato-modal-lbl').textContent=lbl;
-  document.getElementById('dato-modal-info').textContent=salgOnr(s)+' · '+(s.kunstner||'—')+(s.tittel?' – '+s.tittel:'');
+  var ordreVis=irMode?irOnr(s.ordrenummer):salgOnr(s);
+  var navnVis=irMode?(s.navn||'—'):(s.kunstner||'—');
+  var detVis=irMode?(s.beskrivelse||''):(s.tittel||'');
+  document.getElementById('dato-modal-info').textContent=ordreVis+' · '+navnVis+(detVis?' – '+detVis:'');
   var idag=new Date();
   var iso=idag.getFullYear()+'-'+String(idag.getMonth()+1).padStart(2,'0')+'-'+String(idag.getDate()).padStart(2,'0');
   document.getElementById('dato-modal-input').value=iso;
@@ -2180,22 +2215,37 @@ async function lagreDato(){
   if(!dato){msg.style.color='var(--danger)';msg.textContent='Velg dato.';return;}
   var lagreBtn=document.getElementById('dato-lagre');
   lagreBtn.disabled=true;lagreBtn.textContent='Lagrer…';
-  var up={};up[datoField]=true;up[datoField+'_dato']=dato;
-  var r=await sb.from('salg').update(up).eq('id',datoSalgId);
+  var tabell=datoIrMode?'innramming':'salg';
+  var liste=datoIrMode?alleIr:alleSalg;
+  var up={};
+  if(datoIrMode&&datoField==='hentet'){
+    /* Innramming bruker status-feltet for 'hentet' */
+    up.status='hentet';up.hentet_dato=dato;
+  } else {
+    up[datoField]=true;up[datoField+'_dato']=dato;
+  }
+  var r=await sb.from(tabell).update(up).eq('id',datoSalgId);
   lagreBtn.disabled=false;lagreBtn.textContent='Lagre';
   if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
-  var s=alleSalg.find(function(x){return x.id===datoSalgId;});
-  if(s){s[datoField]=true;s[datoField+'_dato']=dato;}
+  var s=liste.find(function(x){return x.id===datoSalgId;});
+  if(s){
+    if(datoIrMode&&datoField==='hentet'){s.status='hentet';s.hentet_dato=dato;}
+    else{s[datoField]=true;s[datoField+'_dato']=dato;}
+  }
   if(datoBtn)settDatoBtn(datoBtn,datoField,true,dato);
   document.getElementById('dato-modal-bg').classList.remove('open');
-  if((datoField==='skal_ha_faktura'||datoField==='faktura_sendt')&&document.getElementById('page-faktura').classList.contains('active'))renderFaktura();
-  if(datoField==='hentet'&&document.getElementById('page-levering').classList.contains('active'))renderLevering();
-  if(datoField==='hentet'&&document.getElementById('page-hentet').classList.contains('active'))renderHentet();
-  datoSalgId=null;datoBtn=null;datoField=null;
+  if(!datoIrMode){
+    if((datoField==='skal_ha_faktura'||datoField==='faktura_sendt')&&document.getElementById('page-faktura').classList.contains('active'))renderFaktura();
+    if(datoField==='hentet'&&document.getElementById('page-levering').classList.contains('active'))renderLevering();
+    if(datoField==='hentet'&&document.getElementById('page-hentet').classList.contains('active'))renderHentet();
+  } else if(s&&typeof rerenderIrCard==='function'){
+    rerenderIrCard(s,datoBtn);
+  }
+  datoSalgId=null;datoBtn=null;datoField=null;datoIrMode=false;
 }
 
 /* ── BETALT MODAL ── */
-var betaltSalgId=null,betaltBtn=null,betaltTotal=0;
+var betaltSalgId=null,betaltBtn=null,betaltTotal=0,betaltIrMode=false;
 function oppdaterGjenstaende(){
   var delsum=parseFloat(document.getElementById('betalt-delsum').value)||0;
   var el=document.getElementById('betalt-gjenstaende');
@@ -2215,30 +2265,35 @@ function oppdaterGjenstaende(){
     el.style.borderColor='#e07020';
   }
 }
-function apneBetaltModal(s,btn){
+function apneBetaltModal(s,btn,irMode){
+  /* irMode=true: bruker innramming-tabellen istedet for salg */
+  var tabell=irMode?'innramming':'salg';
+  var listeSalg=irMode?alleIr:alleSalg;
   if(s.betalt_kort){
     /* Allerede betalt – vis info og tilbud å fjerne */
     var linjer=['Betalt: '+(s.betalings_metode||'—')];
     if(s.betalt_dato)linjer.push('Dato: '+s.betalt_dato);
     if(s.betalt_initialer)linjer.push('Kvittert av: '+s.betalt_initialer);
-    if(s.delsum_betalt&&s.delsum_betalt>0&&s.delsum_betalt<(s.total||0)){
+    if(s.delsum_betalt&&s.delsum_betalt>0&&s.delsum_betalt<(s.total||s.pris||0)){
       linjer.push('');linjer.push('Delsum betalt: '+kr(s.delsum_betalt));
-      linjer.push('Gjenstående: '+kr((s.total||0)-s.delsum_betalt));
+      linjer.push('Gjenstående: '+kr((s.total||s.pris||0)-s.delsum_betalt));
     }
     if(confirm(linjer.join('\n')+'\n\nFjerne betalt-status?')){
       var old={metode:s.betalings_metode,dato:s.betalt_dato,ini:s.betalt_initialer,delsum:s.delsum_betalt};
       s.betalt_kort=false;s.betalings_metode=null;s.betalt_dato=null;s.betalt_initialer=null;s.delsum_betalt=null;
       settStatusBtn(btn,'betalt_kort',false);
-      rerenderCard(s,btn);
-      sb.from('salg').update({betalt_kort:false,betalings_metode:null,betalt_dato:null,betalt_initialer:null,delsum_betalt:null}).eq('id',s.id).then(function(r){
-        if(r.error){s.betalt_kort=true;s.betalings_metode=old.metode;s.betalt_dato=old.dato;s.betalt_initialer=old.ini;s.delsum_betalt=old.delsum;settStatusBtn(btn,'betalt_kort',true,visBetaltEtikett(s));rerenderCard(s,btn);}
-        if(document.getElementById('page-betaling').classList.contains('active'))renderBetaling();
+      if(!irMode)rerenderCard(s,btn);
+      else if(typeof rerenderIrCard==='function')rerenderIrCard(s,btn);
+      sb.from(tabell).update({betalt_kort:false,betalings_metode:null,betalt_dato:null,betalt_initialer:null,delsum_betalt:null}).eq('id',s.id).then(function(r){
+        if(r.error){s.betalt_kort=true;s.betalings_metode=old.metode;s.betalt_dato=old.dato;s.betalt_initialer=old.ini;s.delsum_betalt=old.delsum;settStatusBtn(btn,'betalt_kort',true,visBetaltEtikett(s));if(!irMode)rerenderCard(s,btn);else if(typeof rerenderIrCard==='function')rerenderIrCard(s,btn);}
+        if(!irMode&&document.getElementById('page-betaling').classList.contains('active'))renderBetaling();
       });
     }
     return;
   }
-  betaltSalgId=s.id;betaltBtn=btn;betaltTotal=s.total||0;
-  document.getElementById('betalt-modal-info').textContent=salgOnr(s)+' · '+(s.kunstner||'—')+(s.tittel?' – '+s.tittel:'')+' · '+kr(betaltTotal);
+  betaltSalgId=s.id;betaltBtn=btn;betaltTotal=s.total||s.pris||0;betaltIrMode=!!irMode;
+  var tittelPre=irMode?'🖼 Innramming':'';
+  document.getElementById('betalt-modal-info').textContent=(irMode?irOnr(s.ordrenummer):salgOnr(s))+' · '+(s.navn||s.kunstner||'—')+(s.beskrivelse||s.tittel?' – '+(s.beskrivelse||s.tittel):'')+' · '+kr(betaltTotal);
   document.querySelectorAll('input[name="betalt-metode"]').forEach(function(r){r.checked=false;});
   var idag=new Date();
   var iso=idag.getFullYear()+'-'+String(idag.getMonth()+1).padStart(2,'0')+'-'+String(idag.getDate()).padStart(2,'0');
@@ -2271,16 +2326,21 @@ async function lagreBetalt(){
   var lagreBtn=document.getElementById('betalt-lagre');
   lagreBtn.disabled=true;lagreBtn.textContent='Lagrer…';
   var metode=metodeInp.value;
-  var r=await sb.from('salg').update({betalt_kort:true,betalings_metode:metode,betalt_dato:dato,betalt_initialer:ini,delsum_betalt:delsum}).eq('id',betaltSalgId);
+  var tabell=betaltIrMode?'innramming':'salg';
+  var liste=betaltIrMode?alleIr:alleSalg;
+  var r=await sb.from(tabell).update({betalt_kort:true,betalings_metode:metode,betalt_dato:dato,betalt_initialer:ini,delsum_betalt:delsum}).eq('id',betaltSalgId);
   lagreBtn.disabled=false;lagreBtn.textContent='Kvitter ut betalt';
   if(r.error){msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
-  var s=alleSalg.find(function(x){return x.id===betaltSalgId;});
+  var s=liste.find(function(x){return x.id===betaltSalgId;});
   if(s){s.betalt_kort=true;s.betalings_metode=metode;s.betalt_dato=dato;s.betalt_initialer=ini;s.delsum_betalt=delsum;}
   if(betaltBtn)settStatusBtn(betaltBtn,'betalt_kort',true,visBetaltEtikett(s));
-  if(s)rerenderCard(s,betaltBtn);
-  if(document.getElementById('page-betaling').classList.contains('active'))renderBetaling();
+  if(s){
+    if(betaltIrMode){if(typeof rerenderIrCard==='function')rerenderIrCard(s,betaltBtn);}
+    else rerenderCard(s,betaltBtn);
+  }
+  if(!betaltIrMode&&document.getElementById('page-betaling').classList.contains('active'))renderBetaling();
   document.getElementById('betalt-modal-bg').classList.remove('open');
-  betaltSalgId=null;betaltBtn=null;
+  betaltSalgId=null;betaltBtn=null;betaltIrMode=false;
 }
 
 /* ── FLYTT EKSTRALISTE (per salg) ── */
@@ -3657,11 +3717,20 @@ function makeVipKort(s){
 
 function makeIrCard(x){
   var d=document.createElement('div');d.className='ir-card status-'+x.status;
+  d.dataset.irId=x.id;
   var statusLabels={aktiv:'Pågående',ferdig:'✅ Ferdig',hentet:'📦 Hentet'};
   var fotoHtml=x.bilde_url?'<img class="ir-foto" src="'+x.bilde_url+'" data-action="foto">':'';
   var notatHtml=x.notat?'<div class="ir-notat">'+x.notat+'</div>':'';
   var ordreChip=x.ordrenummer?'<span class="sc-nr" style="background:#3a5a7a;margin-right:.5rem">'+irOnr(x.ordrenummer)+'</span>':'';
   var tlfHtml=x.telefon?'<div class="ir-tlf"><button class="contact-link" data-tlf="'+x.telefon+'" style="font-size:.85rem;color:#3a5a7a">📞 '+x.telefon+'</button></div>':'';
+  /* Betalt-etikett hvis registrert */
+  function betaltEtikettIr(x){
+    if(!x.betalt_kort)return '';
+    if(x.delsum_betalt&&x.delsum_betalt>0&&x.delsum_betalt<(x.pris||0))return 'Delvis '+(x.betalings_metode||'');
+    return x.betalings_metode||'';
+  }
+  var betaltVis=x.betalt_kort?('✅ Betalt'+(betaltEtikettIr(x)?': '+betaltEtikettIr(x):'')):'☐ Betalt';
+  var hentetVis=x.status==='hentet'?('✅ Hentet/Levert'+(x.hentet_dato?': '+formatKortDato(x.hentet_dato):'')):'📦 Marker hentet';
   d.innerHTML=
     '<div class="ir-top"><div>'+ordreChip+'<div class="ir-name" style="display:inline-block">'+(x.navn||'—')+'</div>'+tlfHtml+'</div><span class="ir-status-chip '+x.status+'">'+(statusLabels[x.status]||x.status)+'</span></div>'+
     (x.beskrivelse?'<div class="ir-beskrivelse">'+x.beskrivelse+'</div>':'')+
@@ -3670,7 +3739,9 @@ function makeIrCard(x){
     '<div style="font-size:.68rem;color:var(--muted);margin-bottom:.5rem">'+fmt(x.created_at)+'</div>'+
     '<div class="ir-actions">'+
       '<button class="ir-btn ferdig-btn'+(x.status==='ferdig'?' ok':'')+'" data-action="ferdig">'+(x.status==='ferdig'?'✅ Ferdig':'Marker ferdig')+'</button>'+
-      '<button class="ir-btn hentet-btn'+(x.status==='hentet'?' ok':'')+'" data-action="hentet">'+(x.status==='hentet'?'📦 Hentet':'Marker hentet')+'</button>'+
+      '<button class="ir-btn hentet-btn'+(x.status==='hentet'?' ok':'')+'" data-action="hentet">'+hentetVis+'</button>'+
+      '<button class="ir-btn'+(x.betalt_kort?' ok':'')+'" data-action="betalt" style="border-color:#1a6a6a;color:'+(x.betalt_kort?'#fff':'#1a6a6a')+';'+(x.betalt_kort?'background:#1a6a6a;':'')+'">💵 '+betaltVis+'</button>'+
+      '<button class="ir-btn'+(x.sendt_innramming?' ok':'')+'" data-action="sendt_innramming" style="border-color:#7a4a20;color:'+(x.sendt_innramming?'#fff':'#7a4a20')+';'+(x.sendt_innramming?'background:#7a4a20;':'')+'">'+(x.sendt_innramming?'✅ ':'📤 ')+'Sendt til innramming</button>'+
       '<button class="ir-btn'+(x.sendt_hentemeld?' ok':'')+'" data-action="sendt_hentemeld" style="border-color:var(--green);color:'+(x.sendt_hentemeld?'#fff':'var(--green)')+';'+(x.sendt_hentemeld?'background:var(--green);':'')+'">'+(x.sendt_hentemeld?'✅ ':'☐ ')+'Sendt hentemeld</button>'+
       '<button class="ir-btn'+(x.skal_ha_faktura?' ok':'')+'" data-action="ir_faktura" style="border-color:#e07020;color:'+(x.skal_ha_faktura?'#fff':'#e07020')+';'+(x.skal_ha_faktura?'background:#e07020;':'')+'">📄 Skal ha faktura</button>'+
       '<button class="ir-btn'+(x.faktura_sendt?' ok':'')+'" data-action="ir_faktura_sendt" style="border-color:var(--green);color:'+(x.faktura_sendt?'#fff':'var(--green)')+';'+(x.faktura_sendt?'background:var(--green);':'')+'">✉️ Faktura sendt</button>'+
@@ -3680,7 +3751,23 @@ function makeIrCard(x){
   var fb=d.querySelector('[data-action=foto]');if(fb)fb.addEventListener('click',function(){visFoto(x.bilde_url);});
   var tlfBtn=d.querySelector('[data-tlf]');if(tlfBtn)tlfBtn.addEventListener('click',function(e){e.stopPropagation();phonePopup(e,this.dataset.tlf,x);});
   d.querySelector('[data-action=ferdig]').addEventListener('click',function(){setIrStatus(x,x.status==='ferdig'?'aktiv':'ferdig',this);});
-  d.querySelector('[data-action=hentet]').addEventListener('click',function(){setIrStatus(x,x.status==='hentet'?'aktiv':'hentet',this);});
+  d.querySelector('[data-action=hentet]').addEventListener('click',function(e){e.stopPropagation();apneDatoModal(x,this,'hentet',true);});
+  d.querySelector('[data-action=betalt]').addEventListener('click',function(e){e.stopPropagation();apneBetaltModal(x,this,true);});
+  d.querySelector('[data-action=sendt_innramming]').addEventListener('click',async function(){
+    var nv=!x.sendt_innramming;
+    x.sendt_innramming=nv;
+    this.style.background=nv?'#7a4a20':'';
+    this.style.color=nv?'#fff':'#7a4a20';
+    this.innerHTML=(nv?'✅ ':'📤 ')+'Sendt til innramming';
+    var r=await sb.from('innramming').update({sendt_innramming:nv}).eq('id',x.id);
+    if(r.error){
+      x.sendt_innramming=!nv;
+      this.style.background=!nv?'#7a4a20':'';
+      this.style.color=!nv?'#fff':'#7a4a20';
+      this.innerHTML=(!nv?'✅ ':'📤 ')+'Sendt til innramming';
+      alert('Feil: '+r.error.message);
+    }
+  });
   d.querySelector('[data-action=sendt_hentemeld]').addEventListener('click',async function(){
     var nv=!x.sendt_hentemeld;
     /* Optimistisk */
