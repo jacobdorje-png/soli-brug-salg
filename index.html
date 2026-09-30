@@ -1999,7 +1999,7 @@ function makeCard(s,erGruppert){
   var ab=d.querySelector('[data-action=arkiver]');if(ab)ab.addEventListener('click',function(e){e.stopPropagation();åpneArkivModal('enkelt',s.id);});
   var fb=d.querySelector('[data-action=foto]');if(fb)fb.addEventListener('click',function(e){e.stopPropagation();visFoto(s.bilde_url);});
   var tlfBtn=d.querySelector('[data-tlf]');if(tlfBtn)tlfBtn.addEventListener('click',function(e){e.stopPropagation();phonePopup(e,this.dataset.tlf,s);});
-  var epostBtn=d.querySelector('[data-epost]');if(epostBtn)epostBtn.addEventListener('click',function(e){e.stopPropagation();emailPopup(e,this.dataset.epost);});
+  var epostBtn=d.querySelector('[data-epost]');if(epostBtn)epostBtn.addEventListener('click',function(e){e.stopPropagation();emailPopup(e,this.dataset.epost,s);});
   return d;
 }
 
@@ -2649,11 +2649,16 @@ function phonePopup(e,tlf,s){
     }
   });
 }
-function emailPopup(e,epost){
-  showPopup(e,[
+function emailPopup(e,epost,s){
+  var valg=[
     {icon:'📋',label:'Kopier e-post',copy:true},
     {icon:'✉️',label:'Send mail',href:'mailto:'+epost}
-  ],epost,function(item){
+  ];
+  /* Kun for salgskort/innramming med ordrenummer: legg til hentemelding */
+  if(s&&salgOnr(s)){
+    valg.push({icon:'📦',label:'Send hentemelding',hentemelding:true});
+  }
+  showPopup(e,valg,epost,function(item){
     if(item.copy){
       if(navigator.clipboard&&navigator.clipboard.writeText){
         navigator.clipboard.writeText(epost).then(function(){visToast('📋 E-post kopiert: '+epost);}).catch(function(){alert('Kunne ikke kopiere. E-post: '+epost);});
@@ -2664,6 +2669,11 @@ function emailPopup(e,epost){
         catch(err){alert('E-post: '+epost);}
         document.body.removeChild(ta);
       }
+    } else if(item.hentemelding){
+      var tekst=lagHentemelding(s);
+      var subject='Ordrebekreftelse '+salgOnr(s)+' – klar til henting';
+      var url='mailto:'+epost+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(tekst);
+      window.location.href=url;
     }
   });
 }
