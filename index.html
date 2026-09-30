@@ -2624,10 +2624,12 @@ function beregnHentedato(){
 function formaterHentedato(d){return d.getDate()+'.'+(d.getMonth()+1);}
 
 /* Bygg hentemelding-tekst for et salg/innramming */
-function lagHentemelding(s){
+function lagHentemelding(s,utenSignatur){
   var dato=formaterHentedato(beregnHentedato());
   var onr=salgOnr(s);
-  return 'Hei! Bildet ditt med ordrenr: '+onr+' er klart til henting! Det kan hentes her alle dager 13.30-17.30 tom. '+dato+' 😊\n\nMvh Jacob Dørje, Soli Brug';
+  var tekst='Hei! Bildet ditt med ordrenr: '+onr+' er klart til henting! Det kan hentes her alle dager 13.30-17.30 tom. '+dato+' 😊';
+  if(!utenSignatur)tekst+='\n\nMvh Jacob Dørje, Soli Brug';
+  return tekst;
 }
 
 function phonePopup(e,tlf,s){
@@ -2670,7 +2672,8 @@ function emailPopup(e,epost,s){
         document.body.removeChild(ta);
       }
     } else if(item.hentemelding){
-      var tekst=lagHentemelding(s);
+      /* Uten signatur – brukerens epost-signatur legges automatisk til av mail-appen */
+      var tekst=lagHentemelding(s,true);
       var subject='Ordrebekreftelse '+salgOnr(s)+' – klar til henting';
       var url='mailto:'+epost+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(tekst);
       window.location.href=url;
