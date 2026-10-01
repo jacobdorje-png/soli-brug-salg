@@ -2702,7 +2702,13 @@ function kvitteringBase(s){
 }
 function lagKvitteringUX(s){
   var base=kvitteringBase(s);
-  /* Henteinfo midlertidig fjernet – ny tekst kommer */
+  if(s.butikk==='soli'){
+    base=base.concat([
+      '',
+      'Kunstverket ditt kan hentes på Soli Brug tidligst kl. 17-18 den 20. september, så alle dager 13-18 påfølgende uke tom. 27. september.'
+    ]);
+  }
+  /* For Fredrikstad: ingen henteinfo – legges inn manuelt ved behov */
   return base.concat([
     '',
     'Tusen takk for handelen!',
