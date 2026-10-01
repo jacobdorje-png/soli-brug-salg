@@ -1457,7 +1457,8 @@ function byggFilterTabs(){
   var wrap=document.getElementById('filter-tabs');wrap.innerHTML='';
   var aktive=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk;});
   var arkiverte=alleSalg.filter(function(s){return!!s.arkiv&&s.butikk===aktivButikk;});
-  var fakturaAntall=alleSalg.filter(function(s){return!s.arkiv&&s.skal_ha_faktura&&!s.faktura_sendt;}).length;
+  /* Tell også arkiverte salg som mangler faktura - de skal vises på faktura-fanen */
+  var fakturaAntall=alleSalg.filter(function(s){return s.skal_ha_faktura&&!s.faktura_sendt;}).length;
 
   var nylige=document.createElement('button');
   nylige.className='ftab'+(aktivFilter==='alle'&&!visArkiv&&!visFaktura?' active':'');
@@ -1606,8 +1607,11 @@ function renderSalg(){
   if(visFaktura){
     document.getElementById('sales-title').textContent='📄 Faktura – alle butikker';
     ['excel-btn','epost-btn','excel-enkel-btn','levering-btn','alle-oppgjor-btn'].forEach(function(id){var el=document.getElementById(id);if(el){el.style.display='none';el.dataset.harData='0';}});
-    /* Salg med skal_ha_faktura fra alle butikker (ikke arkiverte) */
-    var fakturaSalg=alleSalg.filter(function(s){return!s.arkiv&&s.skal_ha_faktura;});
+    /* Salg med skal_ha_faktura fra alle butikker (inkl. arkiverte som mangler faktura) */
+    var fakturaSalg=alleSalg.filter(function(s){
+      if(s.arkiv)return s.skal_ha_faktura&&!s.faktura_sendt;/* arkiverte: kun hvis mangler */
+      return s.skal_ha_faktura;
+    });
     /* Innrammingsjobber med skal_ha_faktura */
     var fakturaIr=alleIr.filter(function(x){return x.skal_ha_faktura;});
     if(!fakturaSalg.length&&!fakturaIr.length){
@@ -4022,8 +4026,10 @@ function renderFaktura(){
   var subWrap=document.getElementById('faktura-subtabs');
   list.innerHTML='';subWrap.innerHTML='';empty.style.display='none';
 
-  /* Filtrer relevante salg og innramminger */
-  var utestSalg=alleSalg.filter(function(s){return!s.arkiv&&s.skal_ha_faktura&&!s.faktura_sendt;});
+  /* Filtrer relevante salg og innramminger.
+     VIKTIG: Utestående fakturaer MÅ vises selv om salget er arkivert –
+     ellers mister vi kontrollen over fakturaer som skal sendes. */
+  var utestSalg=alleSalg.filter(function(s){return s.skal_ha_faktura&&!s.faktura_sendt;});
   var sendtSalg=alleSalg.filter(function(s){return!s.arkiv&&s.faktura_sendt;});
   var utestIr=alleIr.filter(function(x){return x.skal_ha_faktura&&!x.faktura_sendt;});
   var sendtIr=alleIr.filter(function(x){return x.faktura_sendt;});
@@ -4071,7 +4077,9 @@ function renderLevering(){
   var subWrap=document.getElementById('levering-subtabs');
   list.innerHTML='';subWrap.innerHTML='';empty.style.display='none';
 
-  var utestSalg=alleSalg.filter(function(s){return!s.arkiv&&skalLeveres(s)&&!s.hentet;});
+  /* Utestående leveringer MÅ vises selv om de er arkivert –
+     ellers mister vi kontrollen over hva som faktisk skal leveres. */
+  var utestSalg=alleSalg.filter(function(s){return skalLeveres(s)&&!s.hentet;});
   var levertSalg=alleSalg.filter(function(s){return!s.arkiv&&skalLeveres(s)&&s.hentet;});
 
   function lagSubTab(navn,verdi,antall){
@@ -4124,7 +4132,9 @@ function renderHentet(){
   var subWrap=document.getElementById('hentet-subtabs');
   list.innerHTML='';subWrap.innerHTML='';empty.style.display='none';
 
-  var skalHentesSalg=alleSalg.filter(function(s){return!s.arkiv&&skalHentes(s)&&!s.hentet;});
+  /* Salg som skal hentes MÅ vises selv om de er arkivert –
+     ellers mister vi kontrollen over hvem som ikke har hentet enda. */
+  var skalHentesSalg=alleSalg.filter(function(s){return skalHentes(s)&&!s.hentet;});
   var hentedeSalg=alleSalg.filter(function(s){return!s.arkiv&&skalHentes(s)&&s.hentet;});
 
   function lagSubTab(navn,verdi,antall){
