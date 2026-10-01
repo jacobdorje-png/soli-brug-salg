@@ -1466,10 +1466,11 @@ function byggFilterTabs(){
   nylige.addEventListener('click',function(){aktivFilter='alle';visArkiv=false;visFaktura=false;visVip=false;sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
   wrap.appendChild(nylige);
 
-  /* Kunstner-faner */
+  /* Kunstner-faner (Gavekort håndteres separat lenger ned) */
   var kunstnere=[];
   aktive.forEach(function(s){
     if(s.ekstraliste)return; /* Ekstraliste-salg får ikke egen kunstnerfane */
+    if(s.kunstner==='Gavekort')return; /* Gavekort får egen fane etter Faktura */
     if(s.kunstner&&kunstnere.indexOf(s.kunstner)===-1)kunstnere.push(s.kunstner);
   });
   kunstnere.sort();
@@ -1518,6 +1519,18 @@ function byggFilterTabs(){
 
   /* VIP-tab */
   var vipAntall=alleSalg.filter(function(s){return!s.arkiv&&s.butikk===aktivButikk&&s.vip;}).length;
+  /* Gavekort-tab (mellom Faktura og VIP) */
+  var gavekortAntall=aktive.filter(function(s){return s.kunstner==='Gavekort'&&!s.ekstraliste;}).length;
+  if(gavekortAntall>0){
+    var gkt=document.createElement('button');
+    var erGkValgt=aktivFilter==='Gavekort'&&!visArkiv&&!visFaktura&&!visVip;
+    gkt.className='ftab'+(erGkValgt?' active':'');
+    gkt.style.borderColor='#d4a500';gkt.style.color=erGkValgt?'#fff':'#a07000';
+    if(erGkValgt)gkt.style.background='#d4a500';
+    gkt.textContent='🎁 Gavekort ('+gavekortAntall+')';
+    gkt.addEventListener('click',function(){aktivFilter='Gavekort';visArkiv=false;visFaktura=false;visVip=false;sokeTekst='';document.getElementById('search-input').value='';oppdaterSokeUI();oppdaterArkivBar();renderSalg();byggFilterTabs();});
+    wrap.appendChild(gkt);
+  }
   var vt=document.createElement('button');
   vt.className='ftab'+(visVip?' active':'');
   vt.style.borderColor='#d4a500';vt.style.color=visVip?'#fff':'#a07000';
