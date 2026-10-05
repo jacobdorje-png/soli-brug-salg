@@ -2585,7 +2585,7 @@ function visKvitteringMeny(e,s,type){
   var kropp=encodeURIComponent(tekst);
   var items=[];
   if(epost)items.push({icon:'✉️',label:'Send e-post til '+epost,href:'mailto:'+epost+'?subject='+emne+'&body='+kropp});
-  if(tlf)items.push({icon:'💬',label:'Send SMS til '+tlf,href:'sms:'+tlf+'&body='+kropp});
+  if(tlf)items.push({icon:'💬',label:'Send SMS til '+tlf,href:lagSmsUrl(tlf,tekst)});
   items.push({icon:'📋',label:'Kopier til utklippstavle',href:'#',copy:tekst});
   showPopup(e,items,label,function(item){
     if(item.copy){navigator.clipboard.writeText(item.copy);}
@@ -2627,6 +2627,17 @@ document.addEventListener('click',function(e){if(!popup.contains(e.target))close
 
 /* Beregn hentedato: nærmeste søndag ca 2 uker frem.
    Heller 1.9 uker enn 2.1 uker (dvs. prioriter tidligere ved lik avstand). */
+/* ══════════════ SMS/MAIL URL-HELPER ══════════════
+   Android krever ?body= som query-separator, iOS historisk &body=.
+   Fra iOS 8+ fungerer begge, men vi beholder &body= for maks kompat.
+   Tlf-nummer må renses for mellomrom/bindestrek/parenteser. */
+function renseTlf(tlf){return String(tlf||'').replace(/[\s()\-]/g,'');}
+function erIOS(){return /iP(hone|ad|od)/.test(navigator.userAgent);}
+function lagSmsUrl(tlf,tekst){
+  var sep=erIOS()?'&':'?';
+  return 'sms:'+renseTlf(tlf)+sep+'body='+encodeURIComponent(tekst||'');
+}
+
 function beregnHentedato(){
   var d=new Date();d.setHours(0,0,0,0);
   d.setDate(d.getDate()+14);
@@ -2650,9 +2661,10 @@ function lagHentemelding(s,utenSignatur){
 }
 
 function phonePopup(e,tlf,s){
+  var tlfRen=renseTlf(tlf);
   var valg=[
-    {icon:'📞',label:'Ring',href:'tel:'+tlf},
-    {icon:'💬',label:'Send SMS',href:'sms:'+tlf}
+    {icon:'📞',label:'Ring',href:'tel:'+tlfRen},
+    {icon:'💬',label:'Send SMS',href:'sms:'+tlfRen}
   ];
   /* Kun for salgskort/innramming med ordrenummer: legg til hentemelding */
   if(s&&salgOnr(s)){
@@ -2661,10 +2673,7 @@ function phonePopup(e,tlf,s){
   showPopup(e,valg,tlf,function(item){
     if(item.hentemelding){
       var tekst=lagHentemelding(s);
-      /* SMS-URI med body – iOS og Android tolker '?body=' og '&body=' forskjellig.
-         Prøv iOS-vennlig '&body=' først (fungerer også på Android 4.4+). */
-      var url='sms:'+tlf+(/iP(hone|ad|od)/.test(navigator.userAgent)?'&':'?')+'body='+encodeURIComponent(tekst);
-      window.location.href=url;
+      window.location.href=lagSmsUrl(tlf,tekst);
     }
   });
 }
@@ -3869,7 +3878,7 @@ function visMottattKvittering(e,x){
   var kropp=encodeURIComponent(tekst);
   var items=[];
   if(epost)items.push({icon:'✉️',label:'Send e-post til '+epost,href:'mailto:'+epost+'?subject='+emne+'&body='+kropp});
-  if(tlf)items.push({icon:'💬',label:'Send SMS til '+tlf,href:'sms:'+tlf+'&body='+kropp});
+  if(tlf)items.push({icon:'💬',label:'Send SMS til '+tlf,href:lagSmsUrl(tlf,tekst)});
   items.push({icon:'📋',label:'Kopier til utklippstavle',href:'#',copy:tekst});
   showPopup(e,items,'Kvittering for mottatt',function(item){
     if(item.copy)navigator.clipboard.writeText(item.copy);
