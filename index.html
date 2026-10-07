@@ -1032,6 +1032,7 @@ function onr(n){return'2026-'+String(n).padStart(3,'0');}
 function gkOnr(n){return'4026-'+String(n).padStart(3,'0');}
 function irOnr(n){return'3026-'+String(n).padStart(3,'0');}
 function salgOnr(s){
+  if(s._erInnramming)return irOnr(s.ordrenummer);
   var erGavekort=(s.type==='Gavekort'||s.kunstner==='Gavekort');
   if(erGavekort)return gkOnr(s.gavekort_ordrenummer||s.ordrenummer);
   return onr(s.ordrenummer);
@@ -1089,7 +1090,7 @@ function sorterG(salg){
 function sokFilter(s,q){
   if(!q)return true;
   var t=q.toLowerCase();
-  return[s.navn,s.kunstner,s.tittel,s.edisjon,s.telefon,s.epost,s.adresse,s.ramme_info,s.notat,s.selger,s.arkiv,
+  return[s.navn,s.kunstner,s.tittel,s.edisjon,s.telefon,s.epost,s.adresse,s.ramme_info,s.notat,s.selger,s.arkiv,s.beskrivelse,
          s.ordrenummer?'2026-'+String(s.ordrenummer).padStart(3,'0'):'']
     .some(function(v){return v&&String(v).toLowerCase().indexOf(t)>-1;});
 }
@@ -1591,11 +1592,22 @@ function renderSalg(){
     document.getElementById('sales-title').textContent='Søkeresultat';
     ['excel-btn','epost-btn','excel-enkel-btn','levering-btn','alle-oppgjor-btn'].forEach(function(id){var el=document.getElementById(id);if(el){el.style.display='none';el.dataset.harData='0';}});
     var treff=alleSalg.filter(function(s){return sokFilter(s,sokeTekst);});
+    var irTreff=(alleIr||[]).filter(function(x){
+      if(sokFilter(x,sokeTekst))return true;
+      return x.ordrenummer&&irOnr(x.ordrenummer).indexOf(sokeTekst)>-1;
+    });
     var ie=document.getElementById('search-info');
-    ie.style.display='block';ie.textContent='Fant '+treff.length+' treff på «'+sokeTekst+'» (alle butikker, inkl. arkiverte)';
-    if(!treff.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Ingen treff.';return;}
+    ie.style.display='block';ie.textContent='Fant '+(treff.length+irTreff.length)+' treff på «'+sokeTekst+'» (Soli, Fredrikstad og Innramming, inkl. arkiverte)';
+    if(!treff.length&&!irTreff.length){document.getElementById('empty').style.display='block';document.getElementById('empty').textContent='Ingen treff.';return;}
     treff.forEach(function(s){list.appendChild(makeCard(s,false));});
-    visTotals(treff);return;
+    if(irTreff.length){
+      var irHdr=document.createElement('div');
+      irHdr.style.cssText='margin:1.2rem 0 .6rem;padding:.55rem .8rem;border-radius:8px;background:linear-gradient(90deg,#3a5a7a,#5a7a9a);color:#fff;font-weight:700;font-size:.92rem';
+      irHdr.textContent='🖼 Innramming ('+irTreff.length+')';
+      list.appendChild(irHdr);
+      irTreff.forEach(function(x){list.appendChild(makeIrCard(x));});
+    }
+    if(treff.length)visTotals(treff);return;
   }
   document.getElementById('search-info').style.display='none';
 
@@ -1937,8 +1949,8 @@ function makeCard(s,erGruppert){
     '</div>'+
     '<div class="sc-bottom-row">'+
       '<div class="row1">'+
-        '<button class="sc-copy-btn" data-action="copy-ux">📋 Ordrebekreftelse UX</button>'+
-        '<button class="sc-copy-btn" data-action="copy-ex">📋 Ordrebekreftelse EX</button>'+
+        '<button class="sc-copy-btn" data-action="copy-ux">📋 Kvittering UX</button>'+
+        '<button class="sc-copy-btn" data-action="copy-ex">📋 Kvittering EX</button>'+
         '<button class="sc-arkiver-btn" data-action="print">🖨️ Skriv ut</button>'+
       '</div>'+
       '<div class="row2">'+
@@ -1948,7 +1960,7 @@ function makeCard(s,erGruppert){
       '</div>'+
       '<div class="row2" style="margin-top:.4rem">'+
         '<button class="sc-copy-btn" data-action="del" style="border-color:#1a5fa8;color:#1a5fa8;font-size:.78rem">📤 Del salgskort</button>'+
-        '<button class="sc-copy-btn" data-action="pdf" style="border-color:#5a3a7a;color:#5a3a7a;font-size:.78rem">📄 Ordrebekreftelse PDF</button>'+
+        '<button class="sc-copy-btn" data-action="pdf" style="border-color:#5a3a7a;color:#5a3a7a;font-size:.78rem">📄 Kvittering PDF</button>'+
       '</div>'+
     '</div>'+
     '<div class="sc-inline-notat"><textarea class="sc-inline-notat-inp" placeholder="Enkelt notat…" data-action="notat">'+escHtml(s.notat||'')+'</textarea></div>';
@@ -2619,7 +2631,7 @@ function exportArkivExcel(arkivNavn,salg){
 
 function visKvitteringMeny(e,s,type){
   var tekst=type==='ux'?lagKvitteringUX(s):lagKvitteringEX(s);
-  var label=type==='ux'?'Ordrebekreftelse UX':'Ordrebekreftelse EX';
+  var label=type==='ux'?'Kvittering UX':'Kvittering EX';
   var epost=s.epost||'';
   var tlf=s.telefon||'';
   var emne=encodeURIComponent('Soli Brug');
@@ -2741,7 +2753,7 @@ function emailPopup(e,epost,s){
     } else if(item.hentemelding){
       /* Uten signatur – brukerens epost-signatur legges automatisk til av mail-appen */
       var tekst=lagHentemelding(s,true);
-      var subject='Ordrebekreftelse '+salgOnr(s)+' – klar til henting';
+      var subject='Kvittering '+salgOnr(s)+' – klar til henting';
       var url='mailto:'+epost+'?subject='+encodeURIComponent(subject)+'&body='+encodeURIComponent(tekst);
       window.location.href=url;
     }
@@ -3826,7 +3838,8 @@ function makeIrCard(x){
       '<button class="ir-btn'+(x.skal_ha_faktura?' ok':'')+'" data-action="ir_faktura" style="border-color:#e07020;color:'+(x.skal_ha_faktura?'#fff':'#e07020')+';'+(x.skal_ha_faktura?'background:#e07020;':'')+'">📄 Skal ha faktura</button>'+
       '<button class="ir-btn'+(x.faktura_sendt?' ok':'')+'" data-action="ir_faktura_sendt" style="border-color:var(--green);color:'+(x.faktura_sendt?'#fff':'var(--green)')+';'+(x.faktura_sendt?'background:var(--green);':'')+'">✉️ Faktura sendt</button>'+
       '<button class="ir-btn" data-action="mottatt" style="border-color:var(--blue);color:var(--blue)">📋 Kvittering for mottatt</button>'+
-      '<button class="ir-btn" data-action="edit" style="margin-left:auto">✏️ Rediger</button>'+
+      '<button class="ir-btn" data-action="ir_pdf" style="margin-left:auto;border-color:#5a3a7a;color:#5a3a7a">📄 Kvittering PDF</button>'+
+      '<button class="ir-btn" data-action="edit">✏️ Rediger</button>'+
     '</div>';
   var fb=d.querySelector('[data-action=foto]');if(fb)fb.addEventListener('click',function(){visFoto(x.bilde_url);});
   var tlfBtn=d.querySelector('[data-tlf]');if(tlfBtn)tlfBtn.addEventListener('click',function(e){e.stopPropagation();phonePopup(e,this.dataset.tlf,x);});
@@ -3901,6 +3914,7 @@ function makeIrCard(x){
   });
   d.querySelector('[data-action=mottatt]').addEventListener('click',function(e){visMottattKvittering(e,x);});
   d.querySelector('[data-action=edit]').addEventListener('click',function(){openIrModal(x);});
+  d.querySelector('[data-action=ir_pdf]').addEventListener('click',function(e){e.stopPropagation();lagKvitteringPDF(irTilKvittering(x),this);});
   return d;
 }
 
@@ -5152,6 +5166,22 @@ function _loadJsPDF(cb){
   s.onload=cb;s.onerror=function(){alert('Kunne ikke laste PDF-bibliotek. Sjekk internett-tilkoblingen.');};
   document.head.appendChild(s);
 }
+/* Gjør en innrammingsjobb om til et salgs-lignende objekt så lagKvitteringPDF kan gjenbrukes */
+function irTilKvittering(x){
+  return {
+    _erInnramming:true,
+    ordrenummer:x.ordrenummer,
+    created_at:x.created_at,
+    navn:x.navn,telefon:x.telefon,epost:x.epost,adresse:x.adresse,
+    kunstner:'Innramming',
+    tittel:x.beskrivelse||'Innramming',
+    pris:x.pris||0,total:x.pris||0,
+    betalt_kort:x.betalt_kort,betalings_metode:x.betalings_metode,
+    betalt_dato:x.betalt_dato,betalt_initialer:x.betalt_initialer,
+    delsum_betalt:x.delsum_betalt
+  };
+}
+
 async function lagKvitteringPDF(s,btn){
   var origLabel=btn.innerHTML;
   btn.disabled=true;btn.innerHTML='⏳ Lager PDF…';
@@ -5317,7 +5347,7 @@ async function sendKvitteringPDF(file,s,btn,origLabel){
   /* Prøv Web Share API for iOS/Android – lar bruker velge Mail/Outlook (PDF vedlagt automatisk) */
   if(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
     try{
-      await navigator.share({files:[file],title:'Ordrebekreftelse '+salgOnr(s),text:'Ordrebekreftelse fra Soli Brug'});
+      await navigator.share({files:[file],title:'Kvittering '+salgOnr(s),text:'Kvittering fra Soli Brug'});
       btn.disabled=false;btn.innerHTML=origLabel;
       return;
     }catch(e){
@@ -5341,7 +5371,7 @@ async function sendKvitteringPDF(file,s,btn,origLabel){
 }
 
 function visMailValgModal(epost,s,file){
-  var subject=encodeURIComponent('Ordrebekreftelse fra Soli Brug – '+salgOnr(s));
+  var subject=encodeURIComponent('Kvittering fra Soli Brug – '+salgOnr(s));
   var body='Hei'+(s.navn?' '+s.navn.split(' ')[0]:'')+',\n\nVennligst finn vedlagt kvittering for ditt kjøp (ordre '+salgOnr(s)+').\n\nTusen takk for handelen!\n\nMed vennlig hilsen,\nSoli Brug Galleri\nwww.soli-brug.no';
   var bodyEnc=encodeURIComponent(body);
   document.getElementById('mail-valg-adr').textContent='Til: '+epost;
