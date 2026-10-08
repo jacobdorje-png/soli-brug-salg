@@ -1949,8 +1949,8 @@ function makeCard(s,erGruppert){
     '</div>'+
     '<div class="sc-bottom-row">'+
       '<div class="row1">'+
-        '<button class="sc-copy-btn" data-action="copy-ux">📋 Kvittering UX</button>'+
-        '<button class="sc-copy-btn" data-action="copy-ex">📋 Kvittering EX</button>'+
+        '<button class="sc-copy-btn" data-action="copy-ux">📋 Ordrebekreftelse UX</button>'+
+        '<button class="sc-copy-btn" data-action="copy-ex">📋 Ordrebekreftelse EX</button>'+
         '<button class="sc-arkiver-btn" data-action="print">🖨️ Skriv ut</button>'+
       '</div>'+
       '<div class="row2">'+
@@ -2631,7 +2631,7 @@ function exportArkivExcel(arkivNavn,salg){
 
 function visKvitteringMeny(e,s,type){
   var tekst=type==='ux'?lagKvitteringUX(s):lagKvitteringEX(s);
-  var label=type==='ux'?'Kvittering UX':'Kvittering EX';
+  var label=type==='ux'?'Ordrebekreftelse UX':'Ordrebekreftelse EX';
   var epost=s.epost||'';
   var tlf=s.telefon||'';
   var emne=encodeURIComponent('Soli Brug');
