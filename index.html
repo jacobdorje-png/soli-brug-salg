@@ -1081,9 +1081,12 @@ function sorterKD(data){
   return result;
 }
 function sorterG(salg){
+  /* Innenfor en gruppe (bilder med lik tittel): sortér etter salgsrekkefølge
+     – eldste salg øverst, nyeste nederst. Ordrenummer brukes som fallback
+     siden det stiger kronologisk. */
   return salg.slice().sort(function(a,b){
-    var ra=rammeRang(a),rb=rammeRang(b);
-    if(ra!==rb)return ra-rb;
+    var da=a.created_at||'',db=b.created_at||'';
+    if(da!==db)return da.localeCompare(db);
     return(a.ordrenummer||0)-(b.ordrenummer||0);
   });
 }
