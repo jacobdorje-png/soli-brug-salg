@@ -4031,6 +4031,22 @@ async function saveSale(){
   }
 
   var dv=document.getElementById('m-dato').value;if(dv)row.created_at=new Date(dv).toISOString();
+
+  /* AUTO-DELBETALING: Hvis salget er fullt betalt og totalen økes
+     (f.eks. ved påfølgende innramming), konverter automatisk til delbetalt
+     med det opprinnelige beløpet som delsum_betalt. Da kan brukeren
+     bare trykke "Betal resten" senere. */
+  var autoDelbetalingDiff=0;
+  if(origSalg&&origSalg.betalt_kort&&(!origSalg.delsum_betalt||origSalg.delsum_betalt===0)){
+    var origTotal=origSalg.total||0;
+    var nyTotal=row.total||0;
+    if(nyTotal>origTotal&&origTotal>0){
+      row.delsum_betalt=origTotal;
+      autoDelbetalingDiff=nyTotal-origTotal;
+      /* betalt_kort beholdes true, metode/dato/initialer uendret */
+    }
+  }
+
   var r=await sb.from('salg').update(row).eq('id',editId);
   if(r.error){btn.disabled=false;btn.textContent='Lagre endringer';msg.style.color='var(--danger)';msg.textContent='Feil: '+r.error.message;return;}
 
@@ -4064,6 +4080,9 @@ async function saveSale(){
 
   btn.disabled=false;btn.textContent='Lagre endringer';
   closeModal();loadSales(true);
+  if(autoDelbetalingDiff>0){
+    visToast('💡 Totalen økte med '+kr(autoDelbetalingDiff)+' – salget er nå delbetalt. Trykk «Betal resten» når kunden betaler differensen.');
+  }
 }
 
 /* ══════════════ MODAL: REDIGER INNRAMMING ══════════════ */
