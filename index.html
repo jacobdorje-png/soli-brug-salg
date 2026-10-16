@@ -869,6 +869,10 @@ datalist{display:none!important}
       <span class="lbl">Dine initialer</span>
       <input type="text" id="betalt-initialer" placeholder="F.eks. OB" autocomplete="off" data-lpignore="true" data-form-type="other" maxlength="10" style="text-transform:uppercase">
     </div>
+    <div id="betalt-gk-wrap" style="margin-bottom:.85rem;display:none;padding:.6rem .75rem;background:#fff8e1;border:1.5px solid #d4a500;border-radius:8px">
+      <span class="lbl" style="color:#8a6d00">🎁 Gavekort-nummer (som ble brukt)</span>
+      <input type="text" id="betalt-gk-nummer" placeholder="F.eks. 2026-050" autocomplete="off" style="width:100%;background:#fff">
+    </div>
     <div style="margin-bottom:.85rem" id="betalt-delsum-wrap">
       <span class="lbl">Delsum betalt (valgfritt – la stå tom hvis alt er betalt)</span>
       <input type="number" id="betalt-delsum" placeholder="0" min="0" inputmode="numeric">
@@ -2279,6 +2283,18 @@ async function lagreDato(){
 
 /* ── BETALT MODAL ── */
 var betaltSalgId=null,betaltBtn=null,betaltTotal=0,betaltIrMode=false,betaltErRest=false;
+function oppdaterGavekortFelt(){
+  var valgt=document.querySelector('input[name="betalt-metode"]:checked');
+  var wrap=document.getElementById('betalt-gk-wrap');
+  if(!wrap)return;
+  if(valgt&&valgt.value==='Gavekort'){
+    wrap.style.display='block';
+  } else {
+    wrap.style.display='none';
+    var inp=document.getElementById('betalt-gk-nummer');
+    if(inp)inp.value='';
+  }
+}
 function oppdaterGjenstaende(){
   var delsum=parseFloat(document.getElementById('betalt-delsum').value)||0;
   var el=document.getElementById('betalt-gjenstaende');
@@ -2308,16 +2324,17 @@ function apneBetaltModal(s,btn,irMode){
   /* FULLT BETALT (ikke delvis) – vis info og tilbud å fjerne */
   if(s.betalt_kort&&!erDelvis){
     var linjer=['Betalt: '+(s.betalings_metode||'—')];
+    if(s.gavekort_brukt_nummer)linjer.push('Gavekort-nr: '+s.gavekort_brukt_nummer);
     if(s.betalt_dato)linjer.push('Dato: '+s.betalt_dato);
     if(s.betalt_initialer)linjer.push('Kvittert av: '+s.betalt_initialer);
     if(confirm(linjer.join('\n')+'\n\nFjerne betalt-status?')){
-      var old={metode:s.betalings_metode,dato:s.betalt_dato,ini:s.betalt_initialer,delsum:s.delsum_betalt};
-      s.betalt_kort=false;s.betalings_metode=null;s.betalt_dato=null;s.betalt_initialer=null;s.delsum_betalt=null;
+      var old={metode:s.betalings_metode,dato:s.betalt_dato,ini:s.betalt_initialer,delsum:s.delsum_betalt,gkNr:s.gavekort_brukt_nummer};
+      s.betalt_kort=false;s.betalings_metode=null;s.betalt_dato=null;s.betalt_initialer=null;s.delsum_betalt=null;s.gavekort_brukt_nummer=null;
       settStatusBtn(btn,'betalt_kort',false);
       if(!irMode)rerenderCard(s,btn);
       else if(typeof rerenderIrCard==='function')rerenderIrCard(s,btn);
-      sb.from(tabell).update({betalt_kort:false,betalings_metode:null,betalt_dato:null,betalt_initialer:null,delsum_betalt:null}).eq('id',s.id).then(function(r){
-        if(r.error){s.betalt_kort=true;s.betalings_metode=old.metode;s.betalt_dato=old.dato;s.betalt_initialer=old.ini;s.delsum_betalt=old.delsum;settStatusBtn(btn,'betalt_kort',true,visBetaltEtikett(s));if(!irMode)rerenderCard(s,btn);else if(typeof rerenderIrCard==='function')rerenderIrCard(s,btn);}
+      sb.from(tabell).update({betalt_kort:false,betalings_metode:null,betalt_dato:null,betalt_initialer:null,delsum_betalt:null,gavekort_brukt_nummer:null}).eq('id',s.id).then(function(r){
+        if(r.error){s.betalt_kort=true;s.betalings_metode=old.metode;s.betalt_dato=old.dato;s.betalt_initialer=old.ini;s.delsum_betalt=old.delsum;s.gavekort_brukt_nummer=old.gkNr;settStatusBtn(btn,'betalt_kort',true,visBetaltEtikett(s));if(!irMode)rerenderCard(s,btn);else if(typeof rerenderIrCard==='function')rerenderIrCard(s,btn);}
         if(!irMode&&document.getElementById('page-betaling').classList.contains('active'))renderBetaling();
       });
     }
@@ -2357,6 +2374,9 @@ function apneBetaltModal(s,btn,irMode){
   document.getElementById('betalt-delsum').value='';
   document.getElementById('betalt-gjenstaende').style.display='none';
   document.getElementById('betalt-msg').textContent='';
+  /* Reset gavekort-felt */
+  var gkWrap=document.getElementById('betalt-gk-wrap');if(gkWrap)gkWrap.style.display='none';
+  var gkInp=document.getElementById('betalt-gk-nummer');if(gkInp)gkInp.value='';
   document.getElementById('betalt-modal-bg').classList.add('open');
 }
 function visBetaltEtikett(s){
@@ -2376,6 +2396,13 @@ async function lagreBetalt(){
   if(!metodeInp){msg.style.color='var(--danger)';msg.textContent='Velg betalingsmetode.';return;}
   if(!dato){msg.style.color='var(--danger)';msg.textContent='Velg dato.';return;}
   if(!ini){msg.style.color='var(--danger)';msg.textContent='Skriv dine initialer.';return;}
+  /* Krev gavekort-nummer når metode = Gavekort */
+  var gkNummer=document.getElementById('betalt-gk-nummer').value.trim();
+  if(metodeInp.value==='Gavekort'&&!gkNummer){
+    msg.style.color='var(--danger)';msg.textContent='Skriv inn gavekort-nummeret.';
+    document.getElementById('betalt-gk-nummer').focus();
+    return;
+  }
   /* Hvis delsum er lik/større enn total, behandle som fullt betalt (delsum=null) */
   if(delsum!==null&&delsum>=betaltTotal)delsum=null;
   var lagreBtn=document.getElementById('betalt-lagre');
@@ -2387,6 +2414,8 @@ async function lagreBetalt(){
 
   /* RESTBETALING: kombiner metoder, oppdater til fullt betalt (delsum=null) */
   var oppdat={betalt_kort:true,betalings_metode:metode,betalt_dato:dato,betalt_initialer:ini,delsum_betalt:delsum};
+  /* Lagre gavekort-nummer hvis valgt */
+  if(metode==='Gavekort')oppdat.gavekort_brukt_nummer=gkNummer;
   if(betaltErRest){
     var sExisting=liste.find(function(x){return x.id===betaltSalgId;});
     if(sExisting){
@@ -2405,6 +2434,7 @@ async function lagreBetalt(){
   var s=liste.find(function(x){return x.id===betaltSalgId;});
   if(s){
     s.betalt_kort=true;s.betalings_metode=oppdat.betalings_metode;s.betalt_dato=dato;s.betalt_initialer=ini;s.delsum_betalt=oppdat.delsum_betalt;
+    if(metode==='Gavekort')s.gavekort_brukt_nummer=gkNummer;
   }
   if(betaltBtn)settStatusBtn(betaltBtn,'betalt_kort',true,visBetaltEtikett(s));
   if(s){
@@ -5723,6 +5753,10 @@ function init(){
   document.getElementById('betalt-lagre').addEventListener('click',lagreBetalt);
   document.getElementById('betalt-initialer').addEventListener('keydown',function(e){if(e.key==='Enter')lagreBetalt();});
   document.getElementById('betalt-delsum').addEventListener('input',oppdaterGjenstaende);
+  /* Vis/skjul gavekort-nummer-felt basert på valgt metode */
+  document.querySelectorAll('input[name="betalt-metode"]').forEach(function(r){
+    r.addEventListener('change',oppdaterGavekortFelt);
+  });
   /* Kunstner betalt modal (arkivmapper) */
   document.getElementById('kb-modal-close').addEventListener('click',function(){document.getElementById('kb-modal-bg').classList.remove('open');});
   document.getElementById('kb-avbryt').addEventListener('click',function(){document.getElementById('kb-modal-bg').classList.remove('open');});
